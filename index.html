@@ -1047,6 +1047,15 @@ function renderRules(){
   if(!rules.length){cont.innerHTML='<div class="lb-empty">Ничего не найдено</div>';return;}
   const grouped={};
   rules.forEach(r=>{const k=r.lesson_number;if(!grouped[k])grouped[k]=[];grouped[k].push(r);});
+  // Сводная таблица всегда последней
+  Object.keys(grouped).forEach(k=>{
+    grouped[k].sort((a,b)=>{
+      const aS=a.title.startsWith('Таблица')?1:-1;
+      const bS=b.title.startsWith('Таблица')?1:-1;
+      if(aS!==bS)return aS-bS;
+      return a.id-b.id;
+    });
+  });
   const lessons=Object.keys(grouped).sort((a,b)=>Number(a)-Number(b));
   cont.innerHTML=lessons.map(lesson=>{
     const items=grouped[lesson];
