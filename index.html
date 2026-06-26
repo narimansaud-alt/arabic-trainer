@@ -1,0 +1,1554 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Alfazi — Арабский тренажер</title>
+<meta name="theme-color" content="#1a6b3c">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="./manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Alfazi">
+<link rel="apple-touch-icon" sizes="180x180" href="./icon.png">
+<link rel="apple-touch-icon" sizes="152x152" href="./icon.png">
+<link rel="apple-touch-icon" sizes="120x120" href="./icon.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js').then(reg=>{
+      console.log('[SW] OK');
+      reg.addEventListener('updatefound',()=>{
+        const nw = reg.installing;
+        nw.addEventListener('statechange',()=>{
+          if(nw.state==='installed' && navigator.serviceWorker.controller){
+            document.getElementById('sw-update-banner').style.display='flex';
+          }
+        });
+      });
+    }).catch(e=>console.error('[SW]',e));
+
+    // Когда новый SW активировался — перезагружаем страницу
+    let refreshing=false;
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{
+      if(!refreshing){ refreshing=true; window.location.reload(); }
+    });
+  });
+}
+function swUpdate(){
+  navigator.serviceWorker.getRegistration().then(reg=>{
+    if(reg && reg.waiting){ reg.waiting.postMessage('skipWaiting'); }
+  });
+}
+</script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --green:#1a6b3c;--green-dark:#114d2b;--green-light:#e8f5ee;
+  --gold:#c9a227;--red:#c0392b;--gray:#6c757d;
+  --bg:#f0f4f0;--border:#d4e6d9;--shadow:0 2px 10px rgba(0,0,0,0.06);--r:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222;min-height:100vh;}
+.screen{display:none;min-height:100vh;flex-direction:column;}
+.screen.active{display:flex;}
+.hidden{display:none!important;}
+
+/* LOGIN */
+#screen-login{background:linear-gradient(160deg,var(--green-dark) 0%,var(--green) 100%);justify-content:center;align-items:center;padding:24px;}
+.login-box{background:white;border-radius:20px;padding:32px 28px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+.login-logo{text-align:center;margin-bottom:18px;}
+.login-logo img{width:80px;height:80px;border-radius:50%;object-fit:cover;}
+.login-logo h1{font-size:20px;color:var(--green);font-weight:700;margin-top:8px;}
+.login-logo p{font-size:13px;color:var(--gray);margin-top:3px;}
+.tab-row{display:flex;border-radius:10px;overflow:hidden;margin-bottom:18px;border:2px solid var(--border);}
+.tab-btn{flex:1;padding:10px;background:#f5f5f5;border:none;font-size:14px;font-weight:600;cursor:pointer;color:var(--gray);}
+.tab-btn.active{background:var(--green);color:white;}
+.field-group{margin-bottom:12px;}
+.field-group label{display:block;font-size:11px;font-weight:700;color:var(--gray);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;}
+.field-group input{width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:15px;outline:none;transition:0.2s;}
+.field-group input:focus{border-color:var(--green);}
+.btn-primary{width:100%;padding:14px;background:var(--green);color:white;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;margin-top:4px;}
+.login-msg{font-size:13px;text-align:center;margin-top:8px;min-height:18px;}
+.login-msg.err{color:var(--red);}
+.login-msg.ok{color:var(--green);}
+
+/* ANNOUNCEMENT POPUP */
+.announcement-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;}
+.announcement-box{background:white;border-radius:20px;padding:28px 24px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,0.4);text-align:center;}
+.announcement-icon{font-size:40px;margin-bottom:12px;}
+.announcement-title{font-size:18px;font-weight:700;color:var(--green-dark);margin-bottom:10px;}
+.announcement-msg{font-size:14px;color:#444;line-height:1.6;margin-bottom:20px;white-space:pre-line;}
+.btn-announcement{width:100%;padding:13px;background:var(--green);color:white;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;}
+
+/* COURSE SELECT */
+#screen-course{background:linear-gradient(160deg,var(--green-dark) 0%,var(--green) 100%);padding:30px 20px 40px;justify-content:flex-start;align-items:center;overflow-y:auto;}
+.course-header{text-align:center;color:white;margin-bottom:10px;}
+.course-header .hello{font-size:14px;opacity:0.8;margin-bottom:6px;}
+.course-header h2{font-size:22px;font-weight:700;}
+
+/* STREAK BANNER */
+.streak-banner{width:100%;background:linear-gradient(135deg,#ff6b00,#ff9500);border-radius:20px;padding:18px 18px 14px;margin-bottom:14px;box-shadow:0 4px 20px rgba(255,107,0,0.35);position:relative;overflow:hidden;}
+.streak-banner::before{content:'';position:absolute;top:-30px;right:-20px;font-size:100px;opacity:0.12;line-height:1;}
+.streak-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;}
+.streak-fire{font-size:15px;font-weight:800;color:white;line-height:1.3;flex:1;}
+.streak-fire .streak-big-num{font-size:36px;font-weight:900;display:block;line-height:1;margin-bottom:2px;text-shadow:0 2px 8px rgba(0,0,0,0.2);}
+.streak-days{font-size:12px;color:rgba(255,255,255,0.9);background:rgba(255,255,255,0.2);border-radius:20px;padding:4px 10px;font-weight:700;white-space:nowrap;margin-top:4px;}
+.streak-hint{font-size:12px;color:rgba(255,255,255,0.9);margin-bottom:10px;margin-top:6px;}
+.streak-bar-bg{background:rgba(255,255,255,0.25);border-radius:10px;height:8px;overflow:hidden;}
+.streak-bar-fill{height:100%;background:white;border-radius:10px;transition:width 0.6s ease;box-shadow:0 0 8px rgba(255,255,255,0.6);}
+.streak-bar-label{display:flex;justify-content:space-between;margin-top:5px;}
+.streak-bar-label span{font-size:11px;color:rgba(255,255,255,0.85);font-weight:600;}
+.streak-done{font-size:13px;font-weight:800;color:white;text-align:center;margin-top:6px;background:rgba(255,255,255,0.2);border-radius:10px;padding:6px;}
+#banner-rank{font-size:12px;color:rgba(255,255,255,0.95);font-weight:700;margin-top:8px;text-align:center;}
+
+.course-cards{width:100%;max-width:420px;display:flex;flex-direction:column;gap:12px;}
+.course-card{background:white;border-radius:16px;overflow:hidden;cursor:pointer;transition:transform 0.15s;box-shadow:0 6px 24px rgba(0,0,0,0.2);}
+.course-card:active{transform:scale(0.97);}
+.cc-cover{width:100%;height:110px;object-fit:cover;display:block;}
+.cc-cover-placeholder{width:100%;height:110px;display:flex;align-items:center;justify-content:center;font-size:48px;}
+.cc-body-row{display:flex;align-items:center;padding:12px 16px;gap:10px;}
+.cc-body{flex:1;}
+.cc-title{font-size:15px;font-weight:700;color:var(--green-dark);}
+.cc-sub{font-size:12px;color:var(--gray);margin-top:2px;}
+.cc-arrow{font-size:18px;color:var(--green);}
+.btn-logout-c{margin-top:20px;background:rgba(255,255,255,0.15);color:white;border:2px solid rgba(255,255,255,0.4);border-radius:10px;padding:10px 24px;font-size:14px;cursor:pointer;}
+
+/* VOLUME SELECT */
+#screen-volume{background:linear-gradient(160deg,var(--green-dark) 0%,var(--green) 100%);padding:30px 20px;justify-content:flex-start;align-items:center;overflow-y:auto;}
+.vol-header{text-align:center;color:white;margin-bottom:24px;}
+.vol-header h2{font-size:20px;font-weight:700;margin-bottom:4px;}
+.vol-header p{font-size:13px;opacity:0.8;}
+.vol-cards{width:100%;max-width:420px;display:flex;flex-direction:column;gap:12px;}
+.vol-card{background:white;border-radius:16px;padding:18px 16px;cursor:pointer;transition:transform 0.15s;box-shadow:0 6px 24px rgba(0,0,0,0.2);display:flex;align-items:center;gap:14px;}
+.vol-card:active{transform:scale(0.97);}
+.vol-num{width:50px;height:50px;background:var(--green);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;flex-shrink:0;text-align:center;padding:4px;}
+.vol-body{flex:1;}
+.vol-title{font-size:15px;font-weight:700;color:var(--green-dark);}
+.vol-sub{font-size:12px;color:var(--gray);margin-top:2px;}
+.vol-arrow{font-size:20px;color:var(--green);font-weight:700;}
+.btn-back-vol{margin-top:16px;background:rgba(255,255,255,0.15);color:white;border:2px solid rgba(255,255,255,0.4);border-radius:10px;padding:10px 24px;font-size:14px;cursor:pointer;}
+
+/* APP */
+#screen-app{background:var(--bg);padding-bottom:70px;}
+.topbar{background:var(--green);color:white;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+.tb-left{display:flex;flex-direction:column;}
+.tb-course{font-size:12px;opacity:0.85;font-weight:500;}
+.tb-user{font-size:14px;font-weight:700;}
+.tb-right{display:flex;align-items:center;gap:6px;}
+.tb-score{background:rgba(255,255,255,0.18);padding:4px 10px;border-radius:16px;font-size:12px;font-weight:600;}
+.btn-tb{background:rgba(255,255,255,0.3);color:white;border:2px solid rgba(255,255,255,0.6);padding:7px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;}
+
+/* BOTTOM TABS */
+.app-tabs{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom,0);}
+.app-tab{flex:1;padding:8px 4px 6px;border:none;background:none;font-size:10px;color:var(--gray);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.app-tab .ti{font-size:20px;}
+.app-tab.active{color:var(--green);font-weight:600;}
+
+/* TAB CONTENT */
+.tab-content{display:none;padding:14px;}
+.tab-content.active{display:block;}
+
+/* SECTION CARD */
+.sc{background:white;border-radius:var(--r);padding:14px;margin-bottom:12px;box-shadow:var(--shadow);}
+.sc-title{font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;}
+
+/* MODE BUTTONS */
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.mode-pill{padding:12px 6px;border:2px solid var(--border);background:#fafafa;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;text-align:center;color:#444;transition:0.15s;line-height:1.4;}
+.mode-pill.active{background:var(--green);color:white;border-color:var(--green);}
+.mode-pill.fast{grid-column:span 2;background:linear-gradient(90deg,#e67e22,#c0392b);color:white;border-color:transparent;}
+.mode-pill.fast.active{box-shadow:0 0 0 3px rgba(230,126,34,0.3);}
+.mode-pill small{font-size:10px;opacity:0.8;display:block;margin-top:2px;}
+
+/* LESSON GRID */
+.lesson-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;}
+.lesson-pill{padding:7px 4px;border:2px solid var(--border);background:#fafafa;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;text-align:center;color:#555;transition:0.15s;}
+.lesson-pill.active{background:var(--green);color:white;border-color:var(--green);}
+.ctrl-row{display:flex;gap:8px;margin-bottom:10px;}
+.ctrl-btn{flex:1;padding:7px;border:1px solid var(--border);background:white;border-radius:8px;font-size:11px;cursor:pointer;color:var(--gray);}
+
+/* START BUTTONS */
+.btn-start{width:100%;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;}
+.btn-start.green{background:var(--green);color:white;}
+.btn-start.gold{background:var(--gold);color:white;}
+.btn-start.blue{background:#2980b9;color:white;}
+.btn-start.orange{background:#e67e22;color:white;}
+.btn-start:disabled{opacity:0.5;cursor:not-allowed;}
+
+/* SETTINGS */
+.qty-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.qty-pill{padding:9px 4px;border:2px solid var(--border);background:#fafafa;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;text-align:center;color:#444;}
+.qty-pill.active{background:var(--green);color:white;border-color:var(--green);}
+
+/* LEADERBOARD */
+.lb-row-btns{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.lb-pill{padding:7px 10px;border:2px solid var(--border);background:white;border-radius:18px;font-size:12px;font-weight:600;cursor:pointer;color:#555;}
+.lb-pill.active{background:var(--green);color:white;border-color:var(--green);}
+.lb-pill.gold.active{background:var(--gold);border-color:var(--gold);}
+.lb-pill.blue.active{background:#2980b9;border-color:#2980b9;}
+.lb-table{background:white;border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);}
+.lb-item{display:flex;align-items:center;padding:11px 14px;border-bottom:1px solid #f0f0f0;gap:10px;}
+.lb-item:last-child{border-bottom:none;}
+.lb-rank{width:26px;font-weight:700;font-size:14px;color:var(--gray);text-align:center;flex-shrink:0;}
+.lb-rank.t1{color:#FFD700;font-size:18px;}
+.lb-rank.t2{color:#C0C0C0;font-size:16px;}
+.lb-rank.t3{color:#CD7F32;font-size:16px;}
+.lb-name{flex:1;font-size:14px;font-weight:500;}
+.lb-name.me{color:var(--green);font-weight:700;}
+.lb-val{font-size:13px;font-weight:700;color:var(--green);}
+.lb-empty{text-align:center;padding:28px;color:var(--gray);font-size:14px;}
+.chart-card{background:white;border-radius:var(--r);padding:14px;margin-bottom:12px;box-shadow:var(--shadow);}
+.chart-title{font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;}
+.chart-wrap{display:flex;align-items:flex-end;gap:5px;height:90px;}
+.chart-col{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;}
+.chart-val{font-size:9px;font-weight:700;color:var(--green);min-height:13px;}
+.chart-bar-wrap{flex:1;display:flex;align-items:flex-end;width:100%;}
+.chart-bar{width:100%;border-radius:3px 3px 0 0;min-height:3px;}
+.chart-label{font-size:9px;color:var(--gray);margin-top:3px;}
+
+/* DICT & RULES */
+.search-input{width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-size:14px;outline:none;margin-bottom:10px;}
+.search-input:focus{border-color:var(--green);}
+.dict-section{background:white;border-radius:var(--r);margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow);}
+.dict-section-hdr{padding:10px 14px;background:var(--green);color:white;font-size:12px;font-weight:700;}
+.dict-item{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #f0f0f0;gap:8px;}
+.dict-item:last-child{border-bottom:none;}
+.dict-ar{font-family:'Times New Roman',serif;font-size:20px;direction:rtl;color:var(--green-dark);}
+.dict-ru{font-size:13px;color:#555;text-align:right;flex:1;}
+.rule-item{padding:12px 14px;border-bottom:1px solid #f0f0f0;}
+.rule-item:last-child{border-bottom:none;}
+.rule-title{font-size:14px;font-weight:700;color:var(--green-dark);margin-bottom:4px;}
+.rule-content{font-size:13px;color:#555;line-height:1.6;}
+.rule-lesson-badge{display:inline-block;font-size:10px;background:var(--green-light);color:var(--green);padding:2px 6px;border-radius:8px;font-weight:600;margin-bottom:6px;}
+
+/* INSTRUCTION TAB */
+.instr-block{background:white;border-radius:var(--r);padding:16px;margin-bottom:12px;box-shadow:var(--shadow);}
+.instr-mode-title{font-size:15px;font-weight:700;color:var(--green-dark);margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+.instr-text{font-size:13px;color:#555;line-height:1.7;}
+.instr-text b{color:var(--green-dark);}
+.instr-wa{display:flex;align-items:center;gap:12px;background:#25d366;border-radius:14px;padding:14px 16px;color:white;text-decoration:none;margin-top:4px;}
+.instr-wa-icon{font-size:28px;}
+.instr-wa-text{flex:1;}
+.instr-wa-title{font-size:15px;font-weight:700;}
+.instr-wa-sub{font-size:12px;opacity:0.85;margin-top:2px;}
+
+/* QUIZ */
+#screen-quiz{background:var(--bg);}
+.quiz-top{background:var(--green);color:white;padding:11px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+.quiz-top .q-info .q-mode{font-size:11px;opacity:0.75;}
+.quiz-top .q-info .q-prog{font-size:14px;font-weight:700;}
+.quiz-top .q-exit{background:rgba(255,255,255,0.18);border:none;color:white;padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;}
+.quiz-bar{height:3px;background:rgba(255,255,255,0.25);flex-shrink:0;}
+.quiz-bar-fill{height:100%;background:var(--gold);transition:width 0.3s;}
+.fast-stats{display:grid;grid-template-columns:1fr 1fr 1fr;background:#2c3e50;flex-shrink:0;}
+.fs-cell{padding:10px 6px;text-align:center;border-right:1px solid rgba(255,255,255,0.1);}
+.fs-cell:last-child{border-right:none;}
+.fs-lbl{font-size:10px;color:rgba(255,255,255,0.55);}
+.fs-val{font-size:20px;font-weight:700;color:white;margin-top:2px;}
+.danger{color:#ff6b6b!important;}
+.quiz-body{padding:14px;flex:1;overflow-y:auto;}
+.word-card{background:white;border-radius:16px;padding:28px 16px;text-align:center;margin-bottom:14px;box-shadow:var(--shadow);min-height:100px;display:flex;align-items:center;justify-content:center;position:relative;}
+.star-btn{position:absolute;top:10px;left:12px;font-size:22px;background:none;border:none;cursor:pointer;}
+.w-ar{font-family:'Times New Roman',serif;font-size:44px;direction:rtl;line-height:1.3;}
+.w-ru{font-size:20px;font-weight:600;color:#333;}
+.opts{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+.opt{background:white;border:2px solid var(--border);border-radius:12px;padding:12px 14px;font-size:15px;cursor:pointer;text-align:center;width:100%;font-family:inherit;transition:0.15s;}
+.opt.ar{font-family:'Times New Roman',serif;font-size:28px;direction:rtl;}
+.opt:active{transform:scale(0.98);}
+.opt.ok{background:#e8f8f0!important;border-color:#27ae60!important;color:#1e8449;}
+.opt.err{background:#fdf0ef!important;border-color:var(--red)!important;color:var(--red);}
+.type-input{width:100%;padding:12px;font-size:26px;border:2px solid var(--border);border-radius:12px;text-align:center;direction:rtl;font-family:'Times New Roman',serif;margin-bottom:8px;outline:none;}
+.type-input:focus{border-color:var(--green);}
+.btn-check{width:100%;padding:13px;background:var(--green);color:white;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px;}
+.feedback{font-size:15px;font-weight:600;text-align:center;min-height:46px;padding:6px 0;line-height:1.5;}
+.feedback.ok{color:#1e8449;}
+.feedback.err{color:var(--red);}
+.quiz-nav{display:flex;gap:8px;margin-top:6px;}
+.btn-nav{flex:1;padding:11px;border:2px solid var(--border);background:white;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;color:#555;}
+.btn-nav:disabled{opacity:0.35;}
+.btn-early{width:100%;padding:10px;background:white;color:#888;border:2px solid var(--border);border-radius:10px;font-size:12px;cursor:pointer;margin-top:10px;}
+
+/* LEARN MODE - intro card */
+.learn-intro-card{background:white;border-radius:16px;padding:30px 20px;text-align:center;margin-bottom:14px;box-shadow:var(--shadow);}
+.learn-intro-ar{font-family:'Times New Roman',serif;font-size:52px;direction:rtl;color:var(--green-dark);line-height:1.3;margin-bottom:8px;}
+.learn-intro-ru{font-size:22px;font-weight:700;color:#333;margin-bottom:16px;}
+.learn-intro-hint{font-size:13px;color:var(--gray);background:var(--green-light);padding:8px 14px;border-radius:10px;display:inline-block;}
+.learn-progress-dots{display:flex;justify-content:center;gap:6px;margin-bottom:12px;}
+.learn-dot{width:8px;height:8px;border-radius:50%;background:var(--border);}
+.learn-dot.done{background:var(--green);}
+.learn-dot.current{background:var(--gold);}
+
+/* RESULTS */
+#screen-results{background:var(--bg);}
+.res-hdr{background:var(--green);color:white;padding:24px 16px;text-align:center;flex-shrink:0;}
+.res-hdr h2{font-size:20px;font-weight:700;}
+.res-stats{display:flex;justify-content:center;gap:24px;margin-top:12px;}
+.rs{text-align:center;}
+.rs-val{font-size:26px;font-weight:700;}
+.rs-lbl{font-size:11px;opacity:0.75;}
+.res-body{padding:14px;overflow-y:auto;flex:1;}
+.word-list{background:white;border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);margin-bottom:14px;}
+.wl-hdr{padding:10px 14px;background:var(--green-light);font-size:12px;font-weight:700;color:var(--green);}
+.wl-item{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #f5f5f5;gap:8px;}
+.wl-item:last-child{border-bottom:none;}
+.wl-ar{font-family:'Times New Roman',serif;font-size:19px;direction:rtl;color:var(--green-dark);}
+.wl-ru{font-size:13px;color:#555;text-align:right;flex:1;}
+.btn-res{width:100%;padding:13px;background:var(--green);color:white;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px;}
+.btn-res.sec{background:white;color:var(--green);border:2px solid var(--green);}
+
+@keyframes xpFloat{0%{opacity:1;transform:translateY(0);}100%{opacity:0;transform:translateY(-50px);}}
+</style>
+</head>
+<body>
+<!-- Баннер автообновления -->
+<div id="sw-update-banner" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999;background:#1a6b3c;color:#fff;padding:12px 20px;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.25);align-items:center;gap:12px;font-family:inherit;font-size:14px;max-width:90vw;">
+  <span>🔄 Доступно обновление</span>
+  <button onclick="swUpdate()" style="background:#c9a227;color:#fff;border:none;padding:7px 16px;border-radius:8px;cursor:pointer;font-weight:bold;font-size:14px;">Обновить</button>
+  <button onclick="this.parentElement.style.display='none'" style="background:transparent;color:#fff;border:none;font-size:18px;cursor:pointer;line-height:1;">✕</button>
+</div>
+
+<!-- ANNOUNCEMENT POPUP -->
+<div class="announcement-overlay hidden" id="announcement-overlay">
+  <div class="announcement-box">
+    <div class="announcement-icon">📢</div>
+    <div class="announcement-title">Важное сообщение</div>
+    <div class="announcement-msg" id="announcement-msg"></div>
+    <button class="btn-announcement" onclick="closeAnnouncement()">Понял ✓</button>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div class="screen active" id="screen-login">
+  <div class="login-box">
+    <div class="login-logo">
+      <img src="/icon.png" alt="Alfazi">
+      <h1>Арабский тренажер</h1>
+      <p>Alfazi — учи арабский каждый день</p>
+    </div>
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchLoginTab('login')">Войти</button>
+      <button class="tab-btn" onclick="switchLoginTab('reg')">Регистрация</button>
+    </div>
+    <div id="login-form">
+      <div class="field-group"><label>Логин</label><input type="text" id="l-user" placeholder="Ваш логин" autocapitalize="none" autocomplete="username"></div>
+      <div class="field-group"><label>Пароль</label><input type="password" id="l-pass" placeholder="Пароль" autocomplete="current-password"></div>
+      <button class="btn-primary" onclick="doLogin()">Войти →</button>
+    </div>
+    <div id="reg-form" class="hidden">
+      <div class="field-group"><label>Логин</label><input type="text" id="r-user" placeholder="Минимум 3 символа" autocapitalize="none"></div>
+      <div class="field-group"><label>Пароль</label><input type="password" id="r-pass" placeholder="Минимум 4 символа"></div>
+      <div class="field-group"><label>Повтор пароля</label><input type="password" id="r-pass2" placeholder="Повторите пароль"></div>
+      <button class="btn-primary" onclick="doRegister()">Создать аккаунт →</button>
+    </div>
+    <div class="login-msg" id="login-msg"></div>
+  </div>
+</div>
+
+<!-- COURSE SELECT -->
+<div class="screen" id="screen-course">
+  <div class="course-header">
+    <div class="hello" id="course-hello">Добро пожаловать!</div>
+    <h2>Выбор курса</h2>
+    <p style="font-size:13px;opacity:0.7;margin-top:6px;">Нажми на курс чтобы выбрать том</p>
+  </div>
+
+  <div class="course-cards">
+    <div class="course-card" onclick="showVolumeScreen('Мединский курс','med')">
+      <img class="cc-cover" src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Medina_arabic_book.jpg/400px-Medina_arabic_book.jpg" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" alt="Мединский курс">
+      <div class="cc-cover-placeholder" style="display:none;">📖</div>
+      <div class="cc-body-row">
+        <div class="cc-body"><div class="cc-title">Мединский курс</div><div class="cc-sub">4 тома — классический арабский</div></div>
+        <div class="cc-arrow">›</div>
+      </div>
+    </div>
+    <div class="course-card" onclick="showVolumeScreen('Huna Arabic','huna')">
+      <img class="cc-cover" src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Huna_Arabic_book_cover.jpg/400px-Huna_Arabic_book_cover.jpg" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" alt="Huna Arabic">
+      <div class="cc-cover-placeholder" style="display:none;">🌙</div>
+      <div class="cc-body-row">
+        <div class="cc-body"><div class="cc-title">Huna Arabic</div><div class="cc-sub">2 тома — разговорный арабский</div></div>
+        <div class="cc-arrow">›</div>
+      </div>
+    </div>
+    <div class="course-card" onclick="showVolumeScreen('بَيْنَ يَدَيْكَ','bayna')">
+      <img class="cc-cover" src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Bayna_yadayk_arabic_textbook.jpg/400px-Bayna_yadayk_arabic_textbook.jpg" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" alt="Байна Ядайк">
+      <div class="cc-cover-placeholder" style="display:none;">🕌</div>
+      <div class="cc-body-row">
+        <div class="cc-body"><div class="cc-title">بَيْنَ يَدَيْكَ</div><div class="cc-sub">Байна Ядайк — 4 тома по 2 части</div></div>
+        <div class="cc-arrow">›</div>
+      </div>
+    </div>
+  </div>
+  <button class="btn-logout-c" onclick="doLogout()">Выйти из аккаунта</button>
+</div>
+
+<!-- VOLUME SELECT -->
+<div class="screen" id="screen-volume">
+  <div class="vol-header">
+    <h2 id="vol-course-title">Курс</h2>
+    <p id="vol-course-sub">Выберите том</p>
+  </div>
+
+  <div class="vol-cards" id="vol-cards"></div>
+  <button id="btn-install-pwa" class="btn-back-vol" style="display:none;background:rgba(255,255,255,0.25);margin-bottom:8px;" onclick="installPWA()">📲 Установить приложение</button>
+  <button class="btn-back-vol" onclick="showScreen('screen-course')">← Назад к курсам</button>
+</div>
+
+<!-- MAIN APP -->
+<div class="screen" id="screen-app">
+  <div class="topbar">
+    <div class="tb-left">
+      <span class="tb-course" id="app-volume">Том</span>
+      <span class="tb-user" id="app-user">Игрок</span>
+    </div>
+    <div class="tb-right">
+      <span class="tb-score" id="app-streak">🔥 0</span>
+      <span class="tb-score" id="app-score">0 🌟</span>
+      <button class="btn-tb" onclick="switchTab('instr')">❓</button>
+      <button class="btn-tb" onclick="goToCourse()">≡ Курсы</button>
+    </div>
+  </div>
+
+  <!-- TAB: TRAIN -->
+  <div class="tab-content active" id="tab-train">
+    <!-- STREAK BANNER -->
+    <div class="streak-banner" id="streak-banner">
+      <div class="streak-top">
+        <div class="streak-fire" id="banner-fire">
+          <span class="streak-big-num">🔥 <span id="banner-days">0</span></span>
+          Ты занимаешься уже <span id="banner-days-label">0 дней</span> подряд!
+        </div>
+        <div class="streak-days" id="banner-today-count">0 / 30 слов</div>
+      </div>
+      <div class="streak-hint" id="banner-hint">Повтори 30 слов до полуночи — продли серию!</div>
+      <div class="streak-bar-bg"><div class="streak-bar-fill" id="streak-bar-fill" style="width:0%"></div></div>
+      <div class="streak-bar-label"><span>0 слов</span><span>🎯 30 слов</span></div>
+      <div class="streak-done hidden" id="streak-done">🎉 Отлично! Серия продлена на ещё один день!</div>
+      <div id="banner-rank"></div>
+    </div>
+    <div class="sc">
+      <div class="sc-title">Уроки</div>
+      <div class="ctrl-row">
+        <button class="ctrl-btn" onclick="selAll(true)">✓ Выбрать все</button>
+        <button class="ctrl-btn" onclick="selAll(false)">✗ Снять все</button>
+      </div>
+      <div class="lesson-grid" id="lesson-grid"><div style="grid-column:span 4;text-align:center;color:#aaa;font-size:13px;padding:10px;">Загрузка...</div></div>
+    </div>
+    <div class="sc">
+      <div class="sc-title">Режим тренировки</div>
+      <div class="mode-grid" id="mode-btns">
+        <button class="mode-pill active" onclick="setMode('learn',this)">🌱 Учить новые слова<small>Знакомство + тест</small></button>
+        <button class="mode-pill" onclick="setMode('type-ar',this)">✍️ Арабский ввод<small>+20 очков</small></button>
+        <button class="mode-pill" onclick="setMode('review',this)">🔄 Обычное повторение<small>По расписанию SRS</small></button>
+        <button class="mode-pill" onclick="setMode('mix',this)">🔀 Микс<small>Все форматы</small></button>
+        <button class="mode-pill fast" onclick="setMode('fast',this)">⚡ Быстрое повторение — 7 сек на слово</button>
+      </div>
+    </div>
+    <div id="cloud-status" style="font-size:12px;color:var(--gray);text-align:center;padding:4px 0;"></div>
+    <button class="btn-start green" id="btn-start" onclick="startQuiz(false)" disabled>▶ Начать тренировку</button>
+    <button class="btn-start gold" id="btn-fav" onclick="startQuiz(true)" disabled>⭐ Только трудные слова</button>
+  </div>
+
+  <!-- TAB: DICT -->
+  <div class="tab-content" id="tab-dict">
+    <div class="sc">
+      <input class="search-input" id="dict-search" type="text" placeholder="Поиск на арабском или русском..." oninput="renderDict()">
+      <div class="sc-title">Урок</div>
+      <div class="lb-row-btns" id="dict-lesson-row">
+        <button class="lb-pill active" onclick="setDictLesson('all',this)">Все</button>
+      </div>
+    </div>
+    <div id="dict-content"><div class="lb-empty">Загрузка...</div></div>
+  </div>
+
+  <!-- TAB: RULES -->
+  <div class="tab-content" id="tab-rules">
+    <div class="sc">
+      <input class="search-input" id="rules-search" type="text" placeholder="Поиск правила..." oninput="renderRules()">
+      <div class="sc-title">Урок</div>
+      <div class="lb-row-btns" id="rules-lesson-row">
+        <button class="lb-pill active" onclick="setRulesLesson('all',this)">Все</button>
+      </div>
+    </div>
+    <div id="rules-content"><div class="lb-empty">Загрузка...</div></div>
+  </div>
+
+  <!-- TAB: LEADERBOARD -->
+  <div class="tab-content" id="tab-lb">
+    <div class="sc">
+      <div class="sc-title">Тип рейтинга</div>
+      <div class="lb-row-btns" id="lb-type-row">
+        <button class="lb-pill gold active" onclick="setLbFilter('type','score',this)">🌟 Очки</button>
+        <button class="lb-pill" onclick="setLbFilter('type','fast',this)">⚡ Длинная серия</button>
+        <button class="lb-pill" onclick="setLbFilter('type','streak',this)">🔥 Серия дней</button>
+      </div>
+      <div id="lb-time-section">
+        <div class="sc-title" style="margin-top:8px;">Период</div>
+        <div class="lb-row-btns" id="lb-period-row">
+          <button class="lb-pill active" onclick="setLbFilter('period','all',this)">Все время</button>
+          <button class="lb-pill" onclick="setLbFilter('period','day',this)">День</button>
+          <button class="lb-pill" onclick="setLbFilter('period','week',this)">Неделя</button>
+          <button class="lb-pill" onclick="setLbFilter('period','month',this)">Месяц</button>
+        </div>
+      </div>
+    </div>
+    <div id="lb-content"><div class="lb-empty">Загрузка...</div></div>
+  </div>
+
+  <!-- TAB: INSTRUCTION -->
+  <div class="tab-content" id="tab-instr">
+    <div class="instr-block" style="background:linear-gradient(135deg,var(--green-dark),var(--green));border-radius:16px;">
+      <div class="instr-mode-title" style="color:white;font-size:17px;">👋 С чего начать?</div>
+      <div class="instr-text" style="color:rgba(255,255,255,0.92);line-height:1.9;">
+        <b style="color:white;">1.</b> Выбери курс — Мединский, Huna Arabic или Байна Ядайк<br>
+        <b style="color:white;">2.</b> Выбери том<br>
+        <b style="color:white;">3.</b> На экране тренировки выбери уроки (можно несколько)<br>
+        <b style="color:white;">4.</b> Выбери режим тренировки<br>
+        <b style="color:white;">5.</b> Нажми <b style="color:white;">«Начать тренировку»</b><br><br>
+        💡 Прокрути вниз чтобы узнать о каждом режиме подробнее
+      </div>
+    </div>
+    <div class="instr-block">
+      <div class="instr-mode-title">🌱 Учить новые слова</div>
+      <div class="instr-text">
+        Режим знакомства со словами в стиле Memrise. Сначала показывается слово с переводом — запомни. Затем идут тесты: выбери правильный перевод из 4 вариантов. Слова берутся из выбранных уроков. Можно выбрать количество слов в настройках.
+      </div>
+    </div>
+    <div class="instr-block">
+      <div class="instr-mode-title">✍️ Арабский ввод</div>
+      <div class="instr-text">
+        Показывается русское слово — нужно написать арабский перевод вручную. <b>+20 очков</b> за правильный ответ. Лучший режим для запоминания написания слов.
+      </div>
+    </div>
+    <div class="instr-block">
+      <div class="instr-mode-title">🔄 Обычное повторение</div>
+      <div class="instr-text">
+        Интервальное повторение (SRS). Система отслеживает каждое слово — чем лучше ты его знаешь, тем реже оно появляется. <b>Уровни 1–5:</b> правильный ответ → уровень растёт → слово приходит позже. Ошибка → уровень падает → слово вернётся скорее.
+      </div>
+    </div>
+    <div class="instr-block">
+      <div class="instr-mode-title">🔀 Микс</div>
+      <div class="instr-text">
+        Случайное чередование всех форматов: арабский→русский, русский→арабский, письмо. Отличный режим для разносторонней тренировки.
+      </div>
+    </div>
+    <div class="instr-block">
+      <div class="instr-mode-title">⚡ Быстрое повторение</div>
+      <div class="instr-text">
+        Показывается русское слово — выбери арабский перевод из 4 вариантов за <b>7 секунд</b>. 3 жизни. Строй как можно более длинную серию! Рекорд серии сохраняется в рейтинге <b>«Длинная серия»</b>.
+      </div>
+    </div>
+    <div class="instr-block">
+      <div class="instr-mode-title">🔥 Серия дней</div>
+      <div class="instr-text">
+        Занимайся каждый день и строй серию — как в Duolingo! Повтори <b>30 слов до полуночи</b> — день засчитывается и серия продолжается. Пропустил день — серия обнуляется и начинается заново.<br><br>
+        Прогресс-бар показывает сколько из 30 слов ты уже повторил сегодня. Своё место в рейтинге «Серия дней» видно прямо в баннере. Серия накапливается бесконечно 💪
+      </div>
+    </div>
+    <div class="instr-block">
+      <div class="instr-mode-title">🏆 Рейтинги</div>
+      <div class="instr-text">
+        <b>🌟 Очки</b> — общий рейтинг за очки. Фильтры: день / неделя / месяц / всё время.<br><br>
+        <b>⚡ Длинная серия</b> — рекорд непрерывной серии в режиме «Быстрое повторение».<br><br>
+        <b>🔥 Серия дней</b> — количество дней подряд без пропусков. Повтори <b>30 слов до полуночи</b> — день засчитывается.
+      </div>
+    </div>
+    <div class="instr-block">
+      <div class="instr-mode-title">📲 Установка приложения</div>
+      <div class="instr-text">
+        <b>Android:</b> нажмите кнопку <b>«Установить приложение»</b> на экране выбора тома. Приложение появится на рабочем столе как обычное.<br><br>
+        <b>iPhone / iPad (iOS):</b> автоматическая установка не поддерживается Apple. Сделайте вручную:<br>
+        1. Откройте сайт в <b>Safari</b> (именно Safari, не Chrome)<br>
+        2. Нажмите кнопку <b>«Поделиться»</b> (квадрат со стрелкой вверх) внизу экрана<br>
+        3. Выберите <b>«На экран "Домой"»</b><br>
+        4. Нажмите <b>«Добавить»</b><br><br>
+        Иконка приложения появится на рабочем столе 📱
+      </div>
+    </div>
+    <div class="instr-block">
+      <div class="instr-mode-title">📞 Связь и поддержка</div>
+      <div class="instr-text" style="margin-bottom:12px;">
+        По вопросам, предложениям и при неполадках — пишите напрямую:
+      </div>
+      <a class="instr-wa" href="https://wa.me/79634018877" target="_blank">
+        <div class="instr-wa-icon">💬</div>
+        <div class="instr-wa-text">
+          <div class="instr-wa-title">Написать в WhatsApp</div>
+          <div class="instr-wa-sub">+7 963 401 88 77</div>
+        </div>
+        <div>›</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- TAB: SETTINGS -->
+  <div class="tab-content" id="tab-settings">
+    <div class="sc">
+      <div class="sc-title">Слов в тренировке</div>
+      <div class="qty-grid" id="qty-normal">
+        <button class="qty-pill" data-val="5" onclick="setQty('normal',5,this)">5</button>
+        <button class="qty-pill" data-val="10" onclick="setQty('normal',10,this)">10</button>
+        <button class="qty-pill active" data-val="15" onclick="setQty('normal',15,this)">15</button>
+        <button class="qty-pill" data-val="20" onclick="setQty('normal',20,this)">20</button>
+        <button class="qty-pill" data-val="30" onclick="setQty('normal',30,this)">30</button>
+        <button class="qty-pill" data-val="50" onclick="setQty('normal',50,this)">50</button>
+        <button class="qty-pill" data-val="all" onclick="setQty('normal','all',this)" style="grid-column:span 2">Все</button>
+      </div>
+    </div>
+    <div class="sc">
+      <div class="sc-title">Слов в быстром повторении</div>
+      <div class="qty-grid" id="qty-fast">
+        <button class="qty-pill active" data-val="50" onclick="setQty('fast',50,this)">50</button>
+        <button class="qty-pill" data-val="100" onclick="setQty('fast',100,this)">100</button>
+        <button class="qty-pill" data-val="200" onclick="setQty('fast',200,this)">200</button>
+        <button class="qty-pill" data-val="inf" onclick="setQty('fast','inf',this)">♾️</button>
+      </div>
+    </div>
+    <div class="sc">
+      <div class="sc-title">Аккаунт</div>
+      <div style="font-size:14px;color:#555;margin-bottom:12px;">Вы вошли как: <b id="s-uname">—</b></div>
+      <button class="btn-start" style="background:var(--red);color:white;" onclick="doLogout()">Выйти из аккаунта</button>
+    </div>
+  </div>
+
+  <!-- BOTTOM TABS -->
+  <div class="app-tabs">
+    <button class="app-tab active" id="at-train" onclick="switchTab('train')"><span class="ti">📚</span>Тренировка</button>
+    <button class="app-tab" id="at-dict" onclick="switchTab('dict')"><span class="ti">📖</span>Словарь</button>
+    <button class="app-tab" id="at-rules" onclick="switchTab('rules')"><span class="ti">📋</span>Правила</button>
+    <button class="app-tab" id="at-lb" onclick="switchTab('lb')"><span class="ti">🏆</span>Рейтинг</button>
+    <button class="app-tab" id="at-instr" onclick="switchTab('instr')" style="display:none;"></button>
+    <button class="app-tab" id="at-settings" onclick="switchTab('settings')"><span class="ti">⚙️</span>Настройки</button>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div class="screen" id="screen-quiz">
+  <div class="quiz-top">
+    <div class="q-info"><div class="q-mode" id="q-mode">Тренировка</div><div class="q-prog" id="q-prog">1/10</div></div>
+    <button class="q-exit" onclick="confirmExit()">✕ Завершить</button>
+  </div>
+  <div class="quiz-bar"><div class="quiz-bar-fill" id="q-bar" style="width:0%"></div></div>
+  <div class="fast-stats hidden" id="fast-stats">
+    <div class="fs-cell"><div class="fs-lbl">Слов</div><div class="fs-val" id="fs-words">0</div></div>
+    <div class="fs-cell"><div class="fs-lbl">Жизни</div><div class="fs-val" id="fs-lives">❤️❤️❤️</div></div>
+    <div class="fs-cell"><div class="fs-lbl">Время</div><div class="fs-val" id="fs-timer">7</div></div>
+  </div>
+  <div class="quiz-body">
+    <div class="word-card" id="word-card">
+      <button class="star-btn" id="star-btn" onclick="toggleStar()">☆</button>
+      <div id="word-display"></div>
+    </div>
+    <div class="opts hidden" id="opts"></div>
+    <div class="hidden" id="type-area">
+      <input class="type-input" id="type-input" type="text" placeholder="اكتب بالعربية..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" dir="rtl">
+      <button class="btn-check" onclick="checkTyped()">Проверить ✓</button>
+    </div>
+    <div class="feedback" id="feedback"></div>
+    <div class="quiz-nav">
+      <button class="btn-nav hidden" id="btn-next" onclick="goNext()">Дальше →</button>
+    </div>
+    <button class="btn-early" onclick="confirmExit()">🏠 Завершить досрочно</button>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div class="screen" id="screen-results">
+  <div class="res-hdr">
+    <h2 id="res-title">🎉 Урок завершён!</h2>
+    <div class="res-stats">
+      <div class="rs"><div class="rs-val" id="r-pts">0</div><div class="rs-lbl">Очков</div></div>
+      <div class="rs"><div class="rs-val" id="r-total">0</div><div class="rs-lbl">Слов</div></div>
+      <div class="rs"><div class="rs-val" id="r-correct">0</div><div class="rs-lbl">Правильно</div></div>
+    </div>
+  </div>
+  <div class="res-body">
+    <div class="word-list" id="res-word-list"></div>
+    <button class="btn-res" onclick="backToMenu()">🏠 В меню</button>
+    <button class="btn-res sec" onclick="restartQuiz()">🔄 Повторить</button>
+  </div>
+</div>
+
+<script>
+const {createClient}=supabase;
+const SUPA_URL='https://vkdfthrvsafjmcmfcdic.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZGZ0aHJ2c2Fmam1jbWZjZGljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDc0NDEsImV4cCI6MjA5Nzc4MzQ0MX0.fzj0WRXkl6j1cVKmEOr2ZCBjtATDAbeL220MqKQ6uB0';
+const db=createClient(SUPA_URL,SUPA_KEY);
+
+// STATE
+let app={username:null,pwHash:null,course:null,volume:null,totalScore:0,survivalRecord:0,streak:0,maxStreak:0,favorites:[],wordStats:{},dailyWords:0,lastCountDate:null};
+let dict={},allWords=[],rulesData=[];
+let mode='learn',qtyNormal=15,qtyFast=50;
+let lbFilters={type:'score',period:'all'};
+let dictLesson='all',rulesLesson='all';
+let queue=[],qi=0,curWord=null,activeMode='ar-ru';
+let roundScore=0,roundWords=[],roundWrong=[],roundCorrect=0;
+let hstack=[],hidx=-1,isHist=false;
+let timerInt=null,pauseTmo=null,timeLeft=7,lives=3,fastWords=0,bestStreak=0;
+
+// LEARN MODE state
+let learnPhase='intro'; // 'intro' or 'test'
+let learnIntroShown=false;
+
+// VOLUMES CONFIG
+const VOLUMES={
+  med:[
+    {id:'Мединский курс (Том 1)',label:'Том 1',sub:'Уроки 1–22'},
+    {id:'Мединский курс (Том 2)',label:'Том 2',sub:'Уроки 1–5+'},
+    {id:'Мединский курс (Том 3)',label:'Том 3',sub:'В разработке'},
+    {id:'Мединский курс (Том 4)',label:'Том 4',sub:'В разработке'}
+  ],
+  huna:[
+    {id:'Huna Arabic (Том 1)',label:'Том 1',sub:'Уроки 1–8'},
+    {id:'Huna Arabic (Том 2)',label:'Том 2',sub:'В разработке'}
+  ],
+  bayna:[
+    {id:'بَيْنَ يَدَيْكَ (Том 1 Часть 1)',label:'Том 1 · Часть 1',sub:''},
+    {id:'بَيْنَ يَدَيْكَ (Том 1 Часть 2)',label:'Том 1 · Часть 2',sub:''},
+    {id:'بَيْنَ يَدَيْكَ (Том 2 Часть 1)',label:'Том 2 · Часть 1',sub:''},
+    {id:'بَيْنَ يَدَيْكَ (Том 2 Часть 2)',label:'Том 2 · Часть 2',sub:''},
+    {id:'بَيْنَ يَدَيْكَ (Том 3 Часть 1)',label:'Том 3 · Часть 1',sub:''},
+    {id:'بَيْنَ يَدَيْكَ (Том 3 Часть 2)',label:'Том 3 · Часть 2',sub:''},
+    {id:'بَيْنَ يَدَيْكَ (Том 4 Часть 1)',label:'Том 4 · Часть 1',sub:''},
+    {id:'بَيْنَ يَدَيْكَ (Том 4 Часть 2)',label:'Том 4 · Часть 2',sub:''}
+  ]
+};
+
+// HELPERS
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
+function rmH(t){return t.replace(/[\u0617-\u061A\u064B-\u0652]/g,'').trim();}
+function shuf(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+async function sha256(pw){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('alfazi_2024'+pw));return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');}
+function showXP(pts){const el=document.createElement('div');el.textContent='+'+pts+' XP';el.style.cssText='position:fixed;top:80px;right:16px;z-index:9999;background:var(--gold);color:white;padding:7px 14px;border-radius:18px;font-weight:700;font-size:15px;animation:xpFloat 1.2s ease forwards;';document.body.appendChild(el);setTimeout(()=>el.remove(),1200);}
+
+// ANNOUNCEMENT
+async function checkAnnouncement(){
+  try{
+    const{data}=await db.from('announcements').select('message,id').eq('is_active',true).order('created_at',{ascending:false}).limit(1);
+    if(!data||!data.length)return;
+    const ann=data[0];
+    const seenKey='ann_seen_'+ann.id;
+    if(localStorage.getItem(seenKey))return;
+    document.getElementById('announcement-msg').textContent=ann.message;
+    document.getElementById('announcement-overlay').classList.remove('hidden');
+    localStorage.setItem(seenKey,'1');
+  }catch(e){console.log('Announcement check failed',e);}
+}
+function closeAnnouncement(){document.getElementById('announcement-overlay').classList.add('hidden');}
+
+// AUTH
+let loginMode='login';
+function switchLoginTab(t){loginMode=t;document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',(i===0&&t==='login')||(i===1&&t==='reg')));document.getElementById('login-form').classList.toggle('hidden',t!=='login');document.getElementById('reg-form').classList.toggle('hidden',t!=='reg');document.getElementById('login-msg').textContent='';}
+function setMsg(t,c){const el=document.getElementById('login-msg');el.textContent=t;el.className='login-msg '+(c||'')}
+
+async function doLogin(){
+  const un=document.getElementById('l-user').value.trim().toLowerCase();
+  const pw=document.getElementById('l-pass').value;
+  if(!un||un.length<2)return setMsg('Логин минимум 2 символа','err');
+  if(!pw||pw.length<4)return setMsg('Пароль минимум 4 символа','err');
+  setMsg('Проверяем...');
+  const hash=await sha256(pw);
+  const{data,error}=await db.from('users').select('*').eq('username',un).eq('password_hash',hash).maybeSingle();
+  if(!data)return setMsg('Неверный логин или пароль','err');
+  app.username=data.username;app.pwHash=hash;app.totalScore=data.total_score||0;app.survivalRecord=data.survival_record||0;
+  localStorage.setItem('arabic_auth',JSON.stringify({username:un,password_hash:hash}));
+  await loadUserStats();
+  await checkAnnouncement();
+  goToCourse();
+}
+
+async function doRegister(){
+  const un=document.getElementById('r-user').value.trim().toLowerCase();
+  const pw=document.getElementById('r-pass').value;
+  const pw2=document.getElementById('r-pass2').value;
+  if(un.length<3)return setMsg('Логин минимум 3 символа','err');
+  if(pw.length<4)return setMsg('Пароль минимум 4 символа','err');
+  if(pw!==pw2)return setMsg('Пароли не совпадают','err');
+  setMsg('Регистрируем...');
+  const hash=await sha256(pw);
+  const{error}=await db.from('users').insert({username:un,password_hash:hash,total_score:0,survival_record:0});
+  if(error){if(error.code==='23505')return setMsg('Логин занят','err');return setMsg('Ошибка: '+error.message,'err');}
+  setMsg('Готово! Входим...','ok');
+  app.username=un;app.pwHash=hash;
+  localStorage.setItem('arabic_auth',JSON.stringify({username:un,password_hash:hash}));
+  setTimeout(goToCourse,800);
+}
+
+async function tryAutoLogin(){
+  const s=localStorage.getItem('arabic_auth');
+  if(!s)return false;
+  try{
+    const{username,password_hash}=JSON.parse(s);
+    const{data}=await db.from('users').select('*').eq('username',username).eq('password_hash',password_hash).maybeSingle();
+    if(!data){localStorage.removeItem('arabic_auth');return false;}
+    app.username=data.username;app.pwHash=password_hash;app.totalScore=data.total_score||0;app.survivalRecord=data.survival_record||0;
+    await loadUserStats();
+    await checkAnnouncement();
+    return true;
+  }catch(e){return false;}
+}
+
+async function loadUserStats(){
+  const{data}=await db.from('word_stats').select('*').eq('username',app.username);
+  if(data){
+    app.favorites=data.filter(w=>w.is_favorite).map(w=>w.word_ar);
+    data.forEach(w=>{app.wordStats[w.word_ar]={seen:w.seen_count||0,level:w.level||1,next:w.next_review||null};});
+  }
+  const{data:ud}=await db.from('users').select('streak,max_streak,daily_words,last_count_date').eq('username',app.username).maybeSingle();
+  if(ud){
+    app.streak=ud.streak||0;
+    app.maxStreak=ud.max_streak||0;
+    const today=new Date().toISOString().split('T')[0];
+    if(ud.last_count_date===today){
+      app.dailyWords=ud.daily_words||0;
+    } else {
+      app.dailyWords=0;
+    }
+    app.lastCountDate=today;
+  }
+}
+
+function doLogout(){
+  localStorage.removeItem('arabic_auth');
+  app={username:null,pwHash:null,course:null,volume:null,totalScore:0,survivalRecord:0,streak:0,maxStreak:0,favorites:[],wordStats:{},dailyWords:0,lastCountDate:null};
+  showScreen('screen-login');
+}
+
+// COURSE & VOLUME
+function goToCourse(){
+  document.getElementById('course-hello').textContent='Привет, '+app.username+'! 👋';
+  updateStreakBanner();
+  showScreen('screen-course');
+}
+
+let currentCourseKey='med';
+
+function showVolumeScreen(courseName,key){
+  app.course=courseName; currentCourseKey=key;
+  document.getElementById('vol-course-title').textContent=courseName;
+  const subMap={med:'4 тома — классический арабский',huna:'2 тома — разговорный арабский',bayna:'4 тома по 2 части'};
+  document.getElementById('vol-course-sub').textContent=subMap[key]||'Выберите том';
+  const vols=VOLUMES[key]||[];
+  const container=document.getElementById('vol-cards');
+  container.innerHTML=vols.map(v=>`
+    <div class="vol-card" onclick="selectVolume('${v.id}')">
+      <div class="vol-num">${v.label}</div>
+      <div class="vol-body"><div class="vol-title">${v.label}</div>${v.sub?'<div class="vol-sub">'+v.sub+'</div>':''}</div>
+      <div class="vol-arrow">›</div>
+    </div>`).join('');
+  showScreen('screen-volume');
+}
+
+async function selectVolume(volumeId){
+  app.volume=volumeId;
+  document.getElementById('app-volume').textContent=volumeId;
+  document.getElementById('app-user').textContent=app.username;
+  document.getElementById('s-uname').textContent=app.username;
+  updateUI(); updateStreakBanner(); switchTab('train'); showScreen('screen-app');
+  await loadDict();
+  await loadRulesAll();
+  await updateStreak();
+  updateStreakBanner();
+}
+
+// STREAK
+async function updateStreak(){
+  const today=new Date().toISOString().split('T')[0];
+  const{data}=await db.from('users').select('streak,last_activity,max_streak').eq('username',app.username).maybeSingle();
+  if(!data)return;
+  const last=data.last_activity?data.last_activity.split('T')[0]:null;
+  let ns=data.streak||0;
+  if(last!==today){
+    const yd=new Date();yd.setDate(yd.getDate()-1);
+    ns=last===yd.toISOString().split('T')[0]?(data.streak||0)+1:1;
+    const nm=Math.max(ns,data.max_streak||0);
+    await db.from('users').update({streak:ns,last_activity:today,max_streak:nm}).eq('username',app.username);
+    app.maxStreak=nm;
+  }
+  app.streak=ns;updateUI();
+}
+
+// DAILY WORDS COUNTER
+async function addDailyWord(){
+  const today=new Date().toISOString().split('T')[0];
+  if(app.lastCountDate!==today){app.dailyWords=0;app.lastCountDate=today;}
+  app.dailyWords++;
+  updateStreakBanner();
+  // Save every word immediately to avoid losing progress on close
+  if(app.dailyWords<=30){
+    try{await db.from('users').update({daily_words:app.dailyWords,last_count_date:today}).eq('username',app.username);}catch(e){}
+  }
+  // Streak milestone at 30 words
+  if(app.dailyWords===30){
+    await updateStreak();
+    updateStreakBanner();
+  }
+}
+
+// Check midnight reset — if day changed since last visit, reset daily counter
+function checkMidnightReset(){
+  const today=new Date().toISOString().split('T')[0];
+  if(app.lastCountDate&&app.lastCountDate!==today){
+    app.dailyWords=0;
+    app.lastCountDate=today;
+    updateStreakBanner();
+  }
+  // Schedule next check at midnight
+  const now=new Date();
+  const midnight=new Date(now);
+  midnight.setHours(24,0,0,0);
+  const msToMidnight=midnight-now;
+  setTimeout(()=>{checkMidnightReset();},msToMidnight);
+}
+
+function getDaysLabel(n){
+  if(n%10===1&&n%100!==11)return n+' день';
+  if([2,3,4].includes(n%10)&&![12,13,14].includes(n%100))return n+' дня';
+  return n+' дней';
+}
+
+function updateStreakBanner(){
+  const days=app.streak||0;
+  const cnt=app.dailyWords||0;
+  const pct=Math.min(cnt/30*100,100);
+  document.getElementById('banner-days').textContent=days;
+  const lbl=document.getElementById('banner-days-label');
+  if(lbl)lbl.textContent=getDaysLabel(days);
+  document.getElementById('banner-today-count').textContent=cnt+' / 30 слов';
+  document.getElementById('streak-bar-fill').style.width=pct+'%';
+  if(cnt>=30){
+    document.getElementById('banner-hint').classList.add('hidden');
+    document.getElementById('streak-done').classList.remove('hidden');
+  } else {
+    document.getElementById('banner-hint').classList.remove('hidden');
+    document.getElementById('streak-done').classList.add('hidden');
+  }
+  loadStreakRank();
+}
+
+async function loadStreakRank(){
+  if(!app.username)return;
+  try{
+    const{data}=await db.from('users').select('username,streak').order('streak',{ascending:false});
+    if(!data||!data.length)return;
+    const rank=data.findIndex(u=>u.username===app.username)+1;
+    const el=document.getElementById('banner-rank');
+    if(el){
+      if(rank>0)el.textContent='📊 '+(rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'#'+rank)+' место в рейтинге «Серия дней»';
+      else el.textContent='';
+    }
+  }catch(e){}
+}
+
+function updateUI(){
+  document.getElementById('app-streak').textContent='🔥 '+(app.streak||0);
+  document.getElementById('app-score').textContent=(app.totalScore||0)+' 🌟';
+}
+
+// DICTIONARY
+function buildLessonPills(rowId,lessons,onSelect){
+  const row=document.getElementById(rowId);
+  row.innerHTML='';
+  const allBtn=document.createElement('button');
+  allBtn.className='lb-pill active'; allBtn.textContent='Все';
+  allBtn.onclick=()=>{row.querySelectorAll('.lb-pill').forEach(b=>b.classList.remove('active'));allBtn.classList.add('active');onSelect('all');};
+  row.appendChild(allBtn);
+  Array.from(lessons).sort((a,b)=>isNaN(a)||isNaN(b)?String(a).localeCompare(String(b)):parseFloat(a)-parseFloat(b)).forEach(l=>{
+    const btn=document.createElement('button');
+    btn.className='lb-pill'; btn.textContent='Ур. '+l;
+    btn.onclick=()=>{row.querySelectorAll('.lb-pill').forEach(b=>b.classList.remove('active'));btn.classList.add('active');onSelect(String(l));};
+    row.appendChild(btn);
+  });
+}
+
+async function loadDict(){
+  document.getElementById('cloud-status').textContent='Загрузка слов... ⏳';
+  document.getElementById('btn-start').disabled=true;
+  document.getElementById('btn-fav').disabled=true;
+  const{data,error}=await db.from('words').select('*').eq('course_name',app.volume);
+  if(error||!data||!data.length){
+    document.getElementById('cloud-status').textContent='⚠️ Слова не найдены';
+    document.getElementById('dict-content').innerHTML='<div class="lb-empty">Слова ещё не добавлены</div>';
+    return;
+  }
+  dict={};allWords=[];
+  const lessons=new Set();
+  data.forEach(r=>{
+    const k=r.lesson_number;
+    if(!dict[k])dict[k]=[];
+    dict[k].push({ar:r.word_ar,ru:r.word_ru,lesson:k});
+    lessons.add(k);
+    allWords.push({ar:r.word_ar,ru:r.word_ru,lesson:k});
+  });
+  document.getElementById('cloud-status').textContent='✅ Загружено: '+allWords.length+' слов';
+  const g=document.getElementById('lesson-grid');g.innerHTML='';
+  Array.from(lessons).sort((a,b)=>isNaN(a)||isNaN(b)?String(a).localeCompare(String(b)):parseFloat(a)-parseFloat(b)).forEach(l=>{
+    const btn=document.createElement('button');
+    btn.className='lesson-pill';btn.dataset.lesson=l;btn.textContent='Ур. '+l;
+    // No auto-select on load — user selects manually each session
+    btn.onclick=()=>btn.classList.toggle('active');
+    g.appendChild(btn);
+  });
+  document.getElementById('btn-start').disabled=false;
+  document.getElementById('btn-fav').disabled=false;
+  buildLessonPills('dict-lesson-row',lessons,l=>{dictLesson=l;renderDict();});
+  renderDict();
+}
+
+function setDictLesson(l,btn){dictLesson=l;document.querySelectorAll('#dict-lesson-row .lb-pill').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderDict();}
+function setRulesLesson(l,btn){rulesLesson=l;document.querySelectorAll('#rules-lesson-row .lb-pill').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderRules();}
+
+function renderDict(){
+  const q=(document.getElementById('dict-search').value||'').trim().toLowerCase();
+  let words=allWords;
+  if(dictLesson!=='all')words=words.filter(w=>String(w.lesson)===dictLesson);
+  if(q)words=words.filter(w=>w.ar.includes(q)||w.ru.toLowerCase().includes(q));
+  const cont=document.getElementById('dict-content');
+  if(!words.length){cont.innerHTML='<div class="lb-empty">Ничего не найдено</div>';return;}
+  if(dictLesson==='all'&&!q){
+    const byL={};words.forEach(w=>{if(!byL[w.lesson])byL[w.lesson]=[];byL[w.lesson].push(w);});
+    cont.innerHTML=Object.keys(byL).sort((a,b)=>isNaN(a)||isNaN(b)?String(a).localeCompare(String(b)):parseFloat(a)-parseFloat(b)).map(l=>
+      `<div class="dict-section"><div class="dict-section-hdr">📖 Урок ${l} — ${byL[l].length} слов</div>${byL[l].map(w=>`<div class="dict-item"><span class="dict-ar">${w.ar}</span><span class="dict-ru">${w.ru}</span></div>`).join('')}</div>`
+    ).join('');
+  }else{
+    cont.innerHTML=`<div class="dict-section">${words.map(w=>`<div class="dict-item"><span class="dict-ar">${w.ar}</span><span class="dict-ru">${w.ru}</span></div>`).join('')}</div>`;
+  }
+}
+
+// RULES
+async function loadRulesAll(){
+  const vols=VOLUMES[currentCourseKey]||[];
+  rulesData=[];
+  for(const v of vols){
+    const{data}=await db.from('rules').select('*').eq('course_name',v.id).order('lesson_number');
+    if(data&&data.length) rulesData=rulesData.concat(data.map(r=>({...r,volLabel:v.label})));
+  }
+  if(!rulesData.length){
+    document.getElementById('rules-content').innerHTML='<div class="lb-empty">Правила ещё не добавлены.<br><small>Добавьте через Supabase → таблица rules</small></div>';
+    return;
+  }
+  const lessons=new Set(rulesData.map(r=>r.lesson_number));
+  buildLessonPills('rules-lesson-row',lessons,l=>{rulesLesson=l;renderRules();});
+  renderRules();
+}
+
+function renderRules(){
+  const q=(document.getElementById('rules-search').value||'').trim().toLowerCase();
+  let rules=rulesData;
+  if(rulesLesson!=='all')rules=rules.filter(r=>String(r.lesson_number)===rulesLesson);
+  if(q)rules=rules.filter(r=>r.title.toLowerCase().includes(q)||r.content.toLowerCase().includes(q));
+  const cont=document.getElementById('rules-content');
+  if(!rules.length){cont.innerHTML='<div class="lb-empty">Ничего не найдено</div>';return;}
+  cont.innerHTML=`<div class="dict-section">${rules.map(r=>`
+    <div class="rule-item">
+      <div class="rule-lesson-badge">Урок ${r.lesson_number}</div>
+      <div class="rule-title">${r.title}</div>
+      <div class="rule-content">${r.content}</div>
+    </div>`).join('')}</div>`;
+}
+
+// TABS
+function switchTab(t){
+  document.querySelectorAll('.tab-content').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.app-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  document.getElementById('at-'+t).classList.add('active');
+  if(t==='lb')loadLB();
+  if(t==='dict')renderDict();
+  if(t==='rules')renderRules();
+}
+
+function selAll(v){document.querySelectorAll('.lesson-pill').forEach(p=>p.classList.toggle('active',v));}
+
+// MODE
+function setMode(m,btn){
+  mode=m;
+  document.querySelectorAll('#mode-btns .mode-pill').forEach(b=>{b.classList.remove('active');});
+  btn.classList.add('active');
+}
+
+// SETTINGS
+function setQty(type,val,btn){
+  if(type==='normal'){qtyNormal=val;document.querySelectorAll('#qty-normal .qty-pill').forEach(p=>p.classList.remove('active'));localStorage.setItem('aqn',val);}
+  else{qtyFast=val;document.querySelectorAll('#qty-fast .qty-pill').forEach(p=>p.classList.remove('active'));localStorage.setItem('aqf',val);}
+  btn.classList.add('active');
+}
+function loadQty(){
+  const n=localStorage.getItem('aqn'),f=localStorage.getItem('aqf');
+  if(n){qtyNormal=isNaN(n)?n:parseInt(n);document.querySelectorAll('#qty-normal .qty-pill').forEach(p=>p.classList.toggle('active',p.dataset.val===n));}
+  if(f){qtyFast=isNaN(f)?f:parseInt(f);document.querySelectorAll('#qty-fast .qty-pill').forEach(p=>p.classList.toggle('active',p.dataset.val===f));}
+}
+
+// LEADERBOARD
+function setLbFilter(dim,val,btn){
+  lbFilters[dim]=val;
+  const rowId=dim==='type'?'lb-type-row':'lb-period-row';
+  document.querySelectorAll('#'+rowId+' .lb-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(dim==='type')document.getElementById('lb-time-section').classList.toggle('hidden',['fast','streak'].includes(val));
+  loadLB();
+}
+
+async function loadLB(){
+  const cont=document.getElementById('lb-content');
+  cont.innerHTML='<div class="lb-empty">Загрузка...</div>';
+  let items=[];
+  if(lbFilters.type==='fast'){
+    const{data}=await db.from('users').select('username,survival_record').order('survival_record',{ascending:false}).limit(20);
+    items=(data||[]).map(r=>({name:r.username,val:(r.survival_record||0)+' слов'}));
+    cont.innerHTML='';renderLbTable(cont,items,true);return;
+  }
+  if(lbFilters.type==='streak'){
+    const{data}=await db.from('users').select('username,streak,max_streak').order('streak',{ascending:false}).limit(20);
+    items=(data||[]).map(r=>({name:r.username,val:(r.streak||0)+' дн.',extra:r.max_streak>0?'Макс: '+r.max_streak+' дн.':''}));
+    cont.innerHTML='';renderLbTable(cont,items,true);return;
+  }
+  // Score
+  let q=db.from('score_history').select('username,points,course_name,created_at');
+  if(lbFilters.period!=='all'){
+    const d=new Date();
+    if(lbFilters.period==='day')d.setHours(0,0,0,0);
+    else if(lbFilters.period==='week')d.setDate(d.getDate()-7);
+    else if(lbFilters.period==='month')d.setMonth(d.getMonth()-1);
+    q=q.gte('created_at',d.toISOString());
+  }
+  const d30=new Date();d30.setDate(d30.getDate()-30);
+  const{data:myData}=await db.from('score_history').select('points,created_at').eq('username',app.username).gte('created_at',d30.toISOString());
+  const{data}=await q;
+  const agg={};(data||[]).forEach(r=>{agg[r.username]=(agg[r.username]||0)+r.points;});
+  const sorted=Object.entries(agg).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  cont.innerHTML='';
+  const chart=buildChart(myData||[]);if(chart)cont.innerHTML+=chart;
+  if(!sorted.length){cont.innerHTML+='<div class="lb-empty">Нет данных</div>';return;}
+  renderLbTable(cont,sorted.map(([name,val])=>({name,val:val+' 🌟'})),true);
+}
+
+function buildChart(records){
+  const days=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(d.toISOString().split('T')[0]);}
+  const byDay={};records.forEach(r=>{const d=r.created_at?r.created_at.split('T')[0]:null;if(d)byDay[d]=(byDay[d]||0)+r.points;});
+  const vals=days.map(d=>byDay[d]||0);
+  const max=Math.max(...vals,1);
+  const dn=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+  return `<div class="chart-card"><div class="chart-title">📈 Мой прогресс — 7 дней</div><div class="chart-wrap">${days.map((d,i)=>{const pct=Math.round(vals[i]/max*100);const isT=i===6;return`<div class="chart-col"><div class="chart-val">${vals[i]||''}</div><div class="chart-bar-wrap"><div class="chart-bar" style="height:${Math.max(pct,4)}%;background:${isT?'var(--gold)':'var(--green)'}"></div></div><div class="chart-label" style="${isT?'font-weight:700;color:var(--gold)':''}">${dn[new Date(d).getDay()]}</div></div>`;}).join('')}</div></div>`;
+}
+
+function renderLbTable(cont,rows,append){
+  if(!rows.length){cont.innerHTML+='<div class="lb-empty">Пока нет результатов</div>';return;}
+  const m=['🥇','🥈','🥉'];
+  const html='<div class="lb-table">'+rows.map((r,i)=>`
+    <div class="lb-item" style="${r.name===app.username?'background:#e8f5ee;':''}">
+      <div class="lb-rank ${i===0?'t1':i===1?'t2':i===2?'t3':''}">${m[i]||(i+1)+'.'}</div>
+      <div class="lb-name ${r.name===app.username?'me':''}">${r.name}${r.name===app.username?' ← ты':''}${r.extra?'<div style="font-size:10px;color:#e67e22">'+r.extra+'</div>':''}</div>
+      <div class="lb-val">${r.val}</div>
+    </div>`).join('')+'</div>';
+  if(append)cont.innerHTML+=html;else cont.innerHTML=html;
+}
+
+// SPACED REPETITION
+function getDue(){
+  const now=new Date().toISOString();
+  return allWords.filter(w=>{const s=app.wordStats[w.ar];return!s||!s.next||s.next<=now;});
+}
+function getNextReview(level,ok){
+  const days=ok?[1,3,7,14,30][Math.min(level-1,4)]:0.5;
+  const d=new Date();d.setTime(d.getTime()+days*86400000);return d.toISOString();
+}
+async function updateWordLevel(ar,ok){
+  const s=app.wordStats[ar]||{};
+  const cur=s.level||1;
+  const nl=ok?Math.min(cur+1,5):Math.max(cur-1,1);
+  const nr=getNextReview(nl,ok);
+  app.wordStats[ar]={...s,level:nl,next:nr,seen:(s.seen||0)+1};
+  await db.from('word_stats').upsert({username:app.username,word_ar:ar,seen_count:(s.seen||0)+1,level:nl,next_review:nr,is_favorite:app.favorites.includes(ar)});
+}
+
+// SMART WORD SELECTION — no repeats, prioritize: new → weak → due → others
+function getSmartQueue(words,limit){
+  const now=new Date().toISOString();
+  const newWords=words.filter(w=>!app.wordStats[w.ar]);
+  const weakWords=words.filter(w=>app.wordStats[w.ar]&&(app.wordStats[w.ar].level||1)<=2&&(!app.wordStats[w.ar].next||app.wordStats[w.ar].next<=now));
+  const dueWords=words.filter(w=>app.wordStats[w.ar]&&(app.wordStats[w.ar].level||1)>2&&(!app.wordStats[w.ar].next||app.wordStats[w.ar].next<=now));
+  const otherWords=words.filter(w=>app.wordStats[w.ar]&&app.wordStats[w.ar].next&&app.wordStats[w.ar].next>now);
+  // Sort others by next_review ascending (most overdue first)
+  otherWords.sort((a,b)=>(app.wordStats[a.ar]?.next||'').localeCompare(app.wordStats[b.ar]?.next||''));
+  let pool=[...shuf(newWords),...shuf(weakWords),...shuf(dueWords),...otherWords];
+  // Deduplicate
+  const seen=new Set();
+  pool=pool.filter(w=>{if(seen.has(w.ar))return false;seen.add(w.ar);return true;});
+  if(limit!=='all'&&limit!=='inf')pool=pool.slice(0,parseInt(limit));
+  return pool;
+}
+
+// QUIZ START
+function getSelectedWords(){
+  const active=[...document.querySelectorAll('.lesson-pill.active')].map(p=>p.dataset.lesson);
+  if(!active.length){alert('Выберите хотя бы один урок');return null;}
+  let words=[];
+  active.forEach(k=>{if(dict[k])words=words.concat(dict[k]);});
+  return words;
+}
+
+function startQuiz(onlyFav){
+  let words=getSelectedWords();
+  if(!words)return;
+  if(onlyFav)words=words.filter(w=>app.favorites.includes(w.ar));
+  if(!words.length)return alert(onlyFav?'Нет трудных слов в выбранных уроках':'Слова не найдены');
+  const limit=mode==='fast'?qtyFast:qtyNormal;
+  if(mode==='review'){
+    // SRS: only due words from selection
+    const now=new Date().toISOString();
+    const due=words.filter(w=>{const s=app.wordStats[w.ar];return!s||!s.next||s.next<=now;});
+    if(!due.length){alert('На сегодня нечего повторять из выбранных уроков! 🎉\nВыберите другие уроки или вернитесь позже.');return;}
+    const finalWords=getSmartQueue(due,limit);
+    initQuiz(finalWords);
+  } else if(mode==='learn'){
+    // LEARN: prefer new words first
+    const finalWords=getSmartQueue(words,limit);
+    initQuiz(finalWords);
+  } else {
+    const finalWords=getSmartQueue(words,limit);
+    initQuiz(finalWords);
+  }
+}
+
+function initQuiz(words){
+  if(!words.length){alert('Нет слов для тренировки');return;}
+  queue=words;qi=0;roundScore=0;roundWords=[...words];roundWrong=[];roundCorrect=0;
+  hstack=[];hidx=-1;isHist=false;
+  lives=3;fastWords=0;bestStreak=0;
+  learnPhase='intro';learnIntroShown=false;
+  const mNames={'learn':'🌱 Учить новые слова','type-ar':'✍️ Арабский ввод','review':'🔄 Обычное повторение','mix':'🔀 Микс','fast':'⚡ Быстрое повторение'};
+  document.getElementById('q-mode').textContent=mNames[mode]||mode;
+  document.getElementById('fast-stats').classList.toggle('hidden',mode!=='fast');
+  if(mode==='fast')updFastUI();
+  saveProgress();
+  showScreen('screen-quiz');
+  nextWord(false);
+}
+
+function nextWord(inc){
+  clearTimers();isHist=false;
+  if(inc)qi++;
+  if(qi>=queue.length){finishQuiz();return;}
+  curWord=queue[qi];
+
+  if(mode==='fast'){
+    activeMode='ru-ar-fast';
+  } else if(mode==='learn'){
+    // Show intro card first, then test
+    learnPhase='intro';
+  } else if(mode==='mix'){
+    activeMode=['ar-ru','ru-ar','type-ar'][Math.floor(Math.random()*3)];
+  } else if(mode==='review'){
+    activeMode=['ar-ru','ru-ar'][Math.floor(Math.random()*2)];
+  } else {
+    activeMode=mode;
+  }
+
+  if(inc){hstack.push({w:curWord,am:activeMode,idx:qi,phase:learnPhase});hidx=hstack.length-1;}
+  else{hstack=[{w:curWord,am:activeMode,idx:0,phase:learnPhase}];hidx=0;}
+  saveProgress();
+  renderQ();
+}
+
+function renderQ(){
+  document.getElementById('q-prog').textContent=(qi+1)+'/'+queue.length;
+  document.getElementById('q-bar').style.width=((qi+1)/queue.length*100)+'%';
+  document.getElementById('star-btn').textContent=app.favorites.includes(curWord.ar)?'⭐':'☆';
+  document.getElementById('feedback').textContent='';
+  document.getElementById('feedback').className='feedback';
+  document.getElementById('btn-next').classList.add('hidden');
+  document.getElementById('btn-next').textContent='Дальше →';
+  const opts=document.getElementById('opts');
+  const typeArea=document.getElementById('type-area');
+  opts.classList.add('hidden');typeArea.classList.add('hidden');
+  opts.innerHTML='';
+
+  if(isHist)document.getElementById('feedback').innerHTML='<span style="color:#e67e22">📖 Просмотр</span>';
+
+  // LEARN MODE — intro phase
+  if(mode==='learn'&&learnPhase==='intro'){
+    document.getElementById('word-card').style.minHeight='140px';
+    document.getElementById('word-display').innerHTML=`
+      <div style="width:100%">
+        <div class="learn-intro-ar">${curWord.ar}</div>
+        <div class="learn-intro-ru">${curWord.ru}</div>
+        <div class="learn-intro-hint">Запомни это слово 👆</div>
+      </div>`;
+    document.getElementById('btn-next').classList.remove('hidden');
+    document.getElementById('btn-next').textContent='Запомнил, дальше →';
+    return;
+  }
+
+  document.getElementById('word-card').style.minHeight='100px';
+
+  if(activeMode==='type-ar'){
+    document.getElementById('word-display').innerHTML=`<div class="w-ru">${curWord.ru}</div>`;
+    typeArea.classList.remove('hidden');
+    const inp=document.getElementById('type-input');inp.value='';inp.disabled=false;
+    if(!isHist)setTimeout(()=>inp.focus(),80);
+    else{inp.value=curWord.ar;inp.disabled=true;}
+  } else if(activeMode==='ru-ar-fast'){
+    document.getElementById('word-display').innerHTML=`<div class="w-ru">${curWord.ru}</div>`;
+    opts.classList.remove('hidden');
+    const correct=curWord.ar;
+    genOpts(correct,'ar').forEach(opt=>{
+      const btn=document.createElement('button');
+      btn.className='opt ar';btn.textContent=opt;
+      btn.onclick=()=>{if(!isHist)handleFast(btn,opt===correct,correct);};
+      opts.appendChild(btn);
+    });
+    if(!isHist)startTimer();
+  } else {
+    // LEARN test phase: always ar→ru (recognition first)
+    let isArQ;
+    if(mode==='learn'){isArQ=true;}
+    else{isArQ=activeMode==='ar-ru';}
+    document.getElementById('word-display').innerHTML=isArQ?`<div class="w-ar">${curWord.ar}</div>`:`<div class="w-ru">${curWord.ru}</div>`;
+    opts.classList.remove('hidden');
+    const correct=isArQ?curWord.ru:curWord.ar;
+    genOpts(correct,isArQ?'ru':'ar').forEach(opt=>{
+      const btn=document.createElement('button');
+      btn.className='opt'+((!isArQ)?' ar':'');btn.textContent=opt;
+      btn.onclick=()=>{if(!isHist)handleAns(btn,opt===correct,correct,!isArQ);};
+      opts.appendChild(btn);
+    });
+  }
+}
+
+function genOpts(correct,key){
+  // Pick distractors that are similar in lesson if possible, else random
+  const pool=shuf(allWords.filter(w=>w[key]!==correct&&rmH(w[key])!==rmH(correct)));
+  return shuf([correct,...pool.slice(0,3).map(w=>w[key])]);
+}
+
+async function handleAns(btn,ok,correct,isAr){
+  document.querySelectorAll('.opt').forEach(b=>b.disabled=true);
+  const fb=document.getElementById('feedback');
+  if(ok){
+    btn.classList.add('ok');
+    let pts=0;
+    if(mode==='learn')pts=5;
+    else if(activeMode==='ar-ru')pts=5;
+    else if(activeMode==='ru-ar')pts=10;
+    roundScore+=pts;roundCorrect++;
+    fb.className='feedback ok';fb.textContent='✅ Правильно!'+(pts?' +'+pts:'');
+    if(pts)logPts(pts);
+    updateWordLevel(curWord.ar,true);
+    addDailyWord();
+    pauseTmo=setTimeout(()=>nextWord(true),800);
+  }else{
+    btn.classList.add('err');
+    document.querySelectorAll('.opt').forEach(b=>{if(b.textContent===correct)b.classList.add('ok');});
+    fb.className='feedback err';
+    fb.innerHTML='❌ Ошибка. Правильно: <span style="'+(isAr?'font-family:Times New Roman,serif;font-size:22px;direction:rtl;':'')+'">'+correct+'</span>';
+    updateWordLevel(curWord.ar,false);
+    if(!roundWrong.find(w=>w.ar===curWord.ar))roundWrong.push(curWord);
+    addDailyWord();
+    document.getElementById('btn-next').classList.remove('hidden');
+    pauseTmo=setTimeout(()=>nextWord(true),3000);
+  }
+}
+
+function checkTyped(){
+  if(isHist)return;
+  const val=rmH(document.getElementById('type-input').value.trim());
+  const correct=rmH(curWord.ar.replace(/\s*\(.*?\)\s*/g,''));
+  const fb=document.getElementById('feedback');
+  document.getElementById('type-input').disabled=true;
+  if(val===correct){
+    fb.className='feedback ok';fb.textContent='✅ Правильно! +20';
+    roundScore+=20;roundCorrect++;logPts(20);updateWordLevel(curWord.ar,true);
+    addDailyWord();
+    pauseTmo=setTimeout(()=>nextWord(true),800);
+  }else{
+    fb.className='feedback err';
+    fb.innerHTML='❌ Ошибка. Правильно: <span style="font-family:Times New Roman,serif;font-size:22px;direction:rtl;">'+curWord.ar+'</span>';
+    updateWordLevel(curWord.ar,false);
+    if(!roundWrong.find(w=>w.ar===curWord.ar))roundWrong.push(curWord);
+    addDailyWord();
+    document.getElementById('btn-next').classList.remove('hidden');
+    pauseTmo=setTimeout(()=>nextWord(true),3000);
+  }
+}
+
+// FAST MODE
+function startTimer(){
+  clearInterval(timerInt);timeLeft=7;updTimer();
+  timerInt=setInterval(()=>{timeLeft--;updTimer();if(timeLeft<=0){clearInterval(timerInt);handleFast(null,false,curWord.ar,true);}},1000);
+}
+function updTimer(){const el=document.getElementById('fs-timer');el.textContent=timeLeft;el.className='fs-val'+(timeLeft<=3?' danger':'');}
+function updFastUI(){document.getElementById('fs-lives').textContent='❤️'.repeat(Math.max(0,lives))+'🖤'.repeat(Math.max(0,3-lives));document.getElementById('fs-words').textContent=fastWords;}
+
+async function handleFast(btn,ok,correct,isTimeout){
+  clearTimers();
+  document.querySelectorAll('.opt').forEach(b=>{b.disabled=true;if(b.textContent===correct)b.classList.add('ok');else if(b===btn)b.classList.add('err');});
+  updateWordLevel(curWord.ar,ok);
+  const fb=document.getElementById('feedback');
+  if(ok){
+    fastWords++;bestStreak=Math.max(bestStreak,fastWords);updFastUI();
+    fb.className='feedback ok';fb.textContent='✅ Серия: '+fastWords;
+    addDailyWord();
+    pauseTmo=setTimeout(()=>nextWord(true),700);
+  }else{
+    lives--;updFastUI();addFav(curWord.ar);
+    fb.className='feedback err';
+    fb.innerHTML='❌ '+(isTimeout?'Время!':'Ошибка!')+' <span style="font-family:Times New Roman,serif;font-size:22px;direction:rtl;">'+correct+'</span>';
+    addDailyWord();
+    if(lives<=0){
+      if(fastWords>(app.survivalRecord||0)){app.survivalRecord=fastWords;await db.from('users').update({survival_record:fastWords}).eq('username',app.username);}
+      fb.innerHTML+='<br><b style="color:var(--red)">💀 Лучшая серия: '+fastWords+' слов</b>';
+      document.getElementById('btn-next').textContent='Результаты →';
+      document.getElementById('btn-next').classList.remove('hidden');
+    }else{pauseTmo=setTimeout(()=>nextWord(true),1500);}
+  }
+}
+
+function goNext(){
+  clearTimers();
+  if(mode==='fast'&&lives<=0){finishQuiz();return;}
+  if(mode==='learn'&&learnPhase==='intro'){
+    learnPhase='test';
+    activeMode='ar-ru';
+    document.getElementById('btn-next').classList.add('hidden');
+    renderQ();
+    return;
+  }
+  nextWord(true);
+}
+function confirmExit(){if(confirm('Завершить тренировку?'))finishQuiz();}
+function clearTimers(){clearInterval(timerInt);clearTimeout(pauseTmo);}
+
+// PROGRESS SAVE
+function saveProgress(){
+  if(!queue.length)return;
+  localStorage.setItem('arabic_progress',JSON.stringify({queue,qi,roundScore,roundWords,roundWrong,roundCorrect,mode,volume:app.volume,lives,fastWords,bestStreak}));
+}
+function clearProgress(){localStorage.removeItem('arabic_progress');}
+async function restoreProgress(){
+  const s=localStorage.getItem('arabic_progress');
+  if(!s)return false;
+  try{
+    const p=JSON.parse(s);
+    if(!p.queue||!p.queue.length)return false;
+    if(!confirm('Продолжить незавершённый урок ('+p.qi+'/'+p.queue.length+' слов, +'+p.roundScore+' очков)?')){clearProgress();return false;}
+    queue=p.queue;qi=p.qi;roundScore=p.roundScore;roundWords=p.roundWords;roundWrong=p.roundWrong||[];
+    roundCorrect=p.roundCorrect;mode=p.mode;lives=p.lives||3;fastWords=p.fastWords||0;bestStreak=p.bestStreak||0;
+    if(p.volume)app.volume=p.volume;
+    learnPhase='test';
+    document.getElementById('q-mode').textContent=mode;
+    document.getElementById('fast-stats').classList.toggle('hidden',mode!=='fast');
+    if(mode==='fast')updFastUI();
+    curWord=queue[qi];
+    activeMode=mode==='fast'?'ru-ar-fast':mode==='mix'?'ar-ru':mode==='learn'?'ar-ru':mode==='review'?'ar-ru':mode;
+    hstack=[{w:curWord,am:activeMode,idx:qi,phase:learnPhase}];hidx=0;isHist=false;
+    showScreen('screen-quiz');renderQ();return true;
+  }catch(e){clearProgress();return false;}
+}
+
+// RESULTS
+function finishQuiz(){
+  clearTimers();clearProgress();
+  if(mode==='fast'&&app.survivalRecord<fastWords){app.survivalRecord=fastWords;db.from('users').update({survival_record:fastWords}).eq('username',app.username);}
+  document.getElementById('r-pts').textContent=roundScore;
+  document.getElementById('r-total').textContent=roundWords.length;
+  document.getElementById('r-correct').textContent=roundCorrect;
+  document.getElementById('res-title').textContent=mode==='fast'?'⚡ Быстрое повторение!':'🎉 Урок завершён!';
+  const box=document.getElementById('res-word-list');
+  const wrongArs=new Set(roundWrong.map(w=>w.ar));
+  const wrongItems=roundWords.filter(w=>wrongArs.has(w.ar));
+  const correctItems=roundWords.filter(w=>!wrongArs.has(w.ar));
+  let html='<div class="wl-hdr">📋 Слова урока — '+roundWords.length+'</div>';
+  if(wrongItems.length){
+    html+='<div style="padding:8px 14px;font-size:11px;font-weight:700;color:var(--red);background:#fff5f5;text-transform:uppercase;letter-spacing:0.5px;">❌ Ошибки — '+wrongItems.length+' слов</div>';
+    html+=wrongItems.map(w=>`<div class="wl-item" style="background:#fff5f5;border-left:3px solid var(--red);"><span class="wl-ar">${w.ar}</span><span class="wl-ru">${w.ru}</span></div>`).join('');
+  }
+  if(correctItems.length){
+    html+='<div style="padding:8px 14px;font-size:11px;font-weight:700;color:var(--green);background:var(--green-light);text-transform:uppercase;letter-spacing:0.5px;">✅ Правильно — '+correctItems.length+' слов</div>';
+    html+=correctItems.map(w=>`<div class="wl-item"><span class="wl-ar">${w.ar}</span><span class="wl-ru">${w.ru}</span></div>`).join('');
+  }
+  box.innerHTML=html;
+  showScreen('screen-results');
+}
+function backToMenu(){showScreen('screen-app');switchTab('train');}
+function restartQuiz(){startQuiz(false);}
+
+// HELPERS
+function addFav(ar){
+  if(!app.favorites.includes(ar)){
+    app.favorites.push(ar);
+    if(app.username)db.from('word_stats').upsert({username:app.username,word_ar:ar,is_favorite:true,seen_count:(app.wordStats[ar]?.seen||0),level:app.wordStats[ar]?.level||1});
+  }
+}
+function toggleStar(){
+  if(!curWord)return;
+  const ar=curWord.ar,was=app.favorites.includes(ar);
+  if(was)app.favorites=app.favorites.filter(w=>w!==ar);else app.favorites.push(ar);
+  document.getElementById('star-btn').textContent=!was?'⭐':'☆';
+  db.from('word_stats').upsert({username:app.username,word_ar:ar,is_favorite:!was,seen_count:app.wordStats[ar]?.seen||0,level:app.wordStats[ar]?.level||1});
+}
+async function logPts(pts){
+  if(!app.username)return;
+  app.totalScore=(app.totalScore||0)+pts;updateUI();showXP(pts);
+  await db.from('score_history').insert({username:app.username,course_name:app.volume,points:pts});
+  await db.from('users').update({total_score:app.totalScore}).eq('username',app.username);
+}
+
+// PWA INSTALL
+let deferredInstallPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferredInstallPrompt=e;
+  const btn=document.getElementById('btn-install-pwa');
+  if(btn)btn.style.display='block';
+});
+window.addEventListener('appinstalled',()=>{
+  deferredInstallPrompt=null;
+  const btn=document.getElementById('btn-install-pwa');
+  if(btn)btn.style.display='none';
+});
+async function installPWA(){
+  if(!deferredInstallPrompt)return;
+  deferredInstallPrompt.prompt();
+  const{outcome}=await deferredInstallPrompt.userChoice;
+  if(outcome==='accepted')deferredInstallPrompt=null;
+}
+
+// VISIBILITY — save everything when app is minimized
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden'){
+    saveProgress();
+    if(app.username&&app.dailyWords>0){
+      const today=new Date().toISOString().split('T')[0];
+      try{db.from('users').update({daily_words:app.dailyWords,last_count_date:today}).eq('username',app.username);}catch(e){}
+    }
+  } else {
+    // On return — check if day changed (midnight passed)
+    checkMidnightReset();
+  }
+});
+
+// KEYBOARD
+document.addEventListener('keypress',e=>{
+  if(e.key!=='Enter')return;
+  const s=document.querySelector('.screen.active')?.id;
+  if(s==='screen-login'){loginMode==='login'?doLogin():doRegister();}
+  else if(s==='screen-quiz'){
+    if(!document.getElementById('type-area').classList.contains('hidden'))checkTyped();
+    else if(!document.getElementById('btn-next').classList.contains('hidden'))goNext();
+  }
+});
+
+// INIT
+window.addEventListener('load',async()=>{
+  loadQty();
+  checkMidnightReset(); // start midnight reset timer
+  const ok=await tryAutoLogin();
+  if(ok){
+    const restored=await restoreProgress();
+    if(!restored)goToCourse();
+  }
+});
+</script>
+</body>
+</html>
