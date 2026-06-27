@@ -341,13 +341,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
     </div>
     <div id="login-form">
       <div class="field-group"><label>Логин</label><input type="text" id="l-user" placeholder="Ваш логин" autocapitalize="none" autocomplete="username"></div>
-      <div class="field-group"><label>Пароль</label><input type="password" id="l-pass" placeholder="Пароль" autocomplete="current-password"></div>
+      <div class="field-group"><label>Пароль</label><div style="position:relative;"><input type="password" id="l-pass" placeholder="Пароль" autocomplete="current-password" style="padding-right:42px;width:100%;box-sizing:border-box;"><button type="button" onclick="togglePw('l-pass',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:20px;padding:0;">👁️</button></div></div>
       <button class="btn-primary" onclick="doLogin()">Войти →</button>
     </div>
     <div id="reg-form" class="hidden">
       <div class="field-group"><label>Логин</label><input type="text" id="r-user" placeholder="Минимум 3 символа" autocapitalize="none"></div>
-      <div class="field-group"><label>Пароль</label><input type="password" id="r-pass" placeholder="Минимум 4 символа"></div>
-      <div class="field-group"><label>Повтор пароля</label><input type="password" id="r-pass2" placeholder="Повторите пароль"></div>
+      <div class="field-group"><label>Пароль</label><div style="position:relative;"><input type="password" id="r-pass" placeholder="Минимум 4 символа" style="padding-right:42px;width:100%;box-sizing:border-box;"><button type="button" onclick="togglePw('r-pass',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:20px;padding:0;">👁️</button></div></div>
+      <div class="field-group"><label>Повтор пароля</label><div style="position:relative;"><input type="password" id="r-pass2" placeholder="Повторите пароль" style="padding-right:42px;width:100%;box-sizing:border-box;"><button type="button" onclick="togglePw('r-pass2',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:20px;padding:0;">👁️</button></div></div>
       <button class="btn-primary" onclick="doRegister()">Создать аккаунт →</button>
     </div>
     <div class="login-msg" id="login-msg"></div>
@@ -446,10 +446,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
     <div class="sc">
       <div class="sc-title">Режим тренировки</div>
       <div class="mode-grid" id="mode-btns">
-        <button class="mode-pill active" onclick="setMode('learn',this)">🌱 Учить новые слова<small>Знакомство + тест</small></button>
-        <button class="mode-pill" onclick="setMode('type-ar',this)">✍️ Арабский ввод<small>+20 очков</small></button>
-        <button class="mode-pill" onclick="setMode('review',this)">🔄 Обычное повторение<small>По расписанию SRS</small></button>
-        <button class="mode-pill" onclick="setMode('mix',this)">🔀 Микс<small>Все форматы</small></button>
+        <button class="mode-pill active" onclick="setMode('learn',this)">🌱 Учить новые слова</button>
+        <button class="mode-pill" onclick="setMode('type-ar',this)">✍️ Арабский ввод</button>
+        <button class="mode-pill" onclick="setMode('review',this)">🔄 Обычное повторение</button>
+        <button class="mode-pill" onclick="setMode('mix',this)">🔀 Микс</button>
         <button class="mode-pill fast" onclick="setMode('fast',this)">⚡ Быстрое повторение — 7 сек на слово</button>
       </div>
     </div>
@@ -488,7 +488,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
       <div class="sc-title">Тип рейтинга</div>
       <div class="lb-row-btns" id="lb-type-row">
         <button class="lb-pill gold active" onclick="setLbFilter('type','score',this)">🌟 Очки</button>
-        <button class="lb-pill" onclick="setLbFilter('type','fast',this)">⚡ Длинная серия</button>
+        <button class="lb-pill" onclick="setLbFilter('type','fast',this)">⚡ Быстрый режим</button>
         <button class="lb-pill" onclick="setLbFilter('type','streak',this)">🔥 Серия дней</button>
       </div>
       <div id="lb-time-section">
@@ -558,7 +558,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
       <div class="instr-mode-title">🏆 Рейтинги</div>
       <div class="instr-text">
         <b>🌟 Очки</b> — общий рейтинг за очки. Фильтры: день / неделя / месяц / всё время.<br><br>
-        <b>⚡ Длинная серия</b> — рекорд непрерывной серии в режиме «Быстрое повторение».<br><br>
+        <b>⚡ Быстрый режим</b> — рекорд непрерывной серии в режиме «Быстрое повторение».<br><br>
         <b>🔥 Серия дней</b> — количество дней подряд без пропусков. Повтори <b>30 слов до полуночи</b> — день засчитывается.
       </div>
     </div>
@@ -643,6 +643,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
     <div class="fs-cell"><div class="fs-lbl">Жизни</div><div class="fs-val" id="fs-lives">❤️❤️❤️</div></div>
     <div class="fs-cell"><div class="fs-lbl">Время</div><div class="fs-val" id="fs-timer">7</div></div>
   </div>
+  <div id="fast-leader" class="hidden" style="text-align:center;font-size:11px;color:#888;padding:3px 0;background:#f5f5f5;">🏆 <span id="fast-leader-text">—</span></div>
   <div class="quiz-body">
     <div class="word-card" id="word-card">
       <button class="star-btn" id="star-btn" onclick="toggleStar()">☆</button>
@@ -1041,6 +1042,11 @@ async function loadRulesAll(){
   renderRules();
 }
 
+function togglePw(id,btn){
+  const inp=document.getElementById(id);
+  if(inp.type==='password'){inp.type='text';btn.textContent='🙈';}
+  else{inp.type='password';btn.textContent='👁️';}
+}
 function wrapArabic(text){
   if(!text)return text;
   return text.replace(/[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]+(?:[\s؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]*[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]+)*/g, m=>'<span class="ar-text">'+m+'</span>');
@@ -1245,7 +1251,8 @@ function initQuiz(words){
   const mNames={'learn':'🌱 Учить новые слова','type-ar':'✍️ Арабский ввод','review':'🔄 Обычное повторение','mix':'🔀 Микс','fast':'⚡ Быстрое повторение'};
   document.getElementById('q-mode').textContent=mNames[mode]||mode;
   document.getElementById('fast-stats').classList.toggle('hidden',mode!=='fast');
-  if(mode==='fast')updFastUI();
+  document.getElementById('fast-leader').classList.toggle('hidden',mode!=='fast');
+  if(mode==='fast'){updFastUI();loadFastLeader();}
   saveProgress();
   showScreen('screen-quiz');
   nextWord(false);
@@ -1369,7 +1376,6 @@ async function handleAns(btn,ok,correct,isAr){
     fb.innerHTML='❌ Ошибка. Правильно: <span style="'+(isAr?'font-family:Times New Roman,serif;font-size:22px;direction:rtl;':'')+'">'+correct+'</span>';
     updateWordLevel(curWord.ar,false);
     if(!roundWrong.find(w=>w.ar===curWord.ar))roundWrong.push(curWord);
-    addDailyWord();
     document.getElementById('btn-next').classList.remove('hidden');
     pauseTmo=setTimeout(()=>nextWord(true),3000);
   }
@@ -1391,7 +1397,6 @@ function checkTyped(){
     fb.innerHTML='❌ Ошибка. Правильно: <span style="font-family:Times New Roman,serif;font-size:22px;direction:rtl;">'+curWord.ar+'</span>';
     updateWordLevel(curWord.ar,false);
     if(!roundWrong.find(w=>w.ar===curWord.ar))roundWrong.push(curWord);
-    addDailyWord();
     document.getElementById('btn-next').classList.remove('hidden');
     pauseTmo=setTimeout(()=>nextWord(true),3000);
   }
@@ -1403,6 +1408,12 @@ function startTimer(){
   timerInt=setInterval(()=>{timeLeft--;updTimer();if(timeLeft<=0){clearInterval(timerInt);handleFast(null,false,curWord.ar,true);}},1000);
 }
 function updTimer(){const el=document.getElementById('fs-timer');el.textContent=timeLeft;el.className='fs-val'+(timeLeft<=3?' danger':'');}
+async function loadFastLeader(){
+  const{data}=await db.from('users').select('username,survival_record').order('survival_record',{ascending:false}).limit(1);
+  if(data&&data.length&&data[0].survival_record>0){
+    document.getElementById('fast-leader-text').textContent=data[0].username+' — '+data[0].survival_record+' слов';
+  }
+}
 function updFastUI(){document.getElementById('fs-lives').textContent='❤️'.repeat(Math.max(0,lives))+'🖤'.repeat(Math.max(0,3-lives));document.getElementById('fs-words').textContent=fastWords;}
 
 async function handleFast(btn,ok,correct,isTimeout){
@@ -1419,7 +1430,6 @@ async function handleFast(btn,ok,correct,isTimeout){
     lives--;updFastUI();addFav(curWord.ar);
     fb.className='feedback err';
     fb.innerHTML='❌ '+(isTimeout?'Время!':'Ошибка!')+' <span style="font-family:Times New Roman,serif;font-size:22px;direction:rtl;">'+correct+'</span>';
-    addDailyWord();
     if(lives<=0){
       if(fastWords>(app.survivalRecord||0)){app.survivalRecord=fastWords;await db.from('users').update({survival_record:fastWords}).eq('username',app.username);}
       fb.innerHTML+='<br><b style="color:var(--red)">💀 Лучшая серия: '+fastWords+' слов</b>';
@@ -1447,7 +1457,7 @@ function clearTimers(){clearInterval(timerInt);clearTimeout(pauseTmo);}
 // PROGRESS SAVE
 function saveProgress(){
   if(!queue.length)return;
-  localStorage.setItem('arabic_progress',JSON.stringify({queue,qi,roundScore,roundWords,roundWrong,roundCorrect,mode,volume:app.volume,lives,fastWords,bestStreak}));
+  localStorage.setItem('arabic_progress',JSON.stringify({queue,qi,roundScore,roundWords,roundWrong,roundCorrect,mode,activeMode,volume:app.volume,lives,fastWords,bestStreak}));
 }
 function clearProgress(){localStorage.removeItem('arabic_progress');}
 async function restoreProgress(){
@@ -1465,16 +1475,16 @@ async function restoreProgress(){
     document.getElementById('fast-stats').classList.toggle('hidden',mode!=='fast');
     if(mode==='fast')updFastUI();
     curWord=queue[qi];
-    activeMode=mode==='fast'?'ru-ar-fast':mode==='mix'?'ar-ru':mode==='learn'?'ar-ru':mode==='review'?'ar-ru':mode;
+    activeMode=p.activeMode||(mode==='fast'?'ru-ar-fast':mode==='mix'?['ar-ru','ru-ar','type-ar'][Math.floor(Math.random()*3)]:mode==='learn'?'ar-ru':mode==='review'?['ar-ru','ru-ar'][Math.floor(Math.random()*2)]:mode);
     hstack=[{w:curWord,am:activeMode,idx:qi,phase:learnPhase}];hidx=0;isHist=false;
     showScreen('screen-quiz');renderQ();return true;
   }catch(e){clearProgress();return false;}
 }
 
 // RESULTS
-function finishQuiz(){
+async function finishQuiz(){
   clearTimers();clearProgress();
-  if(mode==='fast'&&app.survivalRecord<fastWords){app.survivalRecord=fastWords;db.from('users').update({survival_record:fastWords}).eq('username',app.username);}
+  if(mode==='fast'&&fastWords>(app.survivalRecord||0)){app.survivalRecord=fastWords;await db.from('users').update({survival_record:fastWords}).eq('username',app.username);}
   document.getElementById('r-pts').textContent=roundScore;
   document.getElementById('r-total').textContent=roundWords.length;
   document.getElementById('r-correct').textContent=roundCorrect;
