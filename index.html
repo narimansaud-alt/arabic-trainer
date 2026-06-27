@@ -520,46 +520,51 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
     <div class="instr-block">
       <div class="instr-mode-title">🌱 Учить новые слова</div>
       <div class="instr-text">
-        Режим знакомства со словами в стиле Memrise. Сначала показывается слово с переводом — запомни. Затем идут тесты: выбери правильный перевод из 4 вариантов. Слова берутся из выбранных уроков. Можно выбрать количество слов в настройках.
+        Сначала показывается карточка: арабское слово + перевод — запомни. Затем тест: выбери правильный перевод из 4 вариантов. Слова повторяются пока не ответишь правильно. <b>+5 очков</b> за правильный ответ.
       </div>
     </div>
     <div class="instr-block">
       <div class="instr-mode-title">✍️ Арабский ввод</div>
       <div class="instr-text">
-        Показывается русское слово — нужно написать арабский перевод вручную. <b>+20 очков</b> за правильный ответ. Лучший режим для запоминания написания слов.
+        Показывается русское слово — напиши арабский перевод вручную. <b>+20 очков</b> за правильный ответ. Лучший режим для запоминания написания и харакатов.
       </div>
     </div>
     <div class="instr-block">
       <div class="instr-mode-title">🔄 Обычное повторение</div>
       <div class="instr-text">
-        Интервальное повторение (SRS). Система отслеживает каждое слово — чем лучше ты его знаешь, тем реже оно появляется. <b>Уровни 1–5:</b> правильный ответ → уровень растёт → слово приходит позже. Ошибка → уровень падает → слово вернётся скорее.
+        Интервальное повторение (SRS). Система отслеживает каждое слово — чем лучше знаешь, тем реже появляется. Правильный ответ → уровень слова растёт → слово приходит позже. Ошибка → уровень падает → слово вернётся скорее. <b>+5 очков</b> за арабский→русский, <b>+10 очков</b> за русский→арабский.
       </div>
     </div>
     <div class="instr-block">
       <div class="instr-mode-title">🔀 Микс</div>
       <div class="instr-text">
-        Случайное чередование всех форматов: арабский→русский, русский→арабский, письмо. Отличный режим для разносторонней тренировки.
+        Случайное чередование трёх форматов: арабский→русский (+5), русский→арабский (+10), арабский ввод (+20). Лучший режим для разносторонней тренировки и набора очков.
       </div>
     </div>
     <div class="instr-block">
       <div class="instr-mode-title">⚡ Быстрое повторение</div>
       <div class="instr-text">
-        Показывается русское слово — выбери арабский перевод из 4 вариантов за <b>7 секунд</b>. 3 жизни. Строй как можно более длинную серию! Рекорд серии сохраняется в рейтинге <b>«Длинная серия»</b>.
+        Показывается русское слово — выбери арабский перевод из 4 вариантов за <b>7 секунд</b>. Есть 3 жизни ❤️. Ошибка или время вышло — жизнь теряется, слово попадает в трудные. Строй как можно более длинную серию! Рекорд сохраняется в рейтинге <b>«⚡ Быстрый режим»</b>.
+      </div>
+    </div>
+    <div class="instr-block">
+      <div class="instr-mode-title">⭐ Трудные слова</div>
+      <div class="instr-text">
+        Слова которые вызвали ошибку в быстром режиме автоматически попадают в трудные. Кнопка <b>«Только трудные слова»</b> запускает тренировку по ним в режиме «Учить новые слова» — сначала карточка, потом тест. Можно также добавлять слова вручную через звёздочку ⭐ во время тренировки.
       </div>
     </div>
     <div class="instr-block">
       <div class="instr-mode-title">🔥 Серия дней</div>
       <div class="instr-text">
-        Занимайся каждый день и строй серию — как в Duolingo! Повтори <b>30 слов до полуночи</b> — день засчитывается и серия продолжается. Пропустил день — серия обнуляется и начинается заново.<br><br>
-        Прогресс-бар показывает сколько из 30 слов ты уже повторил сегодня. Своё место в рейтинге «Серия дней» видно прямо в баннере. Серия накапливается бесконечно 💪
+        Занимайся каждый день! Правильно ответь на <b>30 слов до полуночи</b> — день засчитывается и серия продолжается. Пропустил день — серия обнуляется. Прогресс-бар вверху показывает сколько из 30 слов уже сделано сегодня. Максимальная серия сохраняется в рейтинге.
       </div>
     </div>
     <div class="instr-block">
       <div class="instr-mode-title">🏆 Рейтинги</div>
       <div class="instr-text">
-        <b>🌟 Очки</b> — общий рейтинг за очки. Фильтры: день / неделя / месяц / всё время.<br><br>
-        <b>⚡ Быстрый режим</b> — рекорд непрерывной серии в режиме «Быстрое повторение».<br><br>
-        <b>🔥 Серия дней</b> — количество дней подряд без пропусков. Повтори <b>30 слов до полуночи</b> — день засчитывается.
+        <b>🌟 Очки</b> — общий рейтинг. Фильтры: день / неделя / месяц / всё время. График показывает твои очки за последние 7 дней.<br><br>
+        <b>⚡ Быстрый режим</b> — рекорд самой длинной серии без ошибок в режиме быстрого повторения.<br><br>
+        <b>🔥 Серия дней</b> — количество дней подряд с выполненной нормой (30 слов). Максимальная серия сохраняется навсегда.
       </div>
     </div>
     <div class="instr-block">
@@ -857,23 +862,29 @@ async function selectVolume(volumeId){
   updateUI(); updateStreakBanner(); switchTab('train'); showScreen('screen-app');
   await loadDict();
   await loadRulesAll();
-  await updateStreak();
+  await updateStreak(false);
   updateStreakBanner();
 }
 
 // STREAK
-async function updateStreak(){
+async function updateStreak(doIncrement){
   const today=new Date().toISOString().split('T')[0];
   const{data}=await db.from('users').select('streak,last_activity,max_streak').eq('username',app.username).maybeSingle();
   if(!data)return;
   const last=data.last_activity?data.last_activity.split('T')[0]:null;
   let ns=data.streak||0;
-  if(last!==today){
+  if(doIncrement&&last!==today){
     const yd=new Date();yd.setDate(yd.getDate()-1);
     ns=last===yd.toISOString().split('T')[0]?(data.streak||0)+1:1;
     const nm=Math.max(ns,data.max_streak||0);
     await db.from('users').update({streak:ns,last_activity:today,max_streak:nm}).eq('username',app.username);
     app.maxStreak=nm;
+  } else if(!doIncrement){
+    // Только проверяем — если пропущен день, показываем 0
+    if(last){
+      const yd=new Date();yd.setDate(yd.getDate()-1);
+      if(last!==today&&last!==yd.toISOString().split('T')[0])ns=0;
+    }
   }
   app.streak=ns;updateUI();
 }
@@ -890,7 +901,7 @@ async function addDailyWord(){
   }
   // Streak milestone at 30 words
   if(app.dailyWords===30){
-    await updateStreak();
+    await updateStreak(true);
     updateStreakBanner();
   }
 }
@@ -1021,7 +1032,7 @@ function renderDict(){
       `<div class="dict-section"><div class="dict-section-hdr">📖 Урок ${l} — ${byL[l].length} слов</div>${byL[l].map(w=>`<div class="dict-item"><span class="dict-ar">${w.ar}</span><span class="dict-ru">${w.ru}</span></div>`).join('')}</div>`
     ).join('');
   }else{
-    cont.innerHTML=`<div class="dict-section">${words.map(w=>`<div class="dict-item"><span class="dict-ar">${w.ar}</span><span class="dict-ru">${w.ru}</span></div>`).join('')}</div>`;
+    cont.innerHTML=`<div class="dict-section">${words.map(w=>`<div class="dict-item"><span class="dict-ar">${esc(w.ar)}</span><span class="dict-ru">${esc(w.ru)}</span></div>`).join('')}</div>`;
   }
 }
 
@@ -1042,6 +1053,7 @@ async function loadRulesAll(){
   renderRules();
 }
 
+function esc(s){if(!s)return '';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function togglePw(id,btn){
   const inp=document.getElementById(id);
   if(inp.type==='password'){inp.type='text';btn.textContent='🙈';}
@@ -1169,8 +1181,8 @@ function renderLbTable(cont,rows,append){
   const html='<div class="lb-table">'+rows.map((r,i)=>`
     <div class="lb-item" style="${r.name===app.username?'background:#e8f5ee;':''}">
       <div class="lb-rank ${i===0?'t1':i===1?'t2':i===2?'t3':''}">${m[i]||(i+1)+'.'}</div>
-      <div class="lb-name ${r.name===app.username?'me':''}">${r.name}${r.name===app.username?' ← ты':''}${r.extra?'<div style="font-size:10px;color:#e67e22">'+r.extra+'</div>':''}</div>
-      <div class="lb-val">${r.val}</div>
+      <div class="lb-name ${r.name===app.username?'me':''}">${esc(r.name)}${r.name===app.username?' ← ты':''}${r.extra?'<div style="font-size:10px;color:#e67e22">'+esc(r.extra)+'</div>':''}</div>
+      <div class="lb-val">${esc(r.val)}</div>
     </div>`).join('')+'</div>';
   if(append)cont.innerHTML+=html;else cont.innerHTML=html;
 }
@@ -1224,32 +1236,30 @@ function startQuiz(onlyFav){
   if(!words)return;
   if(onlyFav)words=words.filter(w=>app.favorites.includes(w.ar));
   if(!words.length)return alert(onlyFav?'Нет трудных слов в выбранных уроках':'Слова не найдены');
-  const limit=mode==='fast'?qtyFast:qtyNormal;
-  if(mode==='review'){
-    // SRS: only due words from selection
+  // Трудные слова всегда запускаются в режиме "учить новые"
+  const effectiveMode=onlyFav?'learn':mode;
+  const limit=effectiveMode==='fast'?qtyFast:qtyNormal;
+  if(effectiveMode==='review'&&!onlyFav){
     const now=new Date().toISOString();
     const due=words.filter(w=>{const s=app.wordStats[w.ar];return!s||!s.next||s.next<=now;});
     if(!due.length){alert('На сегодня нечего повторять из выбранных уроков! 🎉\nВыберите другие уроки или вернитесь позже.');return;}
     const finalWords=getSmartQueue(due,limit);
-    initQuiz(finalWords);
-  } else if(mode==='learn'){
-    // LEARN: prefer new words first
-    const finalWords=getSmartQueue(words,limit);
-    initQuiz(finalWords);
+    initQuiz(finalWords,effectiveMode,onlyFav);
   } else {
     const finalWords=getSmartQueue(words,limit);
-    initQuiz(finalWords);
+    initQuiz(finalWords,effectiveMode,onlyFav);
   }
 }
 
-function initQuiz(words){
+function initQuiz(words,effectiveMode,isFav){
   if(!words.length){alert('Нет слов для тренировки');return;}
+  if(effectiveMode&&effectiveMode!==mode)mode=effectiveMode;
   queue=words;qi=0;roundScore=0;roundWords=[...words];roundWrong=[];roundCorrect=0;
   hstack=[];hidx=-1;isHist=false;
   lives=3;fastWords=0;bestStreak=0;
   learnPhase='intro';learnIntroShown=false;
   const mNames={'learn':'🌱 Учить новые слова','type-ar':'✍️ Арабский ввод','review':'🔄 Обычное повторение','mix':'🔀 Микс','fast':'⚡ Быстрое повторение'};
-  document.getElementById('q-mode').textContent=mNames[mode]||mode;
+  document.getElementById('q-mode').textContent=isFav?'⭐ Трудные слова':mNames[mode]||mode;
   document.getElementById('fast-stats').classList.toggle('hidden',mode!=='fast');
   document.getElementById('fast-leader').classList.toggle('hidden',mode!=='fast');
   if(mode==='fast'){updFastUI();loadFastLeader();}
@@ -1303,8 +1313,8 @@ function renderQ(){
     document.getElementById('word-card').style.minHeight='140px';
     document.getElementById('word-display').innerHTML=`
       <div style="width:100%">
-        <div class="learn-intro-ar">${curWord.ar}</div>
-        <div class="learn-intro-ru">${curWord.ru}</div>
+        <div class="learn-intro-ar">${esc(curWord.ar)}</div>
+        <div class="learn-intro-ru">${esc(curWord.ru)}</div>
         <div class="learn-intro-hint">Запомни это слово 👆</div>
       </div>`;
     document.getElementById('btn-next').classList.remove('hidden');
@@ -1315,13 +1325,13 @@ function renderQ(){
   document.getElementById('word-card').style.minHeight='100px';
 
   if(activeMode==='type-ar'){
-    document.getElementById('word-display').innerHTML=`<div class="w-ru">${curWord.ru}</div>`;
+    document.getElementById('word-display').innerHTML=`<div class="w-ru">${esc(curWord.ru)}</div>`;
     typeArea.classList.remove('hidden');
     const inp=document.getElementById('type-input');inp.value='';inp.disabled=false;
     if(!isHist)setTimeout(()=>inp.focus(),80);
     else{inp.value=curWord.ar;inp.disabled=true;}
   } else if(activeMode==='ru-ar-fast'){
-    document.getElementById('word-display').innerHTML=`<div class="w-ru">${curWord.ru}</div>`;
+    document.getElementById('word-display').innerHTML=`<div class="w-ru">${esc(curWord.ru)}</div>`;
     opts.classList.remove('hidden');
     const correct=curWord.ar;
     genOpts(correct,'ar').forEach(opt=>{
@@ -1336,7 +1346,7 @@ function renderQ(){
     let isArQ;
     if(mode==='learn'){isArQ=true;}
     else{isArQ=activeMode==='ar-ru';}
-    document.getElementById('word-display').innerHTML=isArQ?`<div class="w-ar">${curWord.ar}</div>`:`<div class="w-ru">${curWord.ru}</div>`;
+    document.getElementById('word-display').innerHTML=isArQ?`<div class="w-ar">${esc(curWord.ar)}</div>`:`<div class="w-ru">${esc(curWord.ru)}</div>`;
     opts.classList.remove('hidden');
     const correct=isArQ?curWord.ru:curWord.ar;
     genOpts(correct,isArQ?'ru':'ar').forEach(opt=>{
@@ -1351,7 +1361,9 @@ function renderQ(){
 function genOpts(correct,key){
   // Pick distractors that are similar in lesson if possible, else random
   const pool=shuf(allWords.filter(w=>w[key]!==correct&&rmH(w[key])!==rmH(correct)));
-  return shuf([correct,...pool.slice(0,3).map(w=>w[key])]);
+  const opts=[correct,...pool.slice(0,3).map(w=>w[key])];
+  while(opts.length<4)opts.push('—');
+  return shuf(opts);
 }
 
 async function handleAns(btn,ok,correct,isAr){
@@ -1373,7 +1385,7 @@ async function handleAns(btn,ok,correct,isAr){
     btn.classList.add('err');
     document.querySelectorAll('.opt').forEach(b=>{if(b.textContent===correct)b.classList.add('ok');});
     fb.className='feedback err';
-    fb.innerHTML='❌ Ошибка. Правильно: <span style="'+(isAr?'font-family:Times New Roman,serif;font-size:22px;direction:rtl;':'')+'">'+correct+'</span>';
+    fb.innerHTML='❌ Ошибка. Правильно: <span style="'+(isAr?'font-family:Times New Roman,serif;font-size:22px;direction:rtl;':'')+'">'+esc(correct)+'</span>';
     updateWordLevel(curWord.ar,false);
     if(!roundWrong.find(w=>w.ar===curWord.ar))roundWrong.push(curWord);
     document.getElementById('btn-next').classList.remove('hidden');
@@ -1394,7 +1406,7 @@ function checkTyped(){
     pauseTmo=setTimeout(()=>nextWord(true),800);
   }else{
     fb.className='feedback err';
-    fb.innerHTML='❌ Ошибка. Правильно: <span style="font-family:Times New Roman,serif;font-size:22px;direction:rtl;">'+curWord.ar+'</span>';
+    fb.innerHTML='❌ Ошибка. Правильно: <span style="font-family:Times New Roman,serif;font-size:22px;direction:rtl;">'+esc(curWord.ar)+'</span>';
     updateWordLevel(curWord.ar,false);
     if(!roundWrong.find(w=>w.ar===curWord.ar))roundWrong.push(curWord);
     document.getElementById('btn-next').classList.remove('hidden');
@@ -1411,7 +1423,7 @@ function updTimer(){const el=document.getElementById('fs-timer');el.textContent=
 async function loadFastLeader(){
   const{data}=await db.from('users').select('username,survival_record').order('survival_record',{ascending:false}).limit(1);
   if(data&&data.length&&data[0].survival_record>0){
-    document.getElementById('fast-leader-text').textContent=data[0].username+' — '+data[0].survival_record+' слов';
+    document.getElementById('fast-leader-text').textContent='Рекорд: '+data[0].username+' — '+data[0].survival_record+' слов';
   }
 }
 function updFastUI(){document.getElementById('fs-lives').textContent='❤️'.repeat(Math.max(0,lives))+'🖤'.repeat(Math.max(0,3-lives));document.getElementById('fs-words').textContent=fastWords;}
@@ -1429,7 +1441,7 @@ async function handleFast(btn,ok,correct,isTimeout){
   }else{
     lives--;updFastUI();addFav(curWord.ar);
     fb.className='feedback err';
-    fb.innerHTML='❌ '+(isTimeout?'Время!':'Ошибка!')+' <span style="font-family:Times New Roman,serif;font-size:22px;direction:rtl;">'+correct+'</span>';
+    fb.innerHTML='❌ '+(isTimeout?'Время!':'Ошибка!')+' <span style="font-family:Times New Roman,serif;font-size:22px;direction:rtl;">'+esc(correct)+'</span>';
     if(lives<=0){
       if(fastWords>(app.survivalRecord||0)){app.survivalRecord=fastWords;await db.from('users').update({survival_record:fastWords}).eq('username',app.username);}
       fb.innerHTML+='<br><b style="color:var(--red)">💀 Лучшая серия: '+fastWords+' слов</b>';
@@ -1471,9 +1483,11 @@ async function restoreProgress(){
     roundCorrect=p.roundCorrect;mode=p.mode;lives=p.lives||3;fastWords=p.fastWords||0;bestStreak=p.bestStreak||0;
     if(p.volume)app.volume=p.volume;
     learnPhase='test';
-    document.getElementById('q-mode').textContent=mode;
+    const mNames={'learn':'🌱 Учить новые слова','type-ar':'✍️ Арабский ввод','review':'🔄 Обычное повторение','mix':'🔀 Микс','fast':'⚡ Быстрое повторение'};
+    document.getElementById('q-mode').textContent=mNames[mode]||mode;
     document.getElementById('fast-stats').classList.toggle('hidden',mode!=='fast');
-    if(mode==='fast')updFastUI();
+    document.getElementById('fast-leader').classList.toggle('hidden',mode!=='fast');
+    if(mode==='fast'){updFastUI();loadFastLeader();}
     curWord=queue[qi];
     activeMode=p.activeMode||(mode==='fast'?'ru-ar-fast':mode==='mix'?['ar-ru','ru-ar','type-ar'][Math.floor(Math.random()*3)]:mode==='learn'?'ar-ru':mode==='review'?['ar-ru','ru-ar'][Math.floor(Math.random()*2)]:mode);
     hstack=[{w:curWord,am:activeMode,idx:qi,phase:learnPhase}];hidx=0;isHist=false;
@@ -1496,11 +1510,11 @@ async function finishQuiz(){
   let html='<div class="wl-hdr">📋 Слова урока — '+roundWords.length+'</div>';
   if(wrongItems.length){
     html+='<div style="padding:8px 14px;font-size:11px;font-weight:700;color:var(--red);background:#fff5f5;text-transform:uppercase;letter-spacing:0.5px;">❌ Ошибки — '+wrongItems.length+' слов</div>';
-    html+=wrongItems.map(w=>`<div class="wl-item" style="background:#fff5f5;border-left:3px solid var(--red);"><span class="wl-ar">${w.ar}</span><span class="wl-ru">${w.ru}</span></div>`).join('');
+    html+=wrongItems.map(w=>`<div class="wl-item" style="background:#fff5f5;border-left:3px solid var(--red);"><span class="wl-ar">${esc(w.ar)}</span><span class="wl-ru">${esc(w.ru)}</span></div>`).join('');
   }
   if(correctItems.length){
     html+='<div style="padding:8px 14px;font-size:11px;font-weight:700;color:var(--green);background:var(--green-light);text-transform:uppercase;letter-spacing:0.5px;">✅ Правильно — '+correctItems.length+' слов</div>';
-    html+=correctItems.map(w=>`<div class="wl-item"><span class="wl-ar">${w.ar}</span><span class="wl-ru">${w.ru}</span></div>`).join('');
+    html+=correctItems.map(w=>`<div class="wl-item"><span class="wl-ar">${esc(w.ar)}</span><span class="wl-ru">${esc(w.ru)}</span></div>`).join('');
   }
   box.innerHTML=html;
   showScreen('screen-results');
