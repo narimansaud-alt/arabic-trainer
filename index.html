@@ -82,7 +82,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .btn-announcement{width:100%;padding:13px;background:var(--green);color:white;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;}
 
 /* COURSE SELECT */
-#screen-course{background:linear-gradient(160deg,var(--green-dark) 0%,var(--green) 100%);padding:30px 20px 40px;justify-content:flex-start;align-items:center;overflow-y:auto;}
+#screen-course{background:linear-gradient(160deg,var(--green-dark) 0%,var(--green) 100%);padding:30px 20px 40px;padding-top:calc(30px + env(safe-area-inset-top,0));justify-content:flex-start;align-items:center;overflow-y:auto;}
 .course-header{text-align:center;color:white;margin-bottom:10px;}
 .course-header .hello{font-size:14px;opacity:0.8;margin-bottom:6px;}
 .course-header h2{font-size:22px;font-weight:700;}
@@ -115,7 +115,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .btn-logout-c{margin-top:20px;background:rgba(255,255,255,0.15);color:white;border:2px solid rgba(255,255,255,0.4);border-radius:10px;padding:10px 24px;font-size:14px;cursor:pointer;}
 
 /* VOLUME SELECT */
-#screen-volume{background:linear-gradient(160deg,var(--green-dark) 0%,var(--green) 100%);padding:30px 20px;justify-content:flex-start;align-items:center;overflow-y:auto;}
+#screen-volume{background:linear-gradient(160deg,var(--green-dark) 0%,var(--green) 100%);padding:30px 20px;padding-top:calc(30px + env(safe-area-inset-top,0));justify-content:flex-start;align-items:center;overflow-y:auto;}
 .vol-header{text-align:center;color:white;margin-bottom:24px;}
 .vol-header h2{font-size:20px;font-weight:700;margin-bottom:4px;}
 .vol-header p{font-size:13px;opacity:0.8;}
@@ -131,7 +131,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 
 /* APP */
 #screen-app{background:var(--bg);padding-bottom:70px;}
-.topbar{background:var(--green);color:white;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+.topbar{background:var(--green);color:white;padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top,0));display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
 .tb-left{display:flex;flex-direction:column;}
 .tb-course{font-size:12px;opacity:0.85;font-weight:500;}
 .tb-user{font-size:14px;font-weight:700;}
@@ -219,7 +219,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .rule-item{padding:12px 14px;border-bottom:1px solid #f0f0f0;}
 .rule-item:last-child{border-bottom:none;}
 .rule-title{font-size:15px;font-weight:700;color:var(--green-dark);margin-bottom:8px;line-height:2.4;}
-.rule-content{font-size:14px;color:#555;line-height:2.2;}
+.rule-content{font-size:14px;color:#555;line-height:2.2;overflow-x:auto;-webkit-overflow-scrolling:touch;}
 .ar-text{font-size:22px;line-height:2.4;}
 .rule-content td .ar-text{font-size:20px;}
 .rule-content th .ar-text{font-size:18px;}
@@ -244,7 +244,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 
 /* QUIZ */
 #screen-quiz{background:var(--bg);}
-.quiz-top{background:var(--green);color:white;padding:11px 14px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+.quiz-top{background:var(--green);color:white;padding:11px 14px;padding-top:calc(11px + env(safe-area-inset-top,0));display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
 .quiz-top .q-info .q-mode{font-size:11px;opacity:0.75;}
 .quiz-top .q-info .q-prog{font-size:14px;font-weight:700;}
 .quiz-top .q-exit{background:rgba(255,255,255,0.18);border:none;color:white;padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;}
@@ -290,7 +290,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 
 /* RESULTS */
 #screen-results{background:var(--bg);}
-.res-hdr{background:var(--green);color:white;padding:24px 16px;text-align:center;flex-shrink:0;}
+.res-hdr{background:var(--green);color:white;padding:24px 16px;padding-top:calc(24px + env(safe-area-inset-top,0));text-align:center;flex-shrink:0;}
 .res-hdr h2{font-size:20px;font-weight:700;}
 .res-stats{display:flex;justify-content:center;gap:24px;margin-top:12px;}
 .rs{text-align:center;}
@@ -814,7 +814,8 @@ async function loadUserStats(){
     app.streak=ud.streak||0;
     app.maxStreak=ud.max_streak||0;
     const today=new Date().toISOString().split('T')[0];
-    if(ud.last_count_date===today){
+    const storedDate=ud.last_count_date?String(ud.last_count_date).split('T')[0]:null;
+    if(storedDate===today){
       app.dailyWords=ud.daily_words||0;
     } else {
       app.dailyWords=0;
@@ -1380,6 +1381,7 @@ async function handleAns(btn,ok,correct,isAr){
     if(pts)logPts(pts);
     updateWordLevel(curWord.ar,true);
     addDailyWord();
+    if(qi>=queue.length-1)clearProgress();
     pauseTmo=setTimeout(()=>nextWord(true),800);
   }else{
     btn.classList.add('err');
@@ -1403,6 +1405,7 @@ function checkTyped(){
     fb.className='feedback ok';fb.textContent='✅ Правильно! +20';
     roundScore+=20;roundCorrect++;logPts(20);updateWordLevel(curWord.ar,true);
     addDailyWord();
+    if(qi>=queue.length-1)clearProgress();
     pauseTmo=setTimeout(()=>nextWord(true),800);
   }else{
     fb.className='feedback err';
@@ -1447,6 +1450,7 @@ async function handleFast(btn,ok,correct,isTimeout){
       fb.innerHTML+='<br><b style="color:var(--red)">💀 Лучшая серия: '+fastWords+' слов</b>';
       document.getElementById('btn-next').textContent='Результаты →';
       document.getElementById('btn-next').classList.remove('hidden');
+      clearProgress();
     }else{pauseTmo=setTimeout(()=>nextWord(true),1500);}
   }
 }
@@ -1477,7 +1481,7 @@ async function restoreProgress(){
   if(!s)return false;
   try{
     const p=JSON.parse(s);
-    if(!p.queue||!p.queue.length)return false;
+    if(!p.queue||!p.queue.length||p.qi>=p.queue.length){clearProgress();return false;}
     if(!confirm('Продолжить незавершённый урок ('+p.qi+'/'+p.queue.length+' слов, +'+p.roundScore+' очков)?')){clearProgress();return false;}
     queue=p.queue;qi=p.qi;roundScore=p.roundScore;roundWords=p.roundWords;roundWrong=p.roundWrong||[];
     roundCorrect=p.roundCorrect;mode=p.mode;lives=p.lives||3;fastWords=p.fastWords||0;bestStreak=p.bestStreak||0;
