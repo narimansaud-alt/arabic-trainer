@@ -223,7 +223,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .ar-text{font-size:22px;line-height:2.4;}
 .rule-content td .ar-text{font-size:20px;}
 .rule-content th .ar-text{font-size:18px;}
-.rule-content table{width:100%;border-collapse:collapse;margin-top:8px;font-size:15px;border:1px solid var(--green);}
+.rule-content table{min-width:100%;border-collapse:collapse;font-size:15px;border:1px solid var(--green);}
 .rule-content th{background:var(--green);color:#fff;padding:10px 12px;text-align:center;font-weight:600;border:1px solid var(--green-dark);font-size:15px;}
 .rule-content td{padding:9px 12px;border:1px solid var(--border);vertical-align:top;line-height:1.7;font-size:15px;}
 .rule-content tr:nth-child(even) td{background:#f8fdf9;}
@@ -307,6 +307,18 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .btn-res.sec{background:white;color:var(--green);border:2px solid var(--green);}
 
 @keyframes xpFloat{0%{opacity:1;transform:translateY(0);}100%{opacity:0;transform:translateY(-50px);}}
+
+/* SPLASH */
+#screen-loading{background:linear-gradient(160deg,var(--green-dark) 0%,var(--green) 100%);justify-content:center;align-items:center;}
+.splash-box{text-align:center;color:white;}
+.splash-box img{width:90px;height:90px;border-radius:50%;margin-bottom:20px;box-shadow:0 8px 32px rgba(0,0,0,0.3);}
+.splash-box h1{font-size:24px;font-weight:700;margin-bottom:6px;}
+.splash-box p{font-size:14px;opacity:0.8;margin-bottom:28px;}
+.splash-spinner{width:34px;height:34px;border:3px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* TABLE SCROLL WRAPPER */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;margin:8px 0 4px;}
 </style>
 </head>
 <body>
@@ -327,8 +339,18 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
   </div>
 </div>
 
+<!-- SPLASH -->
+<div class="screen active" id="screen-loading">
+  <div class="splash-box">
+    <img src="/icon.png" alt="Alfazi">
+    <h1>Alfazi</h1>
+    <p>Арабский тренажер</p>
+    <div class="splash-spinner"></div>
+  </div>
+</div>
+
 <!-- LOGIN -->
-<div class="screen active" id="screen-login">
+<div class="screen" id="screen-login">
   <div class="login-box">
     <div class="login-logo">
       <img src="/icon.png" alt="Alfazi">
@@ -1089,6 +1111,11 @@ function renderRules(){
       items.map((r,i)=>'<div class="rule-item"><div class="rule-title">'+(i+1)+'. '+wrapArabic(r.title)+'</div><div class="rule-content">'+wrapArabic(r.content)+'</div></div>').join('')+
     '</div>';
   }).join('');
+  // Wrap tables for horizontal scroll (iOS-safe: avoids overflow:hidden clipping)
+  cont.querySelectorAll('.rule-content table').forEach(t=>{
+    const w=document.createElement('div');w.className='tbl-wrap';
+    t.parentNode.insertBefore(w,t);w.appendChild(t);
+  });
 }
 
 // TABS
@@ -1316,7 +1343,7 @@ function renderQ(){
       <div style="width:100%">
         <div class="learn-intro-ar">${esc(curWord.ar)}</div>
         <div class="learn-intro-ru">${esc(curWord.ru)}</div>
-        <div class="learn-intro-hint">Запомни это слово 👆</div>
+        <div class="learn-intro-hint">Запомни — потом напишешь его ✍️</div>
       </div>`;
     document.getElementById('btn-next').classList.remove('hidden');
     document.getElementById('btn-next').textContent='Запомнил, дальше →';
@@ -1460,7 +1487,7 @@ function goNext(){
   if(mode==='fast'&&lives<=0){finishQuiz();return;}
   if(mode==='learn'&&learnPhase==='intro'){
     learnPhase='test';
-    activeMode='ar-ru';
+    activeMode='type-ar';
     document.getElementById('btn-next').classList.add('hidden');
     renderQ();
     return;
@@ -1493,7 +1520,7 @@ async function restoreProgress(){
     document.getElementById('fast-leader').classList.toggle('hidden',mode!=='fast');
     if(mode==='fast'){updFastUI();loadFastLeader();}
     curWord=queue[qi];
-    activeMode=p.activeMode||(mode==='fast'?'ru-ar-fast':mode==='mix'?['ar-ru','ru-ar','type-ar'][Math.floor(Math.random()*3)]:mode==='learn'?'ar-ru':mode==='review'?['ar-ru','ru-ar'][Math.floor(Math.random()*2)]:mode);
+    activeMode=p.activeMode||(mode==='fast'?'ru-ar-fast':mode==='mix'?['ar-ru','ru-ar','type-ar'][Math.floor(Math.random()*3)]:mode==='learn'?'type-ar':mode==='review'?['ar-ru','ru-ar'][Math.floor(Math.random()*2)]:mode);
     hstack=[{w:curWord,am:activeMode,idx:qi,phase:learnPhase}];hidx=0;isHist=false;
     showScreen('screen-quiz');renderQ();return true;
   }catch(e){clearProgress();return false;}
@@ -1501,7 +1528,7 @@ async function restoreProgress(){
 
 // RESULTS
 async function finishQuiz(){
-  clearTimers();clearProgress();
+  clearTimers();clearProgress();queue=[];
   if(mode==='fast'&&fastWords>(app.survivalRecord||0)){app.survivalRecord=fastWords;await db.from('users').update({survival_record:fastWords}).eq('username',app.username);}
   document.getElementById('r-pts').textContent=roundScore;
   document.getElementById('r-total').textContent=roundWords.length;
@@ -1595,11 +1622,13 @@ document.addEventListener('keypress',e=>{
 // INIT
 window.addEventListener('load',async()=>{
   loadQty();
-  checkMidnightReset(); // start midnight reset timer
+  checkMidnightReset();
   const ok=await tryAutoLogin();
   if(ok){
     const restored=await restoreProgress();
     if(!restored)goToCourse();
+  } else {
+    showScreen('screen-login');
   }
 });
 </script>
