@@ -49,7 +49,7 @@ function swUpdate(){
   --bg:#f0f4f0;--border:#d4e6d9;--shadow:0 2px 10px rgba(0,0,0,0.06);--r:12px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222;min-height:100vh;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222;min-height:100vh;overscroll-behavior-y:none;}
 .screen{display:none;min-height:100vh;flex-direction:column;}
 .screen.active{display:flex;}
 .hidden{display:none!important;}
@@ -270,6 +270,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .type-input{width:100%;padding:12px;font-size:26px;border:2px solid var(--border);border-radius:12px;text-align:center;direction:rtl;font-family:'Times New Roman',serif;margin-bottom:8px;outline:none;}
 .type-input:focus{border-color:var(--green);}
 .btn-check{width:100%;padding:13px;background:var(--green);color:white;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px;}
+.btn-hint{width:100%;padding:10px;background:rgba(201,162,39,0.12);color:var(--gold);border:2px solid var(--gold);border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;}
+.hint-cost{font-size:12px;color:var(--gray);text-align:center;margin-bottom:6px;}
 .feedback{font-size:15px;font-weight:600;text-align:center;min-height:46px;padding:6px 0;line-height:1.5;}
 .feedback.ok{color:#1e8449;}
 .feedback.err{color:var(--red);}
@@ -548,7 +550,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
     <div class="instr-block">
       <div class="instr-mode-title">✍️ Арабский ввод</div>
       <div class="instr-text">
-        Показывается русское слово — напиши арабский перевод вручную. <b>+20 очков</b> за правильный ответ. Лучший режим для запоминания написания и харакатов.
+        Показывается русское слово — напиши арабский перевод вручную. <b>+20 очков</b> за правильный ответ. Есть кнопка <b>💡 Подсказка</b> — каждое нажатие открывает следующую букву слова, но <b>−5 очков</b> за каждое нажатие (1 нажатие = +15, 2 нажатия = +10 и т.д.). Лучший режим для запоминания написания и харакатов.
       </div>
     </div>
     <div class="instr-block">
@@ -680,6 +682,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
     <div class="hidden" id="type-area">
       <input class="type-input" id="type-input" type="text" placeholder="اكتب بالعربية..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" dir="rtl">
       <button class="btn-check" onclick="checkTyped()">Проверить ✓</button>
+      <div class="hint-cost" id="hint-cost-label"></div>
+      <button class="btn-hint" id="btn-hint" onclick="showHint()">💡 Подсказка (−5 очков)</button>
     </div>
     <div class="feedback" id="feedback"></div>
     <div class="quiz-nav">
@@ -700,9 +704,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
     </div>
   </div>
   <div class="res-body">
-    <div class="word-list" id="res-word-list"></div>
     <button class="btn-res" onclick="backToMenu()">🏠 В меню</button>
     <button class="btn-res sec" onclick="restartQuiz()">🔄 Повторить</button>
+    <div class="word-list" id="res-word-list"></div>
   </div>
 </div>
 
@@ -722,6 +726,7 @@ let queue=[],qi=0,curWord=null,activeMode='ar-ru';
 let roundScore=0,roundWords=[],roundWrong=[],roundCorrect=0;
 let hstack=[],hidx=-1,isHist=false;
 let timerInt=null,pauseTmo=null,timeLeft=7,lives=3,fastWords=0,bestStreak=0;
+let hintCount=0; // Hint usage counter for current word in type-ar mode
 
 // LEARN MODE state
 let learnPhase='intro'; // 'intro' or 'test'
@@ -838,9 +843,13 @@ async function loadUserStats(){
     const today=new Date().toISOString().split('T')[0];
     const storedDate=ud.last_count_date?String(ud.last_count_date).split('T')[0]:null;
     if(storedDate===today){
+      // Same day — keep the counter from DB
       app.dailyWords=ud.daily_words||0;
     } else {
+      // Different day — reset counter (midnight passed)
       app.dailyWords=0;
+      // Also reset in DB so it's clean
+      try{await db.from('users').update({daily_words:0,last_count_date:today}).eq('username',app.username);}catch(e){}
     }
     app.lastCountDate=today;
   }
@@ -1284,7 +1293,7 @@ function initQuiz(words,effectiveMode,isFav){
   if(effectiveMode&&effectiveMode!==mode)mode=effectiveMode;
   queue=words;qi=0;roundScore=0;roundWords=[...words];roundWrong=[];roundCorrect=0;
   hstack=[];hidx=-1;isHist=false;
-  lives=3;fastWords=0;bestStreak=0;
+  lives=3;fastWords=0;bestStreak=0;hintCount=0;
   learnPhase='intro';learnIntroShown=false;
   const mNames={'learn':'🌱 Учить новые слова','type-ar':'✍️ Арабский ввод','review':'🔄 Обычное повторение','mix':'🔀 Микс','fast':'⚡ Быстрое повторение'};
   document.getElementById('q-mode').textContent=isFav?'⭐ Трудные слова':mNames[mode]||mode;
@@ -1353,11 +1362,16 @@ function renderQ(){
   document.getElementById('word-card').style.minHeight='100px';
 
   if(activeMode==='type-ar'){
+    hintCount=0; // Reset hint counter for new word
     document.getElementById('word-display').innerHTML=`<div class="w-ru">${esc(curWord.ru)}</div>`;
     typeArea.classList.remove('hidden');
     const inp=document.getElementById('type-input');inp.value='';inp.disabled=false;
+    const hintBtn=document.getElementById('btn-hint');
+    const hintLbl=document.getElementById('hint-cost-label');
+    if(hintBtn){hintBtn.style.display='';hintBtn.disabled=false;}
+    if(hintLbl)hintLbl.textContent='';
     if(!isHist)setTimeout(()=>inp.focus(),80);
-    else{inp.value=curWord.ar;inp.disabled=true;}
+    else{inp.value=curWord.ar;inp.disabled=true;if(hintBtn)hintBtn.style.display='none';}
   } else if(activeMode==='ru-ar-fast'){
     document.getElementById('word-display').innerHTML=`<div class="w-ru">${esc(curWord.ru)}</div>`;
     opts.classList.remove('hidden');
@@ -1422,15 +1436,55 @@ async function handleAns(btn,ok,correct,isAr){
   }
 }
 
+// HINT for type-ar mode
+function showHint(){
+  if(!curWord||isHist)return;
+  const fullWord=rmH(curWord.ar.replace(/\s*\(.*?\)\s*/g,''));
+  hintCount++;
+  // Show letters one by one from start
+  const inp=document.getElementById('type-input');
+  const currentVal=rmH(inp.value.trim());
+  // Reveal up to hintCount letters
+  const revealedPart=fullWord.substring(0,hintCount);
+  inp.value=revealedPart;
+  inp.focus();
+  // Update hint button label
+  const penalty=hintCount*5;
+  const remaining=Math.max(0,20-penalty);
+  const hintBtn=document.getElementById('btn-hint');
+  const hintLbl=document.getElementById('hint-cost-label');
+  if(hintLbl)hintLbl.textContent='💡 Показано букв: '+hintCount+' | Штраф: −'+penalty+' | Получите: '+remaining+' очков';
+  if(hintCount>=fullWord.length){
+    // All letters shown — disable hint
+    if(hintBtn){hintBtn.disabled=true;hintBtn.textContent='💡 Всё показано';}
+  } else {
+    if(hintBtn)hintBtn.textContent='💡 Ещё буква (−5 очков)';
+  }
+}
+
 function checkTyped(){
   if(isHist)return;
   const val=rmH(document.getElementById('type-input').value.trim());
   const correct=rmH(curWord.ar.replace(/\s*\(.*?\)\s*/g,''));
   const fb=document.getElementById('feedback');
   document.getElementById('type-input').disabled=true;
+  // Hide hint button after check
+  const hintBtn=document.getElementById('btn-hint');
+  if(hintBtn)hintBtn.style.display='none';
+  const hintLbl=document.getElementById('hint-cost-label');
+  if(hintLbl)hintLbl.textContent='';
   if(val===correct){
-    fb.className='feedback ok';fb.textContent='✅ Правильно! +20';
-    roundScore+=20;roundCorrect++;logPts(20);updateWordLevel(curWord.ar,true);
+    const penalty=hintCount*5;
+    const pts=Math.max(0,20-penalty);
+    fb.className='feedback ok';
+    if(hintCount>0){
+      fb.textContent='✅ Правильно! +'+ pts+' (−'+penalty+' за подсказки)';
+    } else {
+      fb.textContent='✅ Правильно! +20';
+    }
+    roundScore+=pts;roundCorrect++;
+    if(pts>0)logPts(pts);
+    updateWordLevel(curWord.ar,true);
     addDailyWord();
     if(qi>=queue.length-1)clearProgress();
     pauseTmo=setTimeout(()=>nextWord(true),800);
