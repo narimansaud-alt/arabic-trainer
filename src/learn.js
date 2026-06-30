@@ -23,21 +23,41 @@ let learnDoneWords = [];
 let learnCardIdx = 0;
 let curLearnCard = null;
 
+// QUEUE MODEL: learnCards holds only the work still remaining this
+// session. learnCardIdx always points at the slot that should be
+// shown next. The index is NEVER incremented on its own — every
+// change to "what's current" happens by removing the just-answered
+// card from position learnCardIdx (via splice) and, if it still has
+// stages left, reinserting it further ahead. Since the array shrinks
+// by one whenever a card is removed, whatever was already sitting
+// right after it automatically slides into learnCardIdx — so the
+// pointer simply stays put and is re-read on the next render. This
+// avoids the earlier bug where the index and the array length could
+// drift apart (either through duplicate un-removed cards, or through
+// an index that kept incrementing past cards the splice had already
+// shifted backward).
+
 function initLearnQueue(words) {
   learnCards = shuf(words).map((w) => ({ w, stage: 0, key: w.ar }));
   learnDoneWords = [];
   learnCardIdx = 0;
 }
 
-function learnInsertCard(card, aheadBy) {
-  let pos = Math.min(learnCardIdx + 1 + aheadBy, learnCards.length);
-  learnCards.splice(pos, 0, card);
+// Removes the card currently at learnCardIdx and, if `card` is given,
+// reinserts it `aheadBy` slots further into the (now one-shorter)
+// queue. Pass card=null to drop it permanently (used when a word has
+// finished all its stages).
+function learnRemoveAndMaybeReinsert(card, aheadBy) {
+  learnCards.splice(learnCardIdx, 1);
+  if (card) {
+    const pos = Math.max(0, Math.min(learnCardIdx + aheadBy, learnCards.length));
+    learnCards.splice(pos, 0, card);
+  }
 }
 
-function nextLearnCard(inc) {
+function nextLearnCard() {
   clearTimers();
   isHist = false;
-  if (inc) learnCardIdx++;
   if (learnCardIdx >= learnCards.length) {
     finishQuiz();
     return;
@@ -58,15 +78,16 @@ function learnStageAdvance(ok) {
     if (card.stage >= LEARN_STAGE_COUNT - 1) {
       learnDoneWords.push(card.w);
       roundCorrect++;
+      learnRemoveAndMaybeReinsert(null, 0);
     } else {
       card.stage++;
       const ahead = card.stage === LEARN_STAGE_COUNT - 1 ? LEARN_REINSERT_OK + 3 : LEARN_REINSERT_OK;
-      learnInsertCard(card, ahead);
+      learnRemoveAndMaybeReinsert(card, ahead);
     }
     updateWordLevel(card.key, true);
   } else {
     if (!roundWrong.find((w) => w.ar === card.key)) roundWrong.push(card.w);
-    learnInsertCard(card, LEARN_REINSERT_ERR);
+    learnRemoveAndMaybeReinsert(card, LEARN_REINSERT_ERR);
     updateWordLevel(card.key, false);
   }
   addDailyWord();
@@ -150,9 +171,8 @@ async function handleLearnAns(btn, ok, correct, isAr) {
     fb.className = 'feedback ok';
     fb.textContent = '✅ Правильно!' + (pts ? ' +' + pts : '');
     if (pts) logPts(pts);
-    if (learnCardIdx >= learnCards.length - 1) clearProgress();
     learnStageAdvance(true);
-    pauseTmo = setTimeout(() => nextLearnCard(true), 800);
+    pauseTmo = setTimeout(() => nextLearnCard(), 800);
   } else {
     btn.classList.add('err');
     document.querySelectorAll('.opt').forEach((b) => {
@@ -167,7 +187,7 @@ async function handleLearnAns(btn, ok, correct, isAr) {
       '</span>';
     learnStageAdvance(false);
     document.getElementById('btn-next').classList.remove('hidden');
-    pauseTmo = setTimeout(() => nextLearnCard(true), 3000);
+    pauseTmo = setTimeout(() => nextLearnCard(), 3000);
   }
 }
 
@@ -189,14 +209,14 @@ function checkTypedLearn() {
     roundScore += pts;
     if (pts > 0) logPts(pts);
     learnStageAdvance(true);
-    pauseTmo = setTimeout(() => nextLearnCard(true), 800);
+    pauseTmo = setTimeout(() => nextLearnCard(), 800);
   } else {
     fb.className = 'feedback err';
     fb.innerHTML =
       '❌ Ошибка. Правильно: <span style="font-family:Times New Roman,serif;font-size:22px;direction:rtl;">' + esc(curWord.ar) + '</span>';
     learnStageAdvance(false);
     document.getElementById('btn-next').classList.remove('hidden');
-    pauseTmo = setTimeout(() => nextLearnCard(true), 3000);
+    pauseTmo = setTimeout(() => nextLearnCard(), 3000);
   }
 }
 
@@ -207,5 +227,5 @@ function goNextLearn() {
     renderLearnQ();
     return;
   }
-  nextLearnCard(true);
+  nextLearnCard();
 }
