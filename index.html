@@ -82,7 +82,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .btn-announcement{width:100%;padding:13px;background:var(--green);color:white;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;}
 
 /* COURSE SELECT */
-#screen-course{background:linear-gradient(160deg,var(--green-dark) 0%,var(--green) 100%);padding:30px 20px 40px;padding-top:calc(30px + env(safe-area-inset-top,0));justify-content:flex-start;align-items:center;overflow-y:auto;}
+#screen-course{background:linear-gradient(160deg,var(--green-dark) 0%,var(--green) 100%);padding:30px 20px 40px;padding-top:calc(30px + env(safe-area-inset-top,0));justify-content:flex-start;align-items:center;overflow-y:auto;overscroll-behavior-y:none;}
 .course-header{text-align:center;color:white;margin-bottom:10px;}
 .course-header .hello{font-size:14px;opacity:0.8;margin-bottom:6px;}
 .course-header h2{font-size:22px;font-weight:700;}
@@ -115,7 +115,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .btn-logout-c{margin-top:20px;background:rgba(255,255,255,0.15);color:white;border:2px solid rgba(255,255,255,0.4);border-radius:10px;padding:10px 24px;font-size:14px;cursor:pointer;}
 
 /* VOLUME SELECT */
-#screen-volume{background:linear-gradient(160deg,var(--green-dark) 0%,var(--green) 100%);padding:30px 20px;padding-top:calc(30px + env(safe-area-inset-top,0));justify-content:flex-start;align-items:center;overflow-y:auto;}
+#screen-volume{background:linear-gradient(160deg,var(--green-dark) 0%,var(--green) 100%);padding:30px 20px;padding-top:calc(30px + env(safe-area-inset-top,0));justify-content:flex-start;align-items:center;overflow-y:auto;overscroll-behavior-y:none;}
 .vol-header{text-align:center;color:white;margin-bottom:24px;}
 .vol-header h2{font-size:20px;font-weight:700;margin-bottom:4px;}
 .vol-header p{font-size:13px;opacity:0.8;}
@@ -927,10 +927,8 @@ async function addDailyWord(){
   if(app.lastCountDate!==today){app.dailyWords=0;app.lastCountDate=today;}
   app.dailyWords++;
   updateStreakBanner();
-  // Save every word immediately to avoid losing progress on close
-  if(app.dailyWords<=30){
-    try{await db.from('users').update({daily_words:app.dailyWords,last_count_date:today}).eq('username',app.username);}catch(e){}
-  }
+  // Always save to DB immediately so progress never lost on close/refresh
+  try{await db.from('users').update({daily_words:app.dailyWords,last_count_date:today}).eq('username',app.username);}catch(e){}
   // Streak milestone at 30 words
   if(app.dailyWords===30){
     await updateStreak(true);
