@@ -1,5 +1,22 @@
 const CACHE = 'arabic-v__BUILD_HASH__';
-const FILES = ['./', './index.html', './icon.png', './manifest.json'];
+const FILES = [
+  './',
+  './index.html',
+  './icon.png',
+  './manifest.json',
+  './src/api.js',
+  './src/state.js',
+  './src/helpers.js',
+  './src/auth.js',
+  './src/announcement.js',
+  './src/course.js',
+  './src/streak.js',
+  './src/lb.js',
+  './src/dict.js',
+  './src/quiz.js',
+  './src/learn.js',
+  './src/main.js',
+];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));
