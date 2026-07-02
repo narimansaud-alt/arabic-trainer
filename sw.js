@@ -13,6 +13,7 @@ const FILES = [
   './src/streak.js',
   './src/lb.js',
   './src/dict.js',
+  './src/verbs.js',
   './src/quiz.js',
   './src/learn.js',
   './src/main.js',
