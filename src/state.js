@@ -42,7 +42,6 @@ const Settings = {
   lbFilters: { type: 'score', period: 'all' },
   dictLesson: 'all',
   rulesLesson: 'all',
-  verbLesson: 'all',
 };
 
 const VOLUMES = {

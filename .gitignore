@@ -4,3 +4,9 @@
 !.dev.vars.example
 .env*
 !.env.example
+
+# python worker build artifacts
+.venv
+.venv-workers
+python_modules
+services/*/dev.log
