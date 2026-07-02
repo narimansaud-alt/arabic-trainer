@@ -82,7 +82,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .btn-announcement{width:100%;padding:13px;background:var(--green);color:white;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;}
 
 /* COURSE SELECT */
-#screen-course{background:linear-gradient(160deg,var(--green-dark) 0%,var(--green) 100%);padding:30px 20px 40px;padding-top:calc(30px + env(safe-area-inset-top,0));justify-content:flex-start;align-items:center;overflow-y:auto;overscroll-behavior-y:none;}
+#screen-course{background:linear-gradient(160deg,var(--green-dark) 0%,var(--green) 100%);padding:30px 20px 40px;padding-top:calc(30px + env(safe-area-inset-top,0));justify-content:flex-start;align-items:center;overflow-y:auto;overscroll-behavior-y:none;min-height:0;height:100vh;height:100dvh;}
 .course-header{text-align:center;color:white;margin-bottom:10px;}
 .course-header .hello{font-size:14px;opacity:0.8;margin-bottom:6px;}
 .course-header h2{font-size:22px;font-weight:700;}
@@ -115,7 +115,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .btn-logout-c{margin-top:20px;background:rgba(255,255,255,0.15);color:white;border:2px solid rgba(255,255,255,0.4);border-radius:10px;padding:10px 24px;font-size:14px;cursor:pointer;}
 
 /* VOLUME SELECT */
-#screen-volume{background:linear-gradient(160deg,var(--green-dark) 0%,var(--green) 100%);padding:30px 20px;padding-top:calc(30px + env(safe-area-inset-top,0));justify-content:flex-start;align-items:center;overflow-y:auto;overscroll-behavior-y:none;}
+#screen-volume{background:linear-gradient(160deg,var(--green-dark) 0%,var(--green) 100%);padding:30px 20px;padding-top:calc(30px + env(safe-area-inset-top,0));justify-content:flex-start;align-items:center;overflow-y:auto;overscroll-behavior-y:none;min-height:0;height:100vh;height:100dvh;}
 .vol-header{text-align:center;color:white;margin-bottom:24px;}
 .vol-header h2{font-size:20px;font-weight:700;margin-bottom:4px;}
 .vol-header p{font-size:13px;opacity:0.8;}
@@ -130,7 +130,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .btn-back-vol{margin-top:16px;background:rgba(255,255,255,0.15);color:white;border:2px solid rgba(255,255,255,0.4);border-radius:10px;padding:10px 24px;font-size:14px;cursor:pointer;}
 
 /* VERB CONJUGATION (standalone) */
-#screen-verbs{background:linear-gradient(160deg,var(--green-dark) 0%,var(--green) 100%);padding:30px 20px;padding-top:calc(30px + env(safe-area-inset-top,0));justify-content:flex-start;align-items:center;overflow-y:auto;overscroll-behavior-y:none;}
+#screen-verbs{background:linear-gradient(160deg,var(--green-dark) 0%,var(--green) 100%);padding:30px 20px;padding-top:calc(30px + env(safe-area-inset-top,0));justify-content:flex-start;align-items:center;overflow-y:auto;overscroll-behavior-y:none;min-height:0;height:100vh;height:100dvh;}
 
 /* APP */
 #screen-app{background:var(--bg);padding-bottom:70px;}
@@ -439,7 +439,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
     <div class="course-card" onclick="showScreen('screen-verbs')">
       <div class="cc-cover-placeholder">🔁</div>
       <div class="cc-body-row">
-        <div class="cc-body"><div class="cc-title">Спряжение глаголов</div><div class="cc-sub">Любой арабский глагол — полная таблица форм</div></div>
+        <div class="cc-body"><div class="cc-title">Глаголы и спряжения</div><div class="cc-sub">Любой арабский глагол — полная таблица форм</div></div>
         <div class="cc-arrow">›</div>
       </div>
     </div>
@@ -462,7 +462,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 <!-- VERB CONJUGATION (standalone) -->
 <div class="screen" id="screen-verbs">
   <div class="vol-header">
-    <h2>Спряжение глаголов</h2>
+    <h2>Глаголы и спряжения</h2>
     <p>Введите глагол — получите таблицу спряжения</p>
   </div>
   <div class="sc" style="width:100%;max-width:420px;">
