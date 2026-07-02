@@ -129,6 +129,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .vol-arrow{font-size:20px;color:var(--green);font-weight:700;}
 .btn-back-vol{margin-top:16px;background:rgba(255,255,255,0.15);color:white;border:2px solid rgba(255,255,255,0.4);border-radius:10px;padding:10px 24px;font-size:14px;cursor:pointer;}
 
+/* VERB CONJUGATION (standalone) */
+#screen-verbs{background:linear-gradient(160deg,var(--green-dark) 0%,var(--green) 100%);padding:30px 20px;padding-top:calc(30px + env(safe-area-inset-top,0));justify-content:flex-start;align-items:center;overflow-y:auto;overscroll-behavior-y:none;}
+
 /* APP */
 #screen-app{background:var(--bg);padding-bottom:70px;}
 .topbar{background:var(--green);color:white;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top,0));display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
@@ -433,6 +436,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
         <div class="cc-arrow">›</div>
       </div>
     </div>
+    <div class="course-card" onclick="showScreen('screen-verbs')">
+      <div class="cc-cover-placeholder">🔁</div>
+      <div class="cc-body-row">
+        <div class="cc-body"><div class="cc-title">Спряжение глаголов</div><div class="cc-sub">Любой арабский глагол — полная таблица форм</div></div>
+        <div class="cc-arrow">›</div>
+      </div>
+    </div>
   </div>
   <button class="btn-logout-c" onclick="doLogout()">Выйти из аккаунта</button>
 </div>
@@ -446,6 +456,29 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 
   <div class="vol-cards" id="vol-cards"></div>
   <button id="btn-install-pwa" class="btn-back-vol" style="display:none;background:rgba(255,255,255,0.25);margin-bottom:8px;" onclick="installPWA()">📲 Установить приложение</button>
+  <button class="btn-back-vol" onclick="showScreen('screen-course')">← Назад к курсам</button>
+</div>
+
+<!-- VERB CONJUGATION (standalone) -->
+<div class="screen" id="screen-verbs">
+  <div class="vol-header">
+    <h2>Спряжение глаголов</h2>
+    <p>Введите глагол — получите таблицу спряжения</p>
+  </div>
+  <div class="sc" style="width:100%;max-width:420px;">
+    <div class="sc-title">Спряжение любого глагола</div>
+    <input class="type-input" id="verb-input" type="text" placeholder="اكتب الفعل الماضي بالحركات" dir="rtl">
+    <div style="font-size:12px;color:var(--gray);margin:-4px 0 12px;text-align:center;">Пишите глагол в прошедшем времени, с огласовками (فَعَلَ)</div>
+    <div class="sc-title">Огласовка настоящего времени</div>
+    <div class="lb-row-btns" id="verb-vowel-row">
+      <button class="lb-pill active" data-v="ضمة" onclick="setVerbVowel(this)">ضمة (у)</button>
+      <button class="lb-pill" data-v="فتحة" onclick="setVerbVowel(this)">فتحة (а)</button>
+      <button class="lb-pill" data-v="كسرة" onclick="setVerbVowel(this)">كسرة (и)</button>
+    </div>
+    <div style="font-size:12px;color:var(--gray);margin:4px 0 12px;">Не знаете огласовку? Начните с «ضمة» — если результат выглядит странно, попробуйте другую.</div>
+    <button class="btn-start green" id="verb-conjugate-btn" onclick="conjugateTypedVerb()">🔁 Спрягать</button>
+    <div class="feedback" id="verb-input-feedback"></div>
+  </div>
   <button class="btn-back-vol" onclick="showScreen('screen-course')">← Назад к курсам</button>
 </div>
 
@@ -523,24 +556,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
       </div>
     </div>
     <div id="rules-content"><div class="lb-empty">Загрузка...</div></div>
-  </div>
-
-  <!-- TAB: VERBS -->
-  <div class="tab-content" id="tab-verbs">
-    <div class="sc">
-      <div class="sc-title">Спряжение любого глагола</div>
-      <input class="type-input" id="verb-input" type="text" placeholder="اكتب الفعل الماضي بالحركات" dir="rtl">
-      <div style="font-size:12px;color:var(--gray);margin:-4px 0 12px;text-align:center;">Пишите глагол в прошедшем времени, с огласовками (فَعَلَ)</div>
-      <div class="sc-title">Огласовка настоящего времени</div>
-      <div class="lb-row-btns" id="verb-vowel-row">
-        <button class="lb-pill active" data-v="ضمة" onclick="setVerbVowel(this)">ضمة (у)</button>
-        <button class="lb-pill" data-v="فتحة" onclick="setVerbVowel(this)">فتحة (а)</button>
-        <button class="lb-pill" data-v="كسرة" onclick="setVerbVowel(this)">كسرة (и)</button>
-      </div>
-      <div style="font-size:12px;color:var(--gray);margin:4px 0 12px;">Не знаете огласовку? Начните с «ضمة» — если результат выглядит странно, попробуйте другую.</div>
-      <button class="btn-start green" id="verb-conjugate-btn" onclick="conjugateTypedVerb()">🔁 Спрягать</button>
-      <div class="feedback" id="verb-input-feedback"></div>
-    </div>
   </div>
 
   <!-- TAB: LEADERBOARD -->
@@ -683,7 +698,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
     <button class="app-tab active" id="at-train" onclick="switchTab('train')"><span class="ti">📚</span>Тренировка</button>
     <button class="app-tab" id="at-dict" onclick="switchTab('dict')"><span class="ti">📖</span>Словарь</button>
     <button class="app-tab" id="at-rules" onclick="switchTab('rules')"><span class="ti">📋</span>Правила</button>
-    <button class="app-tab" id="at-verbs" onclick="switchTab('verbs')"><span class="ti">🔁</span>Спряжение</button>
     <button class="app-tab" id="at-lb" onclick="switchTab('lb')" style="display:none;"><span class="ti">🏆</span>Рейтинг</button>
     <button class="app-tab" id="at-instr" onclick="switchTab('instr')" style="display:none;"></button>
     <button class="app-tab" id="at-settings" onclick="switchTab('settings')"><span class="ti">⚙️</span>Настройки</button>
