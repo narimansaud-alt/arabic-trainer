@@ -110,9 +110,21 @@ async function loadStreakRank() {
   }
 }
 
-function updateUI() {
+async function updateUI() {
   const rankEl = document.getElementById('app-rank');
-  if (rankEl) {
-    rankEl.textContent = '🏆 (' + (App.totalScore || 0) + ')';
+  if (!rankEl || !App.username) return;
+  try {
+    const { data } = await db
+      .from('leaderboard')
+      .select('nickname,total_score')
+      .order('total_score', { ascending: false });
+    if (!data || !data.length) {
+      rankEl.textContent = '🏆 —';
+      return;
+    }
+    const rank = data.findIndex((u) => u.nickname === App.username) + 1;
+    rankEl.textContent = rank > 0 ? '🏆 ' + (rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '#' + rank) : '🏆 —';
+  } catch (e) {
+    /* non-fatal */
   }
 }
