@@ -83,7 +83,23 @@ window.addEventListener('load', async () => {
   const ok = await tryAutoLogin();
   if (ok) {
     const restored = await restoreProgress();
-    if (!restored) goToCourse();
+    if (!restored) {
+      const lastScreen = localStorage.getItem('arabic_last_screen');
+      const lastVolume = localStorage.getItem('arabic_last_volume');
+      const lastTab = localStorage.getItem('arabic_last_tab');
+      if (lastScreen === 'screen-app' && lastVolume) {
+        App.volume = lastVolume;
+        document.getElementById('s-uname').textContent = App.username;
+        updateUI();
+        await loadDict();
+        await loadRulesAll();
+        await updateStreak(false);
+        showScreen('screen-app');
+        switchTab(lastTab && document.getElementById('tab-' + lastTab) ? lastTab : 'train');
+      } else {
+        goToCourse();
+      }
+    }
   } else {
     showScreen('screen-login');
   }

@@ -111,6 +111,8 @@ async function loadStreakRank() {
 }
 
 function updateUI() {
-  document.getElementById('app-streak').textContent = '🔥 ' + (App.streak || 0);
-  document.getElementById('app-score').textContent = (App.totalScore || 0) + ' 🌟';
+  const rankEl = document.getElementById('app-rank');
+  if (rankEl) {
+    rankEl.textContent = '🏆 (' + (App.totalScore || 0) + ')';
+  }
 }

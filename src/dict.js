@@ -210,7 +210,9 @@ function switchTab(t) {
   document.querySelectorAll('.tab-content').forEach((p) => p.classList.remove('active'));
   document.querySelectorAll('.app-tab').forEach((b) => b.classList.remove('active'));
   document.getElementById('tab-' + t).classList.add('active');
-  document.getElementById('at-' + t).classList.add('active');
+  const tabBtn = document.getElementById('at-' + t);
+  if (tabBtn) tabBtn.classList.add('active');
+  localStorage.setItem('arabic_last_tab', t);
   if (t === 'lb') loadLB();
   if (t === 'dict') renderDict();
   if (t === 'rules') renderRules();

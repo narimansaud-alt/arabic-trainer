@@ -185,6 +185,7 @@ async function handleLearnAns(btn, ok, correct, isAr) {
       '">' +
       esc(correct) +
       '</span>';
+    curWord.userAnswer = btn.textContent;
     learnStageAdvance(false);
     document.getElementById('btn-next').classList.remove('hidden');
     pauseTmo = setTimeout(() => nextLearnCard(), 3000);
@@ -214,6 +215,7 @@ function checkTypedLearn() {
     fb.className = 'feedback err';
     fb.innerHTML =
       '❌ Ошибка. Правильно: <span style="font-family:Times New Roman,serif;font-size:22px;direction:rtl;">' + esc(curWord.ar) + '</span>';
+    curWord.userAnswer = val;
     learnStageAdvance(false);
     document.getElementById('btn-next').classList.remove('hidden');
     pauseTmo = setTimeout(() => nextLearnCard(), 3000);

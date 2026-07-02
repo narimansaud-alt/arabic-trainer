@@ -364,6 +364,7 @@ function checkTyped() {
     fb.className = 'feedback err';
     fb.innerHTML =
       '❌ Ошибка. Правильно: <span style="font-family:Times New Roman,serif;font-size:22px;direction:rtl;">' + esc(curWord.ar) + '</span>';
+    curWord.userAnswer = val;
     updateWordLevel(curWord.ar, false);
     if (!roundWrong.find((w) => w.ar === curWord.ar)) roundWrong.push(curWord);
     document.getElementById('btn-next').classList.remove('hidden');
@@ -614,7 +615,10 @@ async function finishQuiz() {
       wrongItems.length +
       ' слов</div>';
     html += wrongItems
-      .map((w) => `<div class="wl-item" style="background:#fff5f5;border-left:3px solid var(--red);"><span class="wl-ar">${esc(w.ar)}</span><span class="wl-ru">${esc(w.ru)}</span></div>`)
+      .map((w) => {
+        const typed = w.userAnswer ? '<div style="font-size:12px;color:#888;margin-top:4px;">Вы вводили: <b>' + esc(w.userAnswer) + '</b></div>' : '';
+        return `<div class="wl-item" style="background:#fff5f5;border-left:3px solid var(--red);"><div><span class="wl-ar">${esc(w.ar)}</span><span class="wl-ru">${esc(w.ru)}</span>${typed}</div></div>`;
+      })
       .join('');
   }
   if (correctItems.length) {

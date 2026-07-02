@@ -88,19 +88,18 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .course-header h2{font-size:22px;font-weight:700;}
 
 /* STREAK BANNER */
-.streak-banner{width:100%;background:linear-gradient(135deg,#ff6b00,#ff9500);border-radius:20px;padding:18px 18px 14px;margin-bottom:14px;box-shadow:0 4px 20px rgba(255,107,0,0.35);position:relative;overflow:hidden;}
-.streak-banner::before{content:'';position:absolute;top:-30px;right:-20px;font-size:100px;opacity:0.12;line-height:1;}
-.streak-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;}
-.streak-fire{font-size:15px;font-weight:800;color:white;line-height:1.3;flex:1;}
-.streak-fire .streak-big-num{font-size:36px;font-weight:900;display:block;line-height:1;margin-bottom:2px;text-shadow:0 2px 8px rgba(0,0,0,0.2);}
-.streak-days{font-size:12px;color:rgba(255,255,255,0.9);background:rgba(255,255,255,0.2);border-radius:20px;padding:4px 10px;font-weight:700;white-space:nowrap;margin-top:4px;}
-.streak-hint{font-size:12px;color:rgba(255,255,255,0.9);margin-bottom:10px;margin-top:6px;}
-.streak-bar-bg{background:rgba(255,255,255,0.25);border-radius:10px;height:8px;overflow:hidden;}
-.streak-bar-fill{height:100%;background:white;border-radius:10px;transition:width 0.6s ease;box-shadow:0 0 8px rgba(255,255,255,0.6);}
-.streak-bar-label{display:flex;justify-content:space-between;margin-top:5px;}
-.streak-bar-label span{font-size:11px;color:rgba(255,255,255,0.85);font-weight:600;}
-.streak-done{font-size:13px;font-weight:800;color:white;text-align:center;margin-top:6px;background:rgba(255,255,255,0.2);border-radius:10px;padding:6px;}
-#banner-rank{font-size:12px;color:rgba(255,255,255,0.95);font-weight:700;margin-top:8px;text-align:center;}
+.streak-banner{width:100%;background:linear-gradient(135deg,#ff6b00,#ff9500);border-radius:18px;padding:12px 14px;margin-bottom:10px;box-shadow:0 4px 16px rgba(255,107,0,0.28);position:relative;overflow:hidden;}
+  .streak-banner::before{content:'';position:absolute;top:-20px;right:-10px;font-size:80px;opacity:0.12;line-height:1;}
+  .streak-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
+  .streak-fire{font-size:14px;font-weight:800;color:white;line-height:1.2;flex:1;}
+  .streak-fire .streak-big-num{font-size:28px;font-weight:900;display:block;line-height:1;margin-bottom:2px;text-shadow:0 2px 6px rgba(0,0,0,0.2);}
+  .streak-days{display:none;}
+  .streak-hint{display:none;}
+  .streak-bar-bg{display:none;}
+  .streak-bar-fill{display:none;}
+  .streak-bar-label{display:none;}
+  .streak-done{display:none;}
+  #banner-rank{font-size:12px;color:rgba(255,255,255,0.95);font-weight:700;margin-top:6px;text-align:center;}
 
 .course-cards{width:100%;max-width:420px;display:flex;flex-direction:column;gap:12px;}
 .course-card{background:white;border-radius:16px;overflow:hidden;cursor:pointer;transition:transform 0.15s;box-shadow:0 6px 24px rgba(0,0,0,0.2);}
@@ -131,13 +130,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 
 /* APP */
 #screen-app{background:var(--bg);padding-bottom:70px;}
-.topbar{background:var(--green);color:white;padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top,0));display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
-.tb-left{display:flex;flex-direction:column;}
-.tb-course{font-size:12px;opacity:0.85;font-weight:500;}
-.tb-user{font-size:14px;font-weight:700;}
-.tb-right{display:flex;align-items:center;gap:6px;}
-.tb-score{background:rgba(255,255,255,0.18);padding:4px 10px;border-radius:16px;font-size:12px;font-weight:600;}
-.btn-tb{background:rgba(255,255,255,0.3);color:white;border:2px solid rgba(255,255,255,0.6);padding:7px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;}
+.topbar{background:var(--green);color:white;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top,0));display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+  .tb-left{display:flex;flex-direction:column;gap:4px;}
+  .tb-course{font-size:13px;opacity:0.9;font-weight:600;}
+  .tb-user{font-size:14px;font-weight:700;}
+  .tb-right{display:flex;align-items:center;gap:6px;}
+  .tb-score{display:none;}
+  .btn-tb{background:rgba(255,255,255,0.22);color:white;border:2px solid rgba(255,255,255,0.35);padding:7px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;}
 
 /* BOTTOM TABS */
 .app-tabs{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom,0);}
@@ -157,8 +156,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .mode-pill{padding:12px 6px;border:2px solid var(--border);background:#fafafa;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;text-align:center;color:#444;transition:0.15s;line-height:1.4;}
 .mode-pill.active{background:var(--green);color:white;border-color:var(--green);}
-.mode-pill.fast{grid-column:span 2;background:linear-gradient(90deg,#e67e22,#c0392b);color:white;border-color:transparent;}
-.mode-pill.fast.active{box-shadow:0 0 0 3px rgba(230,126,34,0.3);}
+  .mode-pill.fast{background:#fff7ed;color:#c0392b;border-color:#f5c6a5;}
+  .mode-pill.fast.active{background:#fde7d5;color:#c0392b;border-color:#e67e22;box-shadow:none;}
 .mode-pill small{font-size:10px;opacity:0.8;display:block;margin-top:2px;}
 
 /* LESSON GRID */
@@ -431,12 +430,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 <div class="screen" id="screen-app">
   <div class="topbar">
     <div class="tb-left">
-      <span class="tb-course" id="app-volume">Том</span>
-      <span class="tb-user" id="app-user">Игрок</span>
+      <span class="tb-course">Курсы</span>
+      <span class="tb-user" id="app-rank">🏆 Рейтинг</span>
     </div>
     <div class="tb-right">
-      <span class="tb-score" id="app-streak">🔥 0</span>
-      <span class="tb-score" id="app-score">0 🌟</span>
       <button class="btn-tb" onclick="switchTab('instr')">❓</button>
       <button class="btn-tb" onclick="goToCourse()">≡ Курсы</button>
     </div>
@@ -568,7 +565,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
     <div class="instr-block">
       <div class="instr-mode-title">⚡ Быстрое повторение</div>
       <div class="instr-text">
-        Показывается русское слово — выбери арабский перевод из 4 вариантов за <b>7 секунд</b>. Есть 3 жизни ❤️. Ошибка или время вышло — жизнь теряется, слово попадает в трудные. Строй как можно более длинную серию! Рекорд сохраняется в рейтинге <b>«⚡ Быстрый режим»</b>.
+        Показывается русское слово — выбери арабский перевод из 4 вариантов за <b>7 секунд</b>. Есть 3 жизни ❤️. Ошибка или время вышло — жизнь теряется, слово попадает в трудные. Сначала выбери режим, затем нажми «Начать тренировку». Рекорд сохраняется в рейтинге <b>«⚡ Быстрый режим»</b>.
       </div>
     </div>
     <div class="instr-block">
@@ -578,17 +575,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
       </div>
     </div>
     <div class="instr-block">
-      <div class="instr-mode-title">🔥 Серия дней</div>
-      <div class="instr-text">
-        Занимайся каждый день! Правильно ответь на <b>30 слов до полуночи</b> — день засчитывается и серия продолжается. Пропустил день — серия обнуляется. Прогресс-бар вверху показывает сколько из 30 слов уже сделано сегодня. Максимальная серия сохраняется в рейтинге.
-      </div>
-    </div>
-    <div class="instr-block">
       <div class="instr-mode-title">🏆 Рейтинги</div>
       <div class="instr-text">
-        <b>🌟 Очки</b> — общий рейтинг. Фильтры: день / неделя / месяц / всё время. График показывает твои очки за последние 7 дней.<br><br>
-        <b>⚡ Быстрый режим</b> — рекорд самой длинной серии без ошибок в режиме быстрого повторения.<br><br>
-        <b>🔥 Серия дней</b> — количество дней подряд с выполненной нормой (30 слов). Максимальная серия сохраняется навсегда.
+        Текущий рейтинг теперь выводится вверху в виде значка «🏆» и числа в скобках. Рейтинг обновляется при попадании очков в систему.
       </div>
     </div>
     <div class="instr-block">
@@ -654,7 +643,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
     <button class="app-tab active" id="at-train" onclick="switchTab('train')"><span class="ti">📚</span>Тренировка</button>
     <button class="app-tab" id="at-dict" onclick="switchTab('dict')"><span class="ti">📖</span>Словарь</button>
     <button class="app-tab" id="at-rules" onclick="switchTab('rules')"><span class="ti">📋</span>Правила</button>
-    <button class="app-tab" id="at-lb" onclick="switchTab('lb')"><span class="ti">🏆</span>Рейтинг</button>
+    <button class="app-tab" id="at-lb" onclick="switchTab('lb')" style="display:none;"><span class="ti">🏆</span>Рейтинг</button>
     <button class="app-tab" id="at-instr" onclick="switchTab('instr')" style="display:none;"></button>
     <button class="app-tab" id="at-settings" onclick="switchTab('settings')"><span class="ti">⚙️</span>Настройки</button>
   </div>
