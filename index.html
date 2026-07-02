@@ -467,15 +467,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
   </div>
   <div class="sc" style="width:100%;max-width:420px;">
     <div class="sc-title">Спряжение любого глагола</div>
-    <input class="type-input" id="verb-input" type="text" placeholder="اكتب الفعل الماضي بالحركات" dir="rtl">
-    <div style="font-size:12px;color:var(--gray);margin:-4px 0 12px;text-align:center;">Пишите глагол в прошедшем времени, с огласовками (فَعَلَ)</div>
-    <div class="sc-title">Огласовка настоящего времени</div>
-    <div class="lb-row-btns" id="verb-vowel-row">
-      <button class="lb-pill active" data-v="ضمة" onclick="setVerbVowel(this)">ضمة (у)</button>
-      <button class="lb-pill" data-v="فتحة" onclick="setVerbVowel(this)">فتحة (а)</button>
-      <button class="lb-pill" data-v="كسرة" onclick="setVerbVowel(this)">كسرة (и)</button>
-    </div>
-    <div style="font-size:12px;color:var(--gray);margin:4px 0 12px;">Не знаете огласовку? Начните с «ضمة» — если результат выглядит странно, попробуйте другую.</div>
+    <input class="type-input" id="verb-input" type="text" placeholder="اكتب الفعل الماضي" dir="rtl">
+    <div style="font-size:12px;color:var(--gray);margin:-4px 0 12px;text-align:center;">Пишите глагол в прошедшем времени (كتب или كَتَبَ) — огласовку настоящего времени подберём по словарю</div>
     <button class="btn-start green" id="verb-conjugate-btn" onclick="conjugateTypedVerb()">🔁 Спрягать</button>
     <div class="feedback" id="verb-input-feedback"></div>
   </div>
