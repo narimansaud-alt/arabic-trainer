@@ -216,6 +216,7 @@ function switchTab(t) {
   if (t === 'lb') loadLB();
   if (t === 'dict') renderDict();
   if (t === 'rules') renderRules();
+  if (t === 'verbs') loadVerbs();
 }
 
 function selAll(v) {

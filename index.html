@@ -217,6 +217,18 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .dict-ar{font-family:'Times New Roman',serif;font-size:20px;direction:rtl;color:var(--green-dark);}
 .dict-ru{font-size:13px;color:#555;text-align:right;flex:1;}
 .rule-item{padding:12px 14px;border-bottom:1px solid #f0f0f0;}
+
+/* VERB CONJUGATION */
+.verb-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;}
+.verb-modal-box{background:white;border-radius:20px;padding:22px 18px;width:100%;max-width:420px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.4);position:relative;}
+.verb-modal-close{position:absolute;top:12px;right:12px;background:var(--bg);border:none;border-radius:50%;width:30px;height:30px;font-size:14px;cursor:pointer;color:#666;}
+.verb-modal-title{font-family:'Times New Roman',serif;font-size:32px;direction:rtl;text-align:center;color:var(--green-dark);margin-bottom:2px;}
+.verb-modal-sub{text-align:center;color:#999;font-size:12px;margin-bottom:14px;direction:rtl;}
+.verb-tense-title{font-size:12px;font-weight:700;color:var(--green);text-transform:uppercase;margin:14px 0 6px;}
+.verb-form-row{display:flex;justify-content:space-between;align-items:center;padding:6px 4px;border-bottom:1px solid var(--border);font-size:14px;}
+.verb-form-pron{color:#777;}
+.verb-form-ar{font-family:'Times New Roman',serif;font-size:20px;direction:rtl;color:var(--green-dark);}
+.verb-dual-toggle{font-size:12px;color:var(--green);text-align:center;margin-top:10px;cursor:pointer;text-decoration:underline;}
 .rule-item:last-child{border-bottom:none;}
 .rule-title{font-size:15px;font-weight:700;color:var(--green-dark);margin-bottom:8px;line-height:2.4;}
 .rule-content{font-size:14px;color:#555;line-height:2.2;overflow-x:auto;-webkit-overflow-scrolling:touch;}
@@ -338,6 +350,16 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
     <div class="announcement-title">Важное сообщение</div>
     <div class="announcement-msg" id="announcement-msg"></div>
     <button class="btn-announcement" onclick="closeAnnouncement()">Понял ✓</button>
+  </div>
+</div>
+
+<!-- VERB DETAIL MODAL -->
+<div class="verb-modal-overlay hidden" id="verb-modal-overlay">
+  <div class="verb-modal-box">
+    <button class="verb-modal-close" onclick="closeVerbModal()">✕</button>
+    <div class="verb-modal-title" id="verb-modal-title"></div>
+    <div class="verb-modal-sub">تصريف الفعل</div>
+    <div id="verb-modal-body"></div>
   </div>
 </div>
 
@@ -503,6 +525,18 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
     <div id="rules-content"><div class="lb-empty">Загрузка...</div></div>
   </div>
 
+  <!-- TAB: VERBS -->
+  <div class="tab-content" id="tab-verbs">
+    <div class="sc">
+      <input class="search-input" id="verb-search" type="text" placeholder="Поиск глагола..." oninput="renderVerbs()">
+      <div class="sc-title">Урок</div>
+      <div class="lb-row-btns" id="verb-lesson-row">
+        <button class="lb-pill active" onclick="setVerbLesson('all',this)">Все</button>
+      </div>
+    </div>
+    <div id="verb-content"><div class="lb-empty">Загрузка...</div></div>
+  </div>
+
   <!-- TAB: LEADERBOARD -->
   <div class="tab-content" id="tab-lb">
     <div class="sc">
@@ -643,6 +677,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
     <button class="app-tab active" id="at-train" onclick="switchTab('train')"><span class="ti">📚</span>Тренировка</button>
     <button class="app-tab" id="at-dict" onclick="switchTab('dict')"><span class="ti">📖</span>Словарь</button>
     <button class="app-tab" id="at-rules" onclick="switchTab('rules')"><span class="ti">📋</span>Правила</button>
+    <button class="app-tab" id="at-verbs" onclick="switchTab('verbs')"><span class="ti">🔁</span>Спряжение</button>
     <button class="app-tab" id="at-lb" onclick="switchTab('lb')" style="display:none;"><span class="ti">🏆</span>Рейтинг</button>
     <button class="app-tab" id="at-instr" onclick="switchTab('instr')" style="display:none;"></button>
     <button class="app-tab" id="at-settings" onclick="switchTab('settings')"><span class="ti">⚙️</span>Настройки</button>
@@ -708,6 +743,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 <script src="src/streak.js"></script>
 <script src="src/lb.js"></script>
 <script src="src/dict.js"></script>
+<script src="src/verbs.js"></script>
 <script src="src/quiz.js"></script>
 <script src="src/learn.js"></script>
 <script src="src/main.js"></script>
