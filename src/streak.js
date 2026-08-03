@@ -119,11 +119,18 @@ async function updateUI() {
       .select('nickname,total_score')
       .order('total_score', { ascending: false });
     if (!data || !data.length) {
-      rankEl.textContent = '🏆 Рейтинг: —';
+      rankEl.textContent = '🏆 Рейтинг: — • ' + (App.totalScore || 0) + ' XP';
       return;
     }
     const rank = data.findIndex((u) => u.nickname === App.username) + 1;
-    rankEl.textContent = '🏆 Рейтинг: ' + (rank > 0 ? (rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '#' + rank) : '—');
+    const row = data.find((u) => u.nickname === App.username);
+    const score = Math.max(App.totalScore || 0, row?.total_score || 0);
+    rankEl.textContent =
+      '🏆 Рейтинг: ' +
+      (rank > 0 ? (rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '#' + rank) : '—') +
+      ' • ' +
+      score +
+      ' XP';
   } catch (e) {
     /* non-fatal */
   }

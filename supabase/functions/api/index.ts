@@ -207,18 +207,19 @@ Deno.serve(async (req: Request) => {
           case "log-score": {
             const points = body.points;
             const courseName = body.course_name;
-            if (typeof points !== "number" || !Number.isFinite(points)) return badRequest("points required");
+            if (typeof points !== "number" || !Number.isFinite(points) || !Number.isInteger(points)) {
+              return badRequest("integer points required");
+            }
             const { error: insErr } = await db.from("score_history").insert({
               username,
               course_name: typeof courseName === "string" ? courseName : null,
               points,
             });
             if (insErr) return badRequest(insErr.message);
-            const newTotal = (user.total_score || 0) + points;
-            const { error: updErr } = await db
-              .from("users")
-              .update({ total_score: newTotal })
-              .eq("username", username);
+            const { data: newTotal, error: updErr } = await db.rpc("increment_user_total_score", {
+              p_username: username,
+              p_points: points,
+            });
             if (updErr) return badRequest(updErr.message);
             return json({ ok: true, total_score: newTotal });
           }

@@ -46,15 +46,36 @@ async function loadLB() {
     return;
   }
 
-  // Score, optionally windowed by period — aggregated from score_history.
-  let q = db.from('score_history').select('username,points,course_name,created_at');
-  if (period !== 'all') {
-    const d = new Date();
-    if (period === 'day') d.setHours(0, 0, 0, 0);
-    else if (period === 'week') d.setDate(d.getDate() - 7);
-    else if (period === 'month') d.setMonth(d.getMonth() - 1);
-    q = q.gte('created_at', d.toISOString());
+  // All-time score is the canonical total kept on users/leaderboard.
+  // score_history is still used for time windows and the personal chart.
+  if (period === 'all') {
+    const { data } = await db
+      .from('leaderboard')
+      .select('nickname,total_score')
+      .order('total_score', { ascending: false })
+      .limit(20);
+    const d30 = new Date();
+    d30.setDate(d30.getDate() - 30);
+    const { data: myData } = await db
+      .from('score_history')
+      .select('points,created_at')
+      .eq('username', App.username)
+      .gte('created_at', d30.toISOString());
+    const items = (data || []).map((r) => ({ name: r.nickname, val: (r.total_score || 0) + ' 🌟' }));
+    cont.innerHTML = '';
+    const chart = buildChart(myData || []);
+    if (chart) cont.innerHTML += chart;
+    renderLbTable(cont, items, true);
+    return;
   }
+
+  // Windowed score is aggregated from recent score_history rows.
+  let q = db.from('score_history').select('username,points,course_name,created_at');
+  const d = new Date();
+  if (period === 'day') d.setHours(0, 0, 0, 0);
+  else if (period === 'week') d.setDate(d.getDate() - 7);
+  else if (period === 'month') d.setMonth(d.getMonth() - 1);
+  q = q.gte('created_at', d.toISOString());
   const d30 = new Date();
   d30.setDate(d30.getDate() - 30);
   const { data: myData } = await db

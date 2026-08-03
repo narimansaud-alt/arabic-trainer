@@ -685,8 +685,25 @@ async function logPts(pts) {
   updateUI();
   showXP(pts);
   try {
-    await Api.call('log-score', { username: App.username, password: App.password, points: pts, course_name: App.volume });
+    const res = await Api.call('log-score', { username: App.username, password: App.password, points: pts, course_name: App.volume });
+    if (typeof res.total_score === 'number') App.totalScore = res.total_score;
+    updateUI();
   } catch (e) {
+    App.totalScore = Math.max(0, (App.totalScore || 0) - pts);
+    updateUI();
+    showScoreSyncError();
     console.log('logPts failed (score will be out of sync until next login)', e);
   }
+}
+
+function showScoreSyncError() {
+  const old = document.getElementById('score-sync-error');
+  if (old) old.remove();
+  const el = document.createElement('div');
+  el.id = 'score-sync-error';
+  el.textContent = 'Очки не сохранились. Проверьте интернет и перезайдите.';
+  el.style.cssText =
+    'position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;background:var(--red);color:white;padding:10px 14px;border-radius:10px;font-weight:700;font-size:13px;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,0.22);';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
 }
