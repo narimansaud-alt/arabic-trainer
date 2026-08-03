@@ -15,7 +15,6 @@ function showVolumeScreen(courseName, key) {
   document.getElementById('vol-course-title').textContent = courseName;
   const subMap = {
     med: '4 тома — классический арабский',
-    huna: '2 тома — разговорный арабский',
     bayna: '4 тома по 2 части',
   };
   document.getElementById('vol-course-sub').textContent = subMap[key] || 'Выберите том';

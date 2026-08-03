@@ -511,6 +511,10 @@ async function restoreProgress() {
       fast: '⚡ Быстрое повторение',
     };
     if (p.isLearn) {
+      if (p.volume && !findVolumeById(p.volume)) {
+        clearProgress();
+        return false;
+      }
       if (!p.learnCards || !p.learnCards.length || p.learnCardIdx >= p.learnCards.length) {
         clearProgress();
         return false;
@@ -538,6 +542,10 @@ async function restoreProgress() {
       return true;
     }
     if (!p.queue || !p.queue.length || p.qi >= p.queue.length) {
+      clearProgress();
+      return false;
+    }
+    if (p.volume && !findVolumeById(p.volume)) {
       clearProgress();
       return false;
     }

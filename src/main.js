@@ -103,6 +103,11 @@ window.addEventListener('load', async () => {
       const lastVolume = localStorage.getItem('arabic_last_volume');
       const lastTab = localStorage.getItem('arabic_last_tab');
       if (lastScreen === 'screen-app' && lastVolume) {
+        if (!findVolumeById(lastVolume)) {
+          localStorage.removeItem('arabic_last_volume');
+          goToCourse();
+          return;
+        }
         App.volume = lastVolume;
         currentCourseKey = getCourseKeyByVolume(lastVolume) || currentCourseKey;
         document.getElementById('s-uname').textContent = App.username;
