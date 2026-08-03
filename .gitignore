@@ -12,3 +12,7 @@
 .venv-workers
 python_modules
 services/*/dev.log
+
+# local CLI state and one-time secret bridge files
+supabase/.temp/
+.codex-supabase-token.tmp
