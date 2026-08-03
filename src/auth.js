@@ -108,7 +108,7 @@ async function loadUserStats() {
   App.streak = user.streak || 0;
   App.maxStreak = user.max_streak || 0;
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = appDateKey();
   const storedDate = user.last_count_date ? String(user.last_count_date).split('T')[0] : null;
   if (storedDate === today) {
     App.dailyWords = user.daily_words || 0;

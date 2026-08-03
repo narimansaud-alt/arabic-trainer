@@ -10,7 +10,6 @@ async function updateStreak(doIncrement) {
   if (!doIncrement) {
     // Local-only check: if the user skipped a day, show 0 until the
     // server recomputes on their next 'update-streak' call.
-    const today = new Date().toISOString().split('T')[0];
     updateUI();
     return;
   }
@@ -28,7 +27,7 @@ async function updateStreak(doIncrement) {
 }
 
 async function addDailyWord() {
-  const today = new Date().toISOString().split('T')[0];
+  const today = appDateKey();
   if (App.lastCountDate !== today) {
     App.dailyWords = 0;
     App.lastCountDate = today;
@@ -51,19 +50,15 @@ async function addDailyWord() {
 }
 
 function checkMidnightReset() {
-  const today = new Date().toISOString().split('T')[0];
+  const today = appDateKey();
   if (App.lastCountDate && App.lastCountDate !== today) {
     App.dailyWords = 0;
     App.lastCountDate = today;
     updateStreakBanner();
   }
-  const now = new Date();
-  const midnight = new Date(now);
-  midnight.setHours(24, 0, 0, 0);
-  const msToMidnight = midnight - now;
   setTimeout(() => {
     checkMidnightReset();
-  }, msToMidnight);
+  }, msUntilNextAppMidnight());
 }
 
 function updateStreakBanner() {

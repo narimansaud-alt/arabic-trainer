@@ -38,6 +38,13 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+const MOSCOW_OFFSET_MS = 3 * 60 * 60 * 1000;
+
+function moscowDateKey(offsetDays = 0) {
+  return new Date(Date.now() + MOSCOW_OFFSET_MS + offsetDays * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0];
+}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -284,14 +291,11 @@ Deno.serve(async (req: Request) => {
             // Server recomputes streak from last_activity rather than
             // trusting a client-supplied streak number directly, to
             // avoid letting a tampered client award itself days.
-            const today = new Date().toISOString().split("T")[0];
+            const today = moscowDateKey();
             const last = user.last_activity as string | null;
             let streak = (user.streak as number) || 0;
             if (last !== today) {
-              const yesterday = new Date();
-              yesterday.setDate(yesterday.getDate() - 1);
-              const yStr = yesterday.toISOString().split("T")[0];
-              streak = last === yStr ? streak + 1 : 1;
+              streak = last === moscowDateKey(-1) ? streak + 1 : 1;
             }
             const maxStreak = Math.max(streak, (user.max_streak as number) || 0);
             const { error } = await db
@@ -305,7 +309,7 @@ Deno.serve(async (req: Request) => {
           case "update-daily-count": {
             const count = body.daily_words;
             if (typeof count !== "number") return badRequest("daily_words required");
-            const today = new Date().toISOString().split("T")[0];
+            const today = moscowDateKey();
             const { error } = await db
               .from("users")
               .update({ daily_words: count, last_count_date: today })

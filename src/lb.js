@@ -69,12 +69,10 @@ async function loadLB() {
     return;
   }
 
-  // Windowed score is aggregated from recent score_history rows.
+  // Period scores are aggregated from Moscow calendar periods:
+  // day starts at 00:00 MSK, week starts on Sunday, month starts on the 1st.
   let q = db.from('score_history').select('username,points,course_name,created_at');
-  const d = new Date();
-  if (period === 'day') d.setHours(0, 0, 0, 0);
-  else if (period === 'week') d.setDate(d.getDate() - 7);
-  else if (period === 'month') d.setMonth(d.getMonth() - 1);
+  const d = appPeriodStart(period);
   q = q.gte('created_at', d.toISOString());
   const d30 = new Date();
   d30.setDate(d30.getDate() - 30);
@@ -102,13 +100,12 @@ async function loadLB() {
 function buildChart(records) {
   const days = [];
   for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    days.push(d.toISOString().split('T')[0]);
+    const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+    days.push(appDateKey(d));
   }
   const byDay = {};
   records.forEach((r) => {
-    const d = r.created_at ? r.created_at.split('T')[0] : null;
+    const d = r.created_at ? appDateKey(new Date(r.created_at)) : null;
     if (d) byDay[d] = (byDay[d] || 0) + r.points;
   });
   const vals = days.map((d) => byDay[d] || 0);

@@ -44,6 +44,31 @@ const Settings = {
   rulesLesson: 'all',
 };
 
+const APP_TIME_ZONE_OFFSET_MINUTES = 180; // Europe/Moscow, UTC+3
+
+function appDateKey(date = new Date()) {
+  const moscowTime = new Date(date.getTime() + APP_TIME_ZONE_OFFSET_MINUTES * 60 * 1000);
+  return moscowTime.toISOString().split('T')[0];
+}
+
+function appPeriodStart(period) {
+  const [year, month, day] = appDateKey().split('-').map(Number);
+  let start = Date.UTC(year, month - 1, day, -APP_TIME_ZONE_OFFSET_MINUTES / 60, 0, 0, 0);
+  if (period === 'week') {
+    const dayOfWeek = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+    start = Date.UTC(year, month - 1, day - dayOfWeek, -APP_TIME_ZONE_OFFSET_MINUTES / 60, 0, 0, 0);
+  } else if (period === 'month') {
+    start = Date.UTC(year, month - 1, 1, -APP_TIME_ZONE_OFFSET_MINUTES / 60, 0, 0, 0);
+  }
+  return new Date(start);
+}
+
+function msUntilNextAppMidnight() {
+  const [year, month, day] = appDateKey().split('-').map(Number);
+  const nextMidnight = Date.UTC(year, month - 1, day + 1, -APP_TIME_ZONE_OFFSET_MINUTES / 60, 0, 0, 0);
+  return Math.max(nextMidnight - Date.now(), 1000);
+}
+
 const VOLUMES = {
   med: [
     { id: 'Мединский курс (Том 1)', label: 'Том 1', sub: 'Уроки 1–22' },
