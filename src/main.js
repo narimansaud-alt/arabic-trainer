@@ -1,6 +1,21 @@
 // main.js — settings, PWA install, lifecycle, and app bootstrap.
 // This is the last script loaded; everything else must already be defined.
 
+window.addEventListener('error', (e) => {
+  ErrorLog.capture(e.error || e.message, {
+    source: 'window-error',
+    filename: e.filename,
+    lineno: e.lineno,
+    colno: e.colno,
+  });
+});
+
+window.addEventListener('unhandledrejection', (e) => {
+  ErrorLog.capture(e.reason || 'Unhandled promise rejection', {
+    source: 'unhandledrejection',
+  });
+});
+
 function setMode(m, btn) {
   Settings.mode = m;
   document.querySelectorAll('#mode-btns .mode-pill').forEach((b) => b.classList.remove('active'));

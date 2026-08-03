@@ -110,6 +110,47 @@ function stripSecrets(user: Record<string, unknown>) {
   return safe;
 }
 
+function shortText(value: unknown, maxLength: number) {
+  if (value == null) return null;
+  return String(value).slice(0, maxLength);
+}
+
+function scrubLogValue(value: unknown): unknown {
+  if (value == null) return value;
+  if (typeof value === "string") {
+    return value
+      .replace(/("?(?:password|pass|pw|token|apikey|authorization)"?\s*[:=]\s*)("[^"]*"|[^\s,}]+)/gi, '$1"[redacted]"')
+      .slice(0, 4000);
+  }
+  if (Array.isArray(value)) return value.slice(0, 20).map(scrubLogValue);
+  if (typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [key, item] of Object.entries(value as Record<string, unknown>).slice(0, 40)) {
+      out[key] = /password|pass|pw|token|apikey|authorization/i.test(key) ? "[redacted]" : scrubLogValue(item);
+    }
+    return out;
+  }
+  return value;
+}
+
+async function logClientError(body: Record<string, unknown>, req: Request) {
+  const context = typeof body.context === "object" && body.context !== null ? scrubLogValue(body.context) : null;
+  const { error } = await db.from("app_error_log").insert({
+    username: shortText(body.username, 32),
+    source: shortText(body.source, 80),
+    message: shortText(body.message, 1000) || "Unknown client error",
+    stack: shortText(body.stack, 4000),
+    url: shortText(body.url, 1000),
+    user_agent: shortText(body.user_agent, 1000),
+    app_version: shortText(body.app_version, 80),
+    context,
+    client_ip: shortText(req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"), 80),
+    cf_ray: shortText(req.headers.get("cf-ray"), 80),
+  });
+  if (error) return badRequest(error.message);
+  return json({ ok: true });
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: CORS_HEADERS });
@@ -130,6 +171,9 @@ Deno.serve(async (req: Request) => {
 
   try {
     switch (action) {
+      case "log-client-error":
+        return await logClientError(body, req);
+
       // ---------------------------------------------------------------
       case "register": {
         const username = typeof body.username === "string" ? body.username.trim().toLowerCase() : "";

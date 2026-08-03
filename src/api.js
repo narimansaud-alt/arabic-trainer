@@ -22,6 +22,58 @@ const { createClient } = supabase;
 // Public, read-only client — used ONLY for words/rules/notifications/leaderboard.
 const db = createClient(SUPA_URL, SUPA_ANON_KEY, { auth: { persistSession: false } });
 
+const ErrorLog = {
+  recent: new Set(),
+
+  scrub(value) {
+    if (value == null) return value;
+    if (typeof value === 'string') {
+      return value
+        .replace(/("?(?:password|pass|pw|token|apikey|authorization)"?\s*[:=]\s*)("[^"]*"|[^\s,}]+)/gi, '$1"[redacted]"')
+        .slice(0, 4000);
+    }
+    if (Array.isArray(value)) return value.slice(0, 20).map((v) => this.scrub(v));
+    if (typeof value === 'object') {
+      const out = {};
+      Object.entries(value)
+        .slice(0, 40)
+        .forEach(([k, v]) => {
+          out[k] = /password|pass|pw|token|apikey|authorization/i.test(k) ? '[redacted]' : this.scrub(v);
+        });
+      return out;
+    }
+    return value;
+  },
+
+  async capture(error, meta) {
+    try {
+      const message = error?.message || String(error || 'Unknown error');
+      const signature = [meta?.source || 'unknown', meta?.action || '', message].join('|').slice(0, 300);
+      if (this.recent.has(signature)) return;
+      this.recent.add(signature);
+      setTimeout(() => this.recent.delete(signature), 30000);
+
+      await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'log-client-error',
+          username: typeof App !== 'undefined' ? App.username : null,
+          message,
+          stack: error?.stack || null,
+          source: meta?.source || 'client',
+          url: location.href,
+          user_agent: navigator.userAgent,
+          app_version: 'web',
+          context: this.scrub(meta || {}),
+        }),
+      });
+    } catch {
+      // Logging must never break the app.
+    }
+  },
+};
+
 const Api = {
   /**
    * Calls the trusted Edge Function. `payload` should include
@@ -39,9 +91,11 @@ const Api = {
       });
       data = await res.json();
     } catch (e) {
+      ErrorLog.capture(e, { source: 'api-network', action });
       throw new ApiError('Сеть недоступна. Проверьте подключение.', 0);
     }
     if (!res.ok || data.error) {
+      ErrorLog.capture(new ApiError(data.error || 'API error', res.status), { source: 'api-response', action, status: res.status });
       throw new ApiError(data.error || 'Неизвестная ошибка сервера', res.status);
     }
     return data;
