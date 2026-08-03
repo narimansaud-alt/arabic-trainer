@@ -268,7 +268,8 @@ function renderQ() {
 }
 
 function genOpts(correct, key) {
-  const pool = shuf(Dict.allWords.filter((w) => w[key] !== correct && rmH(w[key]) !== rmH(correct)));
+  const source = Dict.allWords.length ? Dict.allWords : queue;
+  const pool = shuf(source.filter((w) => w[key] !== correct && rmH(w[key]) !== rmH(correct)));
   const opts = [correct, ...pool.slice(0, 3).map((w) => w[key])];
   while (opts.length < 4) opts.push('—');
   return shuf(opts);
