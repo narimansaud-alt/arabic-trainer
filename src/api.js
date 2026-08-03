@@ -81,12 +81,13 @@ const Api = {
    * themselves, since the function re-verifies the password on every
    * write (there is no separate session/JWT layer).
    */
-  async call(action, payload) {
+  async call(action, payload, options = {}) {
     let res, data;
     try {
       res = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        keepalive: options.keepalive === true,
         body: JSON.stringify({ action, ...payload }),
       });
       data = await res.json();

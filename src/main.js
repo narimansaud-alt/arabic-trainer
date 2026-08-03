@@ -72,7 +72,7 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') {
     saveProgress();
     if (App.username && App.dailyWords > 0) {
-      Api.call('update-daily-count', { username: App.username, password: App.password, daily_words: App.dailyWords }).catch(() => {});
+      Api.call('update-daily-count', { username: App.username, password: App.password, daily_words: App.dailyWords }, { keepalive: true }).catch(() => {});
     }
   } else {
     checkMidnightReset();
