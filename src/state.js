@@ -92,6 +92,21 @@ const VOLUMES = {
   ],
 };
 
+function findVolumeById(volumeId) {
+  for (const vols of Object.values(VOLUMES)) {
+    const found = vols.find((v) => v.id === volumeId);
+    if (found) return found;
+  }
+  return null;
+}
+
+function getCourseKeyByVolume(volumeId) {
+  for (const [key, vols] of Object.entries(VOLUMES)) {
+    if (vols.some((v) => v.id === volumeId)) return key;
+  }
+  return null;
+}
+
 function resetApp() {
   App.username = null;
   App.password = null;

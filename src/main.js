@@ -104,6 +104,7 @@ window.addEventListener('load', async () => {
       const lastTab = localStorage.getItem('arabic_last_tab');
       if (lastScreen === 'screen-app' && lastVolume) {
         App.volume = lastVolume;
+        currentCourseKey = getCourseKeyByVolume(lastVolume) || currentCourseKey;
         document.getElementById('s-uname').textContent = App.username;
         updateUI();
         await loadDict();

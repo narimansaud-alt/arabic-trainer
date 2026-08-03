@@ -120,12 +120,12 @@ function renderDict() {
 
 // RULES
 async function loadRulesAll() {
-  const vols = VOLUMES[currentCourseKey] || [];
   Dict.rules = [];
-  for (const v of vols) {
-    const { data } = await db.from('rules').select('*').eq('course_name', v.id).order('lesson_number');
-    if (data && data.length) Dict.rules = Dict.rules.concat(data.map((r) => ({ ...r, volLabel: v.label })));
-  }
+  Settings.rulesLesson = 'all';
+  const volume = findVolumeById(App.volume);
+  if (!volume) return;
+  const { data } = await db.from('rules').select('*').eq('course_name', App.volume).order('lesson_number');
+  if (data && data.length) Dict.rules = data.map((r) => ({ ...r, volLabel: volume.label }));
   if (!Dict.rules.length) {
     document.getElementById('rules-content').innerHTML =
       '<div class="lb-empty">Правила ещё не добавлены.<br><small>Добавьте через Supabase → таблица rules</small></div>';

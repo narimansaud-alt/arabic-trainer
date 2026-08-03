@@ -36,6 +36,7 @@ function showVolumeScreen(courseName, key) {
 
 async function selectVolume(volumeId) {
   App.volume = volumeId;
+  currentCourseKey = getCourseKeyByVolume(volumeId) || currentCourseKey;
   localStorage.setItem('arabic_last_volume', volumeId);
   document.getElementById('s-uname').textContent = App.username;
   updateUI();
