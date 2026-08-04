@@ -111,12 +111,13 @@ def build_forms(verb, future_type):
         past=True,
         future=True,
         imperative=True,
-        alltense=False,
+        alltense=True,
         transitive=True,
         display_format="DICT",
     )
     res = nfc_deep(res)
     return {
+        "all_forms": {key: value for key, value in res.items() if isinstance(value, dict)},
         "past": res.get("الماضي المعلوم", {}),
         "present": res.get("المضارع المعلوم", {}),
         "imperative": {k: v for k, v in res.get("الأمر", {}).items() if v},
@@ -141,7 +142,11 @@ def cache_lookup(env, verb, future_type):
         )
         rows = res.json()
         if rows:
-            return rows[0]["forms"]
+            forms = rows[0]["forms"]
+            # Cached legacy responses only contain three basic tables. Rebuild
+            # them once so the user receives the full فصحى result as well.
+            if isinstance(forms, dict) and isinstance(forms.get("all_forms"), dict) and forms["all_forms"]:
+                return forms
     except Exception:
         pass
     return None
