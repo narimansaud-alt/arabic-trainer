@@ -565,6 +565,21 @@ function lessonTopics(items, limit = items.length) {
     .join('');
 }
 
+function lessonPreviewList(items) {
+  return items
+    .map(
+      (r, i) =>
+        '<span class="rules-lesson-preview-row accent-' +
+        ruleAccent(r, i) +
+        '"><span class="rules-lesson-preview-num">' +
+        (i + 1) +
+        '</span><b>' +
+        wrapArabic(esc(r.title)) +
+        '</b></span>'
+    )
+    .join('');
+}
+
 function lessonOutline(items) {
   return items
     .map(
@@ -625,23 +640,38 @@ function bookPageFromInput(page) {
   return Math.max(1, parsed);
 }
 
-function buildBookUrl(url, page) {
-  return `${url}#page=${bookPageFromInput(page)}&zoom=page-width`;
+function buildBookPageAssetUrl(book, page) {
+  const pattern = book && book.pagePattern;
+  if (!pattern) return '';
+  const pageNumber = String(bookPageFromInput(page)).padStart(3, '0');
+  return pattern.replace('{page}', pageNumber);
 }
 
 function setBookPage(volumeId, page) {
   if (!volumeId) return;
-  const newPage = bookPageFromInput(page);
+  const book = getVolumeBook(volumeId);
+  if (!book) return;
+  const maxPage = Number(book.pageCount) > 0 ? Number(book.pageCount) : Number.MAX_SAFE_INTEGER;
+  const newPage = Math.min(bookPageFromInput(page), maxPage);
   currentBookPage = newPage;
   localStorage.setItem(getBookStorageKey(volumeId), String(newPage));
 
-  const frame = document.getElementById('book-frame');
+  const image = document.getElementById('book-page-image');
   const input = document.getElementById('book-page-input');
-  const book = getVolumeBook(volumeId);
-  if (!frame || !input || !book) return;
+  const status = document.getElementById('book-page-status');
+  const previous = document.getElementById('book-prev-btn');
+  const next = document.getElementById('book-next-btn');
+  if (!input) return;
 
   input.value = String(newPage);
-  frame.src = buildBookUrl(book.url, newPage);
+  input.max = String(maxPage);
+  if (image && buildBookPageAssetUrl(book, newPage)) {
+    image.src = buildBookPageAssetUrl(book, newPage);
+    image.alt = 'Страница ' + newPage + ' из ' + maxPage;
+  }
+  if (status) status.textContent = 'Страница ' + newPage + ' из ' + maxPage;
+  if (previous) previous.disabled = newPage <= 1;
+  if (next) next.disabled = newPage >= maxPage;
 }
 
 function nextBookPage(delta) {
@@ -689,21 +719,28 @@ function renderBookTab() {
     esc(book.url) +
     '" target="_blank" rel="noopener">Открыть отдельно ↗</a></div>' +
     '<div class="book-reader-toolbar">' +
-    '<button class="book-nav-btn" type="button" onclick="nextBookPage(-1)">← Предыдущая</button>' +
+    '<button class="book-nav-btn" id="book-prev-btn" type="button" onclick="nextBookPage(-1)">← Предыдущая</button>' +
     '<input class="book-page-input" id="book-page-input" type="number" min="1" value="' +
     currentBookPage +
     '" onchange="applyBookPageFromInput()">' +
-    '<button class="book-nav-btn" type="button" onclick="nextBookPage(1)">Следующая →</button>' +
+    '<button class="book-nav-btn" id="book-next-btn" type="button" onclick="nextBookPage(1)">Следующая →</button>' +
     '</div>' +
-    '<div class="book-meta">Введите номер страницы для быстрого перехода</div>' +
-    '<iframe class="book-frame" id="book-frame" src="' +
-    buildBookUrl(book.url, currentBookPage) +
-    '" title="Книга тома"></iframe>' +
-    '<div class="book-meta">Можно двигать страницу через встроенные кнопки PDF на экране.</div>' +
+    '<div class="book-meta" id="book-page-status">Страница ' +
+    currentBookPage +
+    ' из ' +
+    (book.pageCount || '—') +
+    '</div>' +
+    '<div class="book-page-shell"><img class="book-page-image" id="book-page-image" src="' +
+    esc(buildBookPageAssetUrl(book, currentBookPage)) +
+    '" alt="Страница ' +
+    currentBookPage +
+    ' из ' +
+    (book.pageCount || '') +
+    '" loading="eager"></div>' +
+    '<div class="book-meta">Листайте страницы кнопками или укажите номер страницы.</div>' +
     '</div>';
 
-  const frame = document.getElementById('book-frame');
-  if (frame) frame.src = buildBookUrl(book.url, currentBookPage);
+  setBookPage(volume.id, currentBookPage);
 }
 
 function pushAppHistoryState(state) {
@@ -810,8 +847,8 @@ function renderRulesIndex(cont, grouped) {
           (items.length === 1 ? 'правило' : items.length < 5 ? 'правила' : 'правил') +
           (tables ? ' · ' + tables + ' табл.' : '') +
           (words ? ' · ' + words + ' слов' : '') +
-          '</span><span class="rules-lesson-topics">' +
-          lessonTopics(items, 2) +
+          '</span><span class="rules-lesson-full-outline" aria-label="Все правила урока">' +
+          lessonPreviewList(items) +
           '</span><span class="rules-lesson-open">Открыть урок ›</span></button>'
         );
       })

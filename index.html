@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Alfazi — Арабский тренажер</title>
-<meta name="theme-color" content="#1a6b3c">
+<meta name="theme-color" content="#ffffff">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="./manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -543,6 +543,56 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 
 /* TABLE SCROLL WRAPPER */
 .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;margin:8px 0 4px;}
+/* Final visual language: white canvas, black typography, non-green rule accents. */
+:root{
+  --green:#111111;--green-dark:#000000;--green-light:#f3f3f3;
+  --bg:#ffffff;--border:#d8d8d8;--gray:#666666;
+}
+body{background:#fff;color:#111;}
+#screen-login,#screen-course,#screen-volume{background:#fff !important;color:#111;}
+.course-header,.vol-header{color:#111;}
+.topbar,.quiz-top,.res-hdr{background:#fff !important;color:#111;border-bottom:1px solid #111;}
+.topbar *,.quiz-top *,.res-hdr *{color:inherit;}
+.book-format-choice{background:#fff;border-color:#111;}
+.book-format-current{background:#111;color:#fff;}
+.book-format-btn{border-color:#111;color:#111;}
+.book-nav-btn{border-color:#111;background:#fff;color:#111;}
+.book-nav-btn:disabled{opacity:.35;cursor:default;}
+.book-page-shell{width:100%;min-height:340px;margin-top:8px;border:1px solid #111;border-radius:10px;background:#fff;display:flex;justify-content:center;overflow:auto;}
+.book-page-image{display:block;width:100%;height:auto;max-height:72vh;object-fit:contain;background:#fff;}
+.rules-lesson-full-outline{grid-column:2;display:flex;flex-direction:column;gap:5px;margin-top:2px;}
+.rules-lesson-preview-row{display:grid;grid-template-columns:22px minmax(0,1fr);align-items:start;gap:7px;color:#111;line-height:1.35;}
+.rules-lesson-preview-row b{font-size:13px;font-weight:750;color:#111;}
+.rules-lesson-preview-num{width:21px;height:21px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--preview-soft,#f3f3f3);color:var(--preview-accent,#111);font-size:10px;font-weight:900;}
+.rules-lesson-preview-row.accent-0{--preview-accent:#1d4ed8;--preview-soft:#eff6ff;}
+.rules-lesson-preview-row.accent-1{--preview-accent:#b45309;--preview-soft:#fff7ed;}
+.rules-lesson-preview-row.accent-2{--preview-accent:#7c3aed;--preview-soft:#f5f3ff;}
+.rules-lesson-preview-row.accent-3{--preview-accent:#be123c;--preview-soft:#fff1f2;}
+.rules-lesson-preview-row.accent-4{--preview-accent:#c026d3;--preview-soft:#fdf4ff;}
+.rules-lesson-preview-row.accent-5{--preview-accent:#0891b2;--preview-soft:#ecfeff;}
+.rules-lesson-num{background:#fff;color:#111;border:1px solid #111;}
+.rules-lesson-num::after{color:#111;}
+.rules-lesson-label,.rules-home-kicker,.rules-lesson-kicker{color:#111 !important;}
+.rules-lesson-name,.rules-home-title,.rule-detail-title,.rule-lesson-title{color:#111 !important;}
+.rules-lesson-stats,.rules-home-sub,.rule-detail-sub{color:#666;}
+.rules-back-btn,.rules-open-btn,.rule-detail-actions button{color:#111;border-color:#111;}
+.rules-home-head,.rules-lesson-tile,.rule-detail-hero,.rule-detail-outline,.rule-card,.rule-lesson-card{box-shadow:none;border-color:#d8d8d8;}
+.rule-outline-row.accent-0,.rule-card.accent-0{--rule-accent:#1d4ed8;--rule-soft:#eff6ff;--rule-line:#bfdbfe;}
+.rule-outline-row.accent-1,.rule-card.accent-1{--rule-accent:#b45309;--rule-soft:#fff7ed;--rule-line:#fed7aa;}
+.rule-outline-row.accent-2,.rule-card.accent-2{--rule-accent:#7c3aed;--rule-soft:#f5f3ff;--rule-line:#ddd6fe;}
+.rule-outline-row.accent-3,.rule-card.accent-3{--rule-accent:#be123c;--rule-soft:#fff1f2;--rule-line:#fecdd3;}
+.rule-outline-row.accent-4,.rule-card.accent-4{--rule-accent:#c026d3;--rule-soft:#fdf4ff;--rule-line:#f5d0fe;}
+.rule-outline-row.accent-5,.rule-card.accent-5{--rule-accent:#0891b2;--rule-soft:#ecfeff;--rule-line:#a5f3fc;}
+.rule-content,.rule-content b,.rule-outline-row b{color:#111;}
+.rule-subpanel.is-logic{background:#ecfeff;border-color:#a5f3fc;border-left-color:#0891b2;}
+.rule-subpanel.is-logic b:first-child{color:#0891b2;}
+.rule-content th,.grammar-ref-table th{background:#111;color:#fff;border-color:#000;}
+.rule-content td:first-child,.grammar-ref-table td:first-child{color:#111;}
+.dict-book-table .dict-book-ar{color:#111;}
+.dict-book-table th{background:#f3f3f3;color:#111;border-color:#111;}
+.dict-book-table td{color:#111;border-color:#d8d8d8;}
+.dict-book-table tr:nth-child(even) td{background:#fafafa;}
+.book-frame{display:none;}
 </style>
 </head>
 <body>

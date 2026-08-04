@@ -75,10 +75,12 @@ const VOLUMES = {
     {
       id: 'Мединский курс (Том 1)',
       label: 'Том 1',
-      sub: 'Уроки 1–22',
+      sub: 'Уроки 1–23',
       book: {
         url: './books/ar_01_Lessons_in_Arabic_Language.pdf',
         title: 'Мединский курс (Том 1)',
+        pageCount: 125,
+        pagePattern: './books/tom1-pages/page-{page}.jpg',
         status: 'ready',
       },
     },
