@@ -153,13 +153,8 @@ function togglePw(id, btn) {
 }
 
 function wrapArabic(text) {
-  if (!text) return text;
-  return text.replace(
-    /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]+(?:[\s؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]*[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]+)*/g,
-    (m) => '<span class="ar-text">' + m + '</span>'
-  );
+  return String(text || '').replace(/[\u0600-\u06FF]+/gu, (m) => '<span class="ar-text">' + m + '</span>');
 }
-
 function stripRuleHtml(html) {
   const div = document.createElement('div');
   div.innerHTML = String(html || '').replace(/<br\s*\/?>/gi, ' ');
@@ -188,6 +183,24 @@ function ruleBlockLabel(cls) {
   return 'Пояснение';
 }
 
+function renderRuleSubpanel(rawHtml, index, forcedClass) {
+  const restored = String(rawHtml || '');
+  const cls = forcedClass || ruleBlockClass(restored);
+  const content = wrapArabic(restored);
+  const label = ruleBlockLabel(cls);
+  return (
+    '<div class="rule-subpanel ' +
+    cls +
+    '"><div class="rule-subpanel-head"><span class="rule-subpanel-num">' +
+    (index + 1) +
+    '</span><span class="rule-subpanel-label">' +
+    label +
+    '</span></div><div class="rule-subpanel-body"><div class="rule-subpanel-content">' +
+    content +
+    '</div></div></div>'
+  );
+}
+
 function formatRuleContent(html) {
   if (!html) return '';
   const tables = [];
@@ -201,12 +214,12 @@ function formatRuleContent(html) {
     .split(/(?:<br\s*\/?>\s*){2,}/i)
     .map((part) => part.trim())
     .filter(Boolean);
-  const blocks = (parts.length ? parts : [safe]).map((part) => {
+  const blocks = (parts.length ? parts : [safe]).map((part, idx) => {
     const restored = part.replace(/%%RULE_TABLE_(\d+)%%/g, (_, i) => tables[Number(i)] || '');
     const cls = ruleBlockClass(restored);
-    return '<div class="rule-block ' + cls + '"><div class="rule-block-label">' + ruleBlockLabel(cls) + '</div>' + restored + '</div>';
+    return renderRuleSubpanel(restored, idx, cls);
   });
-  return '<div class="rule-flow">' + blocks.join('') + '</div>';
+  return '<div class="rule-subpanel-list">' + blocks.join('') + '</div>';
 }
 
 function highlightRuleMatches(root, query) {
@@ -243,9 +256,58 @@ function highlightRuleMatches(root, query) {
 function toggleRuleCard(btn) {
   const card = btn.closest('.rule-card');
   if (!card) return;
+  const parent = card.closest('.rule-list');
   const open = !card.classList.contains('open');
+  if (open && parent) {
+    parent.querySelectorAll('.rule-card').forEach((item) => {
+      if (item !== card) item.classList.remove('open');
+    });
+    parent.querySelectorAll('.rule-card-head').forEach((item) => item.setAttribute('aria-expanded', 'false'));
+  }
   card.classList.toggle('open', open);
   btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (open) pushRuleCardHistory(card.dataset.ruleId);
+  if (open) {
+    const firstPanel = card.querySelector('.rule-subpanel-head');
+    if (firstPanel) {
+      const firstPanelNode = firstPanel.closest('.rule-subpanel');
+      card.querySelectorAll('.rule-subpanel').forEach((panel) => panel.classList.remove('open'));
+      card.querySelectorAll('.rule-subpanel-head').forEach((head) => head.setAttribute('aria-expanded', 'false'));
+      if (firstPanelNode) {
+        firstPanelNode.classList.add('open');
+        firstPanel.setAttribute('aria-expanded', 'true');
+      }
+    }
+  }
+  if (!open) {
+    card.querySelectorAll('.rule-subpanel').forEach((panel) => panel.classList.remove('open'));
+    card.querySelectorAll('.rule-subpanel-head').forEach((head) => head.setAttribute('aria-expanded', 'false'));
+    if (history.state && String(history.state.ruleCardId || '') === String(card.dataset.ruleId || '')) {
+      if (window.history && history.replaceState) {
+        history.replaceState({ app: 'arabic-trainer', appView: 'rule-lesson', lesson: String(Settings.rulesLesson) }, '', window.location.href);
+      }
+    }
+  }
+  document.querySelectorAll('.rule-outline-row[data-card]').forEach((row) => {
+    if (row.getAttribute('data-card') === card.id) row.classList.toggle('active', open);
+    else if (open) row.classList.remove('active');
+  });
+}
+
+function toggleRuleSubpanel(btn) {
+  const panel = btn.closest('.rule-subpanel');
+  if (!panel) return;
+  const list = panel.closest('.rule-subpanel-list');
+  const open = !panel.classList.contains('open');
+  if (open && list) {
+    list.querySelectorAll('.rule-subpanel').forEach((item) => {
+      if (item !== panel) item.classList.remove('open');
+    });
+    list.querySelectorAll('.rule-subpanel-head').forEach((item) => item.setAttribute('aria-expanded', 'false'));
+  }
+  panel.classList.toggle('open', open);
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (open) pushRuleCardHistory(panel.closest('.rule-card')?.dataset.ruleId);
 }
 
 function ruleSortValue(rule) {
@@ -325,9 +387,11 @@ function lessonOutline(items) {
       (r, i) =>
         '<button class="rule-outline-row accent-' +
         ruleAccent(r, i) +
-        '" type="button" onclick="document.getElementById(\'rule-card-' +
+        '" type="button" onclick="openRuleCardById(&quot;' +
         esc(String(r.id)) +
-        '\')?.scrollIntoView({behavior:\'smooth\',block:\'start\'})"><span>' +
+        '&quot;,false)" data-card="rule-card-' +
+        esc(String(r.id)) +
+        '"><span>' +
         (i + 1) +
         '</span><b>' +
         wrapArabic(esc(r.title)) +
@@ -336,6 +400,34 @@ function lessonOutline(items) {
     .join('');
 }
 
+function openRuleCardById(id, skipHistory = false) {
+  const card = document.getElementById('rule-card-' + id);
+  if (!card) return;
+  const targetCardId = 'rule-card-' + id;
+  document.querySelectorAll('.rule-outline-row[data-card]').forEach((row) => {
+    row.classList.toggle('active', row.getAttribute('data-card') === targetCardId);
+  });
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function pushRuleCardHistory(ruleId) {
+  if (!window.history || !history.pushState) return;
+  history.pushState({ app: 'arabic-trainer', appView: 'rule-lesson', lesson: String(Settings.rulesLesson), ruleCardId: String(ruleId) }, '', window.location.href);
+}
+
+function closeAllRuleCards(scope) {
+  const lists = scope ? [scope] : document.querySelectorAll('.rule-list');
+  lists.forEach((list) => {
+    list.querySelectorAll('.rule-card').forEach((card) => {
+      card.classList.remove('open');
+      const head = card.querySelector('.rule-card-head');
+      if (head) head.setAttribute('aria-expanded', 'false');
+      card.querySelectorAll('.rule-subpanel').forEach((item) => item.classList.remove('open'));
+      card.querySelectorAll('.rule-subpanel-head').forEach((btn) => btn.setAttribute('aria-expanded', 'false'));
+    });
+  });
+  document.querySelectorAll('.rule-outline-row[data-card]').forEach((row) => row.classList.remove('active'));
+}
 function pushAppHistoryState(state) {
   if (!window.history || !history.pushState) return;
   history.pushState({ app: 'arabic-trainer', ...state }, '', window.location.href);
@@ -368,19 +460,19 @@ function renderRuleCards(items, openCards) {
       return (
         '<div class="rule-card accent-' +
         ruleAccent(r, i) +
-        (openCards ? ' open' : '') +
+        '' +
         '" id="rule-card-' +
         esc(String(r.id)) +
-        '"><button class="rule-card-head" type="button" aria-expanded="' +
-        (openCards ? 'true' : 'false') +
-        '" onclick="toggleRuleCard(this)"><span class="rule-index">' +
+        '" data-rule-id="' +
+        esc(String(r.id)) +
+        '"><div class="rule-card-head"><span class="rule-index">' +
         (i + 1) +
         '</span><span class="rule-title-wrap"><span class="rule-title">' +
         wrapArabic(esc(r.title)) +
         '</span><span class="rule-preview">' +
         wrapArabic(esc(rulePreview(r))) +
-        '</span></span><span class="rule-chevron">›</span></button><div class="rule-card-body"><div class="rule-content">' +
-        wrapArabic(content) +
+        '</span></span></div><div class="rule-card-body"><div class="rule-content">' +
+        content +
         '</div></div></div>'
       );
     })
@@ -394,12 +486,23 @@ function formatRuleSections(sections) {
     return Number(a.id || 0) - Number(b.id || 0);
   });
   return (
-    '<div class="rule-flow">' +
+    '<div class="rule-subpanel-list">' +
     sorted
-      .map((section) => {
+      .map((section, index) => {
         const cls = 'is-' + (section.section_type || 'note');
+        const sectionContent = wrapArabic(section.content || '');
         const label = esc(section.title || ruleBlockLabel(cls));
-        return '<div class="rule-block ' + cls + '"><div class="rule-block-label">' + label + '</div>' + section.content + '</div>';
+        return (
+          '<div class="rule-subpanel ' +
+          cls +
+          '"><div class="rule-subpanel-head"><span class="rule-subpanel-num">' +
+          (index + 1) +
+          '</span><span class="rule-subpanel-label">' +
+          label +
+          '</span></div><div class="rule-subpanel-body"><div class="rule-subpanel-content">' +
+          sectionContent +
+          '</div></div></div>'
+        );
       })
       .join('') +
     '</div>'
@@ -421,7 +524,7 @@ function renderRulesIndex(cont, grouped) {
           esc(String(lesson)) +
           '\')"><span class="rules-lesson-num">Урок ' +
           esc(String(lesson)) +
-          '</span><span class="rules-lesson-name">' +
+          '</span><span class="rules-lesson-label">Что внутри</span><span class="rules-lesson-name">' +
           esc(items[0]?.title || 'Правила урока') +
           '</span><span class="rules-lesson-stats">' +
           items.length +
@@ -457,7 +560,7 @@ function renderRulesSearch(cont, grouped, query) {
           ' совпад.</div></div><button class="rules-open-btn" type="button" onclick="showRuleLesson(\'' +
           esc(String(lesson)) +
           '\')">Открыть</button></div><div class="rule-list">' +
-          renderRuleCards(items, true) +
+          renderRuleCards(items, false) +
           '</div></div>'
         );
       })
@@ -470,16 +573,18 @@ function renderRuleLessonDetail(cont, lesson, items, query) {
   cont.innerHTML =
     '<div class="rule-detail-page"><div class="rule-detail-hero"><button class="rules-back-btn" type="button" onclick="goBackFromRuleLesson()">← Все уроки</button><div class="rule-lesson-kicker">Урок ' +
     esc(String(lesson)) +
-    '</div><div class="rule-detail-title">Правила и пояснения</div><div class="rule-detail-sub">' +
+    '</div><div class="rule-detail-title">' +
+    wrapArabic(esc(items[0]?.title || 'Правила урока')) +
+    '</div><div class="rule-detail-sub">' +
     items.length +
     ' ' +
     (items.length === 1 ? 'правило' : items.length < 5 ? 'правила' : 'правил') +
     (words ? ' · ' + words + ' слов в уроке' : '') +
     '</div><div class="rule-detail-actions"><button type="button" onclick="openGrammarTable(\'pronouns\')">Местоимения</button><button type="button" onclick="openGrammarTable(\'verbs\')">Глаголы</button></div></div>' +
-    '<div class="rule-detail-outline"><div class="rule-outline-title">Темы урока</div><div class="rule-outline-sub">Карта правил урока.</div><div class="rule-outline-list">' +
+    '<div class="rule-detail-outline"><div class="rule-outline-title">Что внутри</div><div class="rule-outline-sub">Карта правил урока.</div><div class="rule-outline-list">' +
     lessonOutline(items) +
     '</div></div><div class="rule-list">' +
-    renderRuleCards(items, true) +
+    renderRuleCards(items, false) +
     '</div></div>';
   highlightRuleMatches(cont, query);
 }

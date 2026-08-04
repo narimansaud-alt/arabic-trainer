@@ -1,4 +1,4 @@
-// main.js â€” settings, PWA install, lifecycle, and app bootstrap.
+// main.js — settings, PWA install, lifecycle, and app bootstrap.
 // This is the last script loaded; everything else must already be defined.
 
 window.addEventListener('error', (e) => {
@@ -67,7 +67,7 @@ async function installPWA() {
   if (outcome === 'accepted') deferredInstallPrompt = null;
 }
 
-// VISIBILITY â€” save everything when app is minimized
+// VISIBILITY — save everything when app is minimized
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') {
     saveProgress();
@@ -109,6 +109,16 @@ window.addEventListener('popstate', (e) => {
     if (document.querySelector('.screen.active')?.id !== 'screen-app') showScreen('screen-app');
     switchTab('rules');
     showRuleLesson(state.lesson, false);
+    if (state.ruleCardId) {
+      const card = document.getElementById('rule-card-' + state.ruleCardId);
+      if (card) {
+        openRuleCardById(state.ruleCardId, true);
+      } else {
+        closeAllRuleCards();
+      }
+    } else {
+      closeAllRuleCards();
+    }
     return;
   }
 
@@ -116,6 +126,7 @@ window.addEventListener('popstate', (e) => {
     if (document.querySelector('.screen.active')?.id !== 'screen-app') showScreen('screen-app');
     switchTab('rules');
     showRulesIndex(false);
+    closeAllRuleCards();
     return;
   }
 
