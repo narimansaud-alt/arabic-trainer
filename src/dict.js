@@ -158,6 +158,100 @@ function wrapArabic(text) {
   );
 }
 
+function stripRuleHtml(html) {
+  const div = document.createElement('div');
+  div.innerHTML = String(html || '').replace(/<br\s*\/?>/gi, ' ');
+  return div.textContent.replace(/\s+/g, ' ').trim();
+}
+
+function ruleBlockClass(blockHtml) {
+  const plain = stripRuleHtml(blockHtml).toLowerCase();
+  if (/и[‘'`ʼ’]?раб|إعراب|إِعْرَاب/.test(plain)) return 'is-irab';
+  if (/важно|секрет|запомн|внимание/.test(plain)) return 'is-important';
+  if (/пример|مثال/.test(plain)) return 'is-example';
+  if (/логика|суть|как сказать|как читать/.test(plain)) return 'is-logic';
+  if (/правило|новое правило|вспоминаем/.test(plain)) return 'is-rule';
+  return '';
+}
+
+function formatRuleContent(html) {
+  if (!html) return '';
+  const tables = [];
+  let safe = String(html).replace(/<table[\s\S]*?<\/table>/gi, (m) => {
+    const idx = tables.length;
+    tables.push(m);
+    return '%%RULE_TABLE_' + idx + '%%';
+  });
+  safe = safe.replace(/<br\s*\/?>\s*(и[‘'`ʼ’]?раб\s*:)/gi, '<br><br>$1');
+  const parts = safe
+    .split(/(?:<br\s*\/?>\s*){2,}/i)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const blocks = (parts.length ? parts : [safe]).map((part) => {
+    const restored = part.replace(/%%RULE_TABLE_(\d+)%%/g, (_, i) => tables[Number(i)] || '');
+    const cls = ruleBlockClass(restored);
+    return '<div class="rule-block ' + cls + '">' + restored + '</div>';
+  });
+  return '<div class="rule-flow">' + blocks.join('') + '</div>';
+}
+
+function highlightRuleMatches(root, query) {
+  if (!query) return;
+  const needle = query.toLowerCase();
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      if (!node.nodeValue || !node.nodeValue.toLowerCase().includes(needle)) return NodeFilter.FILTER_REJECT;
+      if (node.parentElement && ['MARK', 'SCRIPT', 'STYLE'].includes(node.parentElement.tagName)) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    },
+  });
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach((node) => {
+    const text = node.nodeValue;
+    const lower = text.toLowerCase();
+    const frag = document.createDocumentFragment();
+    let pos = 0;
+    let idx = lower.indexOf(needle);
+    while (idx !== -1) {
+      if (idx > pos) frag.appendChild(document.createTextNode(text.slice(pos, idx)));
+      const mark = document.createElement('mark');
+      mark.textContent = text.slice(idx, idx + query.length);
+      frag.appendChild(mark);
+      pos = idx + query.length;
+      idx = lower.indexOf(needle, pos);
+    }
+    if (pos < text.length) frag.appendChild(document.createTextNode(text.slice(pos)));
+    node.parentNode.replaceChild(frag, node);
+  });
+}
+
+function toggleRuleCard(btn) {
+  const card = btn.closest('.rule-card');
+  if (!card) return;
+  const open = !card.classList.contains('open');
+  card.classList.toggle('open', open);
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+function ruleSortValue(rule) {
+  const n = Number(rule.sort_order);
+  if (Number.isFinite(n) && n > 0) return n;
+  return rule.title.startsWith('Таблица') ? 10000 + Number(rule.id || 0) : Number(rule.id || 0);
+}
+
+function ruleAccent(rule, idx) {
+  const accents = {
+    table: 1,
+    example: 2,
+    irab: 3,
+    important: 4,
+    logic: 5,
+    note: 0,
+  };
+  return accents[rule.rule_kind] ?? idx % 6;
+}
+
 function renderRules() {
   const q = (document.getElementById('rules-search').value || '').trim().toLowerCase();
   let rules = Dict.rules;
@@ -176,9 +270,8 @@ function renderRules() {
   });
   Object.keys(grouped).forEach((k) => {
     grouped[k].sort((a, b) => {
-      const aS = a.title.startsWith('Таблица') ? 1 : -1;
-      const bS = b.title.startsWith('Таблица') ? 1 : -1;
-      if (aS !== bS) return aS - bS;
+      const byOrder = ruleSortValue(a) - ruleSortValue(b);
+      if (byOrder !== 0) return byOrder;
       return a.id - b.id;
     });
   });
@@ -186,13 +279,41 @@ function renderRules() {
   cont.innerHTML = lessons
     .map((lesson) => {
       const items = grouped[lesson];
+      const openCards = q || Settings.rulesLesson !== 'all';
       return (
-        '<div class="dict-section"><div class="rule-lesson-header">Урок ' +
+        '<div class="rule-lesson-card"><div class="rule-lesson-header">' +
+        '<div class="rule-lesson-kicker">Урок ' +
         lesson +
-        '</div>' +
+        '</div><div class="rule-lesson-title">Что нужно запомнить</div><div class="rule-lesson-meta">' +
+        items.length +
+        ' ' +
+        (items.length === 1 ? 'правило' : items.length < 5 ? 'правила' : 'правил') +
+        '</div></div><div class="rule-topic-list">' +
+        items.map((r) => '<span class="rule-topic-chip">' + wrapArabic(esc(r.title)) + '</span>').join('') +
+        '</div><div class="rule-list">' +
         items
-          .map((r, i) => '<div class="rule-item"><div class="rule-title">' + (i + 1) + '. ' + wrapArabic(r.title) + '</div><div class="rule-content">' + wrapArabic(r.content) + '</div></div>')
+          .map((r, i) => {
+            const rawPreview = r.summary || (/<table[\s\S]*?>/i.test(r.content) ? 'Сводная таблица с примерами по теме урока' : stripRuleHtml(r.content));
+            const preview = rawPreview.slice(0, 170);
+            return (
+              '<div class="rule-card accent-' +
+              ruleAccent(r, i) +
+              (openCards ? ' open' : '') +
+              '"><button class="rule-card-head" type="button" aria-expanded="' +
+              (openCards ? 'true' : 'false') +
+              '" onclick="toggleRuleCard(this)"><span class="rule-index">' +
+              (i + 1) +
+              '</span><span class="rule-title-wrap"><span class="rule-title">' +
+              wrapArabic(esc(r.title)) +
+              '</span><span class="rule-preview">' +
+              wrapArabic(esc(preview + (preview.length >= 170 ? '...' : ''))) +
+              '</span></span><span class="rule-chevron">›</span></button><div class="rule-card-body"><div class="rule-content">' +
+              wrapArabic(formatRuleContent(r.content)) +
+              '</div></div></div>'
+            );
+          })
           .join('') +
+        '</div>' +
         '</div>'
       );
     })
@@ -203,6 +324,7 @@ function renderRules() {
     t.parentNode.insertBefore(w, t);
     w.appendChild(t);
   });
+  highlightRuleMatches(cont, q);
 }
 
 // TABS
