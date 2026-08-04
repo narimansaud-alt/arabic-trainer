@@ -1038,14 +1038,14 @@ function renderRuleLessonDetail(cont, lesson, items, query) {
     '<div class="rule-detail-page"><div class="rule-detail-hero"><button class="rules-back-btn" type="button" onclick="goBackFromRuleLesson()">← Все уроки</button><div class="rule-lesson-kicker">Урок ' +
     esc(String(lesson)) +
     '</div><div class="rule-detail-title" dir="auto">' +
-    esc(items[0]?.title || 'Правила урока') +
+    'Правила урока' +
     '</div><div class="rule-detail-sub">' +
     items.length +
     ' ' +
     (items.length === 1 ? 'правило' : items.length < 5 ? 'правила' : 'правил') +
     (words ? ' · ' + words + ' слов в уроке' : '') +
     '</div><div class="rule-detail-actions"><button type="button" onclick="openGrammarTable(\'pronouns\')">Местоимения</button><button type="button" onclick="openGrammarTable(\'verbs\')">Глаголы</button></div></div>' +
-    '<div class="rule-detail-outline"><div class="rule-outline-title">Что внутри</div><div class="rule-outline-sub">Карта правил урока.</div><div class="rule-outline-list">' +
+    '<div class="rule-detail-outline"><div class="rule-outline-title">Содержание урока</div><div class="rule-outline-sub">Все правила урока. Нажмите на пункт, чтобы перейти к пояснению.</div><div class="rule-outline-list">' +
     lessonOutline(items) +
     '</div></div><div class="rule-list">' +
     renderRuleCards(items, false) +
