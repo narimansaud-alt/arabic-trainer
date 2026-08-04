@@ -194,15 +194,15 @@ async function handleLearnAns(btn, ok, correct, isAr) {
 
 function checkTypedLearn() {
   if (isHist) return;
-  const val = rmH(document.getElementById('type-input').value.trim());
-  const correct = rmH(curWord.ar.replace(/\s*\(.*?\)\s*/g, ''));
+  const val = document.getElementById('type-input').value.trim();
+  const correct = curWord.ar.replace(/\s*\(.*?\)\s*/g, '');
   const fb = document.getElementById('feedback');
   document.getElementById('type-input').disabled = true;
   const hintBtn = document.getElementById('btn-hint');
   if (hintBtn) hintBtn.style.display = 'none';
   const hintLbl = document.getElementById('hint-cost-label');
   if (hintLbl) hintLbl.textContent = '';
-  if (val === correct) {
+  if (isArabicAnswerCorrect(val, correct, Settings.answerCheck)) {
     const penalty = hintCount * 5;
     const pts = Math.max(0, 20 - penalty);
     fb.className = 'feedback ok';

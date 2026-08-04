@@ -11,7 +11,9 @@ let queue = [],
 let roundScore = 0,
   roundWords = [],
   roundWrong = [],
-  roundCorrect = 0;
+  roundCorrect = 0,
+  roundAttempts = 0;
+let sessionIntervalRaised = new Set();
 let hstack = [],
   hidx = -1,
   isHist = false;
@@ -39,10 +41,13 @@ function getNextReview(level, ok) {
   return d.toISOString();
 }
 async function updateWordLevel(ar, ok) {
+  roundAttempts++;
   const s = App.wordStats[ar] || {};
   const cur = s.level || 1;
   const nl = ok ? Math.min(cur + 1, 5) : Math.max(cur - 1, 1);
-  const nr = getNextReview(nl, ok);
+  const reviewLevel = ok && sessionIntervalRaised.has(ar) ? cur : nl;
+  const nr = getNextReview(reviewLevel, ok);
+  if (ok) sessionIntervalRaised.add(ar);
   App.wordStats[ar] = { ...s, level: nl, next: nr, seen: (s.seen || 0) + 1 };
   try {
     await Api.call('update-word-stat', {
@@ -80,6 +85,23 @@ function getSmartQueue(words, limit) {
   });
   if (limit !== 'all' && limit !== 'inf') pool = pool.slice(0, parseInt(limit));
   return pool;
+}
+
+function resetQuizState() {
+  clearTimers();
+  queue = [];
+  qi = 0;
+  curWord = null;
+  roundScore = 0;
+  roundWords = [];
+  roundWrong = [];
+  roundCorrect = 0;
+  roundAttempts = 0;
+  sessionIntervalRaised = new Set();
+  if (typeof learnCards !== 'undefined') learnCards = [];
+  if (typeof learnDoneWords !== 'undefined') learnDoneWords = [];
+  if (typeof learnCardIdx !== 'undefined') learnCardIdx = 0;
+  clearProgress();
 }
 
 // QUIZ START
@@ -131,6 +153,8 @@ function initQuiz(words, effectiveMode, isFav) {
   roundWords = [...words];
   roundWrong = [];
   roundCorrect = 0;
+  roundAttempts = 0;
+  sessionIntervalRaised = new Set();
   hstack = [];
   hidx = -1;
   isHist = false;
@@ -341,15 +365,15 @@ function checkTyped() {
     checkTypedLearn();
     return;
   }
-  const val = rmH(document.getElementById('type-input').value.trim());
-  const correct = rmH(curWord.ar.replace(/\s*\(.*?\)\s*/g, ''));
+  const val = document.getElementById('type-input').value.trim();
+  const correct = curWord.ar.replace(/\s*\(.*?\)\s*/g, '');
   const fb = document.getElementById('feedback');
   document.getElementById('type-input').disabled = true;
   const hintBtn = document.getElementById('btn-hint');
   if (hintBtn) hintBtn.style.display = 'none';
   const hintLbl = document.getElementById('hint-cost-label');
   if (hintLbl) hintLbl.textContent = '';
-  if (val === correct) {
+  if (isArabicAnswerCorrect(val, correct, Settings.answerCheck)) {
     const penalty = hintCount * 5;
     const pts = Math.max(0, 20 - penalty);
     fb.className = 'feedback ok';
@@ -483,6 +507,9 @@ function saveProgress() {
         roundWords,
         roundWrong,
         roundCorrect,
+        roundAttempts,
+        username: App.username,
+        answerCheck: Settings.answerCheck,
         mode: Settings.mode,
         volume: App.volume,
       })
@@ -492,7 +519,7 @@ function saveProgress() {
   if (!queue.length) return;
   localStorage.setItem(
     'arabic_progress',
-    JSON.stringify({ queue, qi, roundScore, roundWords, roundWrong, roundCorrect, mode: Settings.mode, activeMode, volume: App.volume, lives, fastWords, bestStreak })
+    JSON.stringify({ queue, qi, roundScore, roundWords, roundWrong, roundCorrect, roundAttempts, username: App.username, answerCheck: Settings.answerCheck, mode: Settings.mode, activeMode, volume: App.volume, lives, fastWords, bestStreak })
   );
 }
 function clearProgress() {
@@ -503,6 +530,10 @@ async function restoreProgress() {
   if (!s) return false;
   try {
     const p = JSON.parse(s);
+    if (!p.username || p.username !== App.username) {
+      clearProgress();
+      return false;
+    }
     const mNames = {
       learn: '🌱 Учить новые слова',
       'type-ar': '✍️ Арабский ввод',
@@ -533,6 +564,9 @@ async function restoreProgress() {
       roundWords = p.roundWords;
       roundWrong = p.roundWrong || [];
       roundCorrect = p.roundCorrect || 0;
+      roundAttempts = p.roundAttempts || 0;
+      Settings.answerCheck = p.answerCheck === 'strict' ? 'strict' : 'learning';
+      updateAnswerCheckUI();
       if (p.volume) App.volume = p.volume;
       document.getElementById('q-mode').textContent = mNames.learn;
       document.getElementById('fast-stats').classList.add('hidden');
@@ -559,6 +593,9 @@ async function restoreProgress() {
     roundWords = p.roundWords;
     roundWrong = p.roundWrong || [];
     roundCorrect = p.roundCorrect;
+    roundAttempts = p.roundAttempts || 0;
+    Settings.answerCheck = p.answerCheck === 'strict' ? 'strict' : 'learning';
+    updateAnswerCheckUI();
     Settings.mode = p.mode;
     lives = p.lives || 3;
     fastWords = p.fastWords || 0;
@@ -612,6 +649,8 @@ async function finishQuiz() {
   document.getElementById('r-pts').textContent = roundScore;
   document.getElementById('r-total').textContent = roundWords.length;
   document.getElementById('r-correct').textContent = roundCorrect;
+  const attemptsEl = document.getElementById('r-attempts');
+  if (attemptsEl) attemptsEl.textContent = roundAttempts;
   document.getElementById('res-title').textContent = Settings.mode === 'fast' ? '⚡ Быстрое повторение!' : '🎉 Урок завершён!';
   const box = document.getElementById('res-word-list');
   const wrongArs = new Set(roundWrong.map((w) => w.ar));

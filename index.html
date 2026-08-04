@@ -593,6 +593,57 @@ body{background:#fff;color:#111;}
 .dict-book-table td{color:#111;border-color:#d8d8d8;}
 .dict-book-table tr:nth-child(even) td{background:#fafafa;}
 .book-frame{display:none;}
+.answer-check-row{margin-top:12px;padding-top:10px;border-top:1px solid var(--border);}
+.answer-check-title{font-size:11px;font-weight:800;color:#111;margin-bottom:7px;}
+.answer-check-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.answer-check-pill{padding:9px 7px;border:1px solid var(--border);background:#fff;border-radius:9px;font-size:11px;font-weight:700;color:#444;cursor:pointer;}
+.answer-check-pill.active{background:#111;color:#fff;border-color:#111;}
+.answer-check-note{font-size:11px;color:#666;margin-top:6px;}
+
+/* Trainer controls: compact Arabic-learning layout with clear action hierarchy. */
+#tab-train{background:#f6f7fb;padding:12px 12px 28px;}
+#tab-train .streak-banner{border-radius:18px;box-shadow:0 8px 24px rgba(15,23,42,.08);}
+#tab-train .sc{border:1px solid #e5e7eb;box-shadow:0 4px 18px rgba(15,23,42,.045);border-radius:16px;padding:16px;}
+#tab-train .sc-title{font-size:12px;color:#111;letter-spacing:.8px;}
+#tab-train .ctrl-row{gap:8px;}
+#tab-train .ctrl-btn{min-height:40px;border:1px solid #d1d5db;border-radius:10px;background:#fff;color:#111;font-weight:700;}
+#tab-train .lesson-pill{min-height:38px;border:1px solid #d1d5db;border-radius:10px;background:#fff;color:#374151;}
+#tab-train .lesson-pill.active{background:#111;color:#fff;border-color:#111;box-shadow:0 3px 8px rgba(15,23,42,.18);}
+#tab-train .mode-grid{grid-template-columns:1fr 1fr;gap:9px;}
+#tab-train .mode-pill{min-height:58px;border:1px solid #d1d5db;border-radius:12px;background:#fff;color:#111;box-shadow:none;}
+#tab-train .mode-pill.active{background:#111;color:#fff;border-color:#111;box-shadow:0 4px 10px rgba(15,23,42,.18);}
+#tab-train .mode-pill.fast{background:#fff7ed;color:#9a3412;border-color:#fed7aa;}
+#tab-train .mode-pill.fast.active{background:#c2410c;color:#fff;border-color:#c2410c;}
+#tab-train .btn-start{min-height:50px;border-radius:13px;margin-top:9px;box-shadow:0 5px 14px rgba(15,23,42,.12);}
+#tab-train .btn-start.green{background:#111;color:#fff;}
+#tab-train .btn-start.gold{background:#b45309;color:#fff;}
+#screen-quiz{background:#f6f7fb;}
+#screen-quiz .quiz-top{background:#fff;color:#111;border-bottom:1px solid #e5e7eb;padding:12px 14px;}
+#screen-quiz .quiz-top .q-info .q-mode{color:#6b7280;opacity:1;}
+#screen-quiz .quiz-top .q-exit{background:#fff;color:#111;border:1px solid #d1d5db;border-radius:9px;}
+#screen-quiz .quiz-bar{height:5px;background:#e5e7eb;}
+#screen-quiz .quiz-bar-fill{background:#b45309;}
+#screen-quiz .quiz-body{padding:14px 12px 24px;}
+#screen-quiz .word-card,#screen-quiz .learn-intro-card{border:1px solid #e5e7eb;border-radius:18px;box-shadow:0 6px 20px rgba(15,23,42,.06);}
+#screen-quiz .w-ar,#screen-quiz .learn-intro-ar{color:#111;}
+#screen-quiz .opt{min-height:54px;border:1px solid #d1d5db;border-radius:13px;background:#fff;color:#111;font-weight:700;box-shadow:0 2px 6px rgba(15,23,42,.03);}
+#screen-quiz .opt.ar{font-weight:400;}
+#screen-quiz .opt.ok{background:#eff6ff!important;border-color:#2563eb!important;color:#1d4ed8!important;}
+#screen-quiz .opt.err{background:#fff1f2!important;border-color:#be123c!important;color:#be123c!important;}
+#screen-quiz .type-input{min-height:56px;border:1px solid #9ca3af;border-radius:13px;background:#fff;color:#111;}
+#screen-quiz .type-input:focus{border-color:#111;box-shadow:0 0 0 3px rgba(17,17,17,.08);}
+#screen-quiz .btn-check{min-height:50px;background:#111;color:#fff;border-radius:13px;}
+#screen-quiz .btn-nav,#screen-quiz .btn-early{min-height:44px;border:1px solid #d1d5db;border-radius:11px;background:#fff;color:#111;}
+#screen-quiz .feedback.ok{color:#1d4ed8;}
+#screen-results{background:#f6f7fb;}
+#screen-results .res-hdr{background:#fff;color:#111;border-bottom:1px solid #e5e7eb;}
+#screen-results .btn-res{min-height:50px;background:#111;color:#fff;border-radius:13px;}
+#screen-results .btn-res.sec{background:#fff;color:#111;border-color:#111;}
+@media(max-width:420px){
+  #tab-train .mode-grid{grid-template-columns:1fr;}
+  #tab-train .mode-pill{min-height:46px;}
+  #screen-quiz .w-ar{font-size:38px;}
+}
 </style>
 </head>
 <body>
@@ -761,6 +812,14 @@ body{background:#fff;color:#111;}
         <button class="mode-pill" onclick="setMode('review',this)">🔄 Обычное повторение</button>
         <button class="mode-pill" onclick="setMode('mix',this)">🔀 Микс</button>
         <button class="mode-pill fast" onclick="setMode('fast',this)">⚡ Быстрое повторение — 7 сек на слово</button>
+      </div>
+      <div class="answer-check-row">
+        <div class="answer-check-title">Проверка арабского ввода</div>
+        <div class="answer-check-grid" id="answer-check-btns">
+          <button class="answer-check-pill active" type="button" data-check="learning" onclick="setAnswerCheck('learning')">Учебный</button>
+          <button class="answer-check-pill" type="button" data-check="strict" onclick="setAnswerCheck('strict')">Строгий</button>
+        </div>
+        <div class="answer-check-note" id="answer-check-note">Учебный режим: огласовки можно пропускать</div>
       </div>
     </div>
     <div id="cloud-status" style="font-size:12px;color:var(--gray);text-align:center;padding:4px 0;"></div>

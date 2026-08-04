@@ -10,9 +10,42 @@ function esc(s) {
 }
 
 function rmH(t) {
-  // Strip Arabic harakat/diacritics for loose matching.
-  return t.replace(/[\u0617-\u061A\u064B-\u0652]/g, '').trim();
+  // Educational matching ignores marks, but keeps distinct Arabic letters.
+  return String(t || '')
+    .normalize('NFC')
+    .replace(/[\u0617-\u061A\u064B-\u065F\u0670ـ]/gu, '')
+    .replace(/\s+/gu, ' ')
+    .trim();
 }
+
+function normalizeArabicAnswer(value, mode = Settings.answerCheck || 'learning') {
+  const text = String(value || '').normalize('NFC').replace(/\s+/gu, ' ').trim();
+  return mode === 'strict' ? text : rmH(text);
+}
+
+function isArabicAnswerCorrect(actual, expected, mode = Settings.answerCheck || 'learning') {
+  return normalizeArabicAnswer(actual, mode) === normalizeArabicAnswer(expected, mode);
+}
+
+function answerCheckLabel(mode = Settings.answerCheck || 'learning') {
+  return mode === 'strict' ? 'Строгий режим: проверяются буквы и огласовки' : 'Учебный режим: огласовки можно пропускать';
+}
+
+function setAnswerCheck(mode) {
+  Settings.answerCheck = mode === 'strict' ? 'strict' : 'learning';
+  localStorage.setItem('arabic_answer_check', Settings.answerCheck);
+  updateAnswerCheckUI();
+}
+
+function updateAnswerCheckUI() {
+  document.querySelectorAll('#answer-check-btns .answer-check-pill').forEach((button) => {
+    button.classList.toggle('active', button.dataset.check === Settings.answerCheck);
+  });
+  const note = document.getElementById('answer-check-note');
+  if (note) note.textContent = answerCheckLabel(Settings.answerCheck);
+}
+
+window.addEventListener('load', updateAnswerCheckUI);
 
 function shuf(a) {
   const b = [...a];

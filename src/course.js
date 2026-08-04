@@ -33,6 +33,16 @@ function showVolumeScreen(courseName, key) {
 }
 
 async function selectVolume(volumeId) {
+  const volumeChanged = Boolean(App.volume && App.volume !== volumeId);
+  if (volumeChanged) {
+    if (typeof resetQuizState === 'function') resetQuizState();
+    Settings.mode = 'learn';
+    Settings.answerCheck = 'learning';
+    updateAnswerCheckUI();
+    Settings.dictLesson = 'all';
+    Settings.rulesLesson = 'all';
+    localStorage.removeItem('arabic_last_tab');
+  }
   App.volume = volumeId;
   currentCourseKey = getCourseKeyByVolume(volumeId) || currentCourseKey;
   localStorage.setItem('arabic_last_volume', volumeId);

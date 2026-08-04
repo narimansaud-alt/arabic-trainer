@@ -37,6 +37,7 @@ const Dict = {
 
 const Settings = {
   mode: 'learn',
+  answerCheck: localStorage.getItem('arabic_answer_check') || 'learning',
   qtyNormal: 15,
   qtyFast: 50,
   lbFilters: { type: 'score', period: 'all' },
