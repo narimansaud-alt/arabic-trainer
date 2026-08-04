@@ -1,6 +1,6 @@
 {
   "name": "Мединский курс и глаголы",
-  "short_name": "Мединский курс",
+  "short_name": "Мединский курс и глаголы",
   "description": "Мединский курс арабского языка, тренировка слов и спряжение глаголов.",
   "start_url": "./",
   "scope": "./",
@@ -14,19 +14,19 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "icon-v2-192.png",
+      "src": "medina-course-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-v2.png",
+      "src": "medina-course-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-v2.png",
+      "src": "medina-course-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
