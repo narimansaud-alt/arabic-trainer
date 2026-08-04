@@ -1128,8 +1128,82 @@ body{background:radial-gradient(circle at 50% -10%,#fff 0,#fff 34%,var(--lux-can
 }
 
 #tab-dict .dict-view-btn.active,#tab-dict .lb-pill.active{
-  border-color:var(--lux-blue)!important;background:var(--lux-blue-soft)!important;color:#496477!important;
+  border-color:#1f1a17!important;
+  background:#1f1a17!important;
+  color:#fff!important;
   box-shadow:0 4px 12px rgba(101,127,146,.12)!important;
+}
+#tab-dict .dict-view-toggle{
+  display:flex!important;
+  gap:10px!important;
+  margin-bottom:14px!important;
+}
+#tab-dict .dict-view-btn{
+  min-width:112px!important;
+  height:38px!important;
+  border-radius:11px!important;
+  padding:0 16px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-color:#d6d0c9!important;
+  background:#fff!important;
+  color:#605a53!important;
+  font-size:13px!important;
+  line-height:1!important;
+  font-weight:700!important;
+  letter-spacing:.02em!important;
+  text-transform:uppercase!important;
+}
+#tab-dict .dict-view-btn:hover{
+  border-color:#bcb3a9!important;
+  background:#f6f2ed!important;
+  color:#1f1a17!important;
+}
+#tab-dict .dict-view-btn span{
+  font-size:16px!important;
+  line-height:1!important;
+  opacity:0.95!important;
+}
+#tab-dict .dict-book{
+  border:1px solid #ddd2c8!important;
+  border-radius:14px!important;
+  overflow:hidden!important;
+  background:#fff!important;
+  box-shadow:0 14px 26px rgba(28,26,24,.08)!important;
+}
+#tab-dict .dict-book-title{
+  background:#f5f1ec!important;
+  color:#332f2b!important;
+  border-bottom:1px solid #e4ddd4!important;
+}
+#tab-dict .dict-book-table{
+  border-bottom:1px solid #ece3da!important;
+}
+#tab-dict .dict-book-table th{
+  background:#f7f3ef!important;
+  color:#2a2521!important;
+  border-right:1px solid #ece3da!important;
+  border-bottom:1px solid #e3d7cc!important;
+}
+#tab-dict .dict-book-table td{
+  border-right:1px solid #ece3da!important;
+  border-bottom:1px solid #ece3da!important;
+}
+#tab-dict .dict-book-table tr:last-child td{
+  border-bottom:0!important;
+}
+#tab-dict .dict-book-table tr:nth-child(even) td{
+  background:#faf8f6!important;
+}
+#tab-dict .dict-book-table tr:hover td{
+  background:#f3ede8!important;
+}
+#tab-dict .dict-book-table .dict-book-ar{
+  color:#1f2522!important;
+}
+#tab-dict .dict-book-table .dict-book-plural{
+  color:#68625a!important;
 }
 #tab-book .book-nav-btn,#tab-book .book-format-btn{
   border-color:#d8c8a8!important;background:var(--lux-gold-soft)!important;color:#725929!important;
@@ -1349,8 +1423,8 @@ button:focus-visible{outline-color:rgba(164,95,67,.25)!important;}
     <div class="sc">
       <input class="search-input" id="dict-search" type="text" placeholder="Поиск на арабском или русском..." oninput="renderDict()">
       <div class="dict-view-toggle" role="group" aria-label="Вид словаря">
-        <button class="dict-view-btn active" type="button" data-dict-view="list" onclick="setDictView('list')" title="Список" aria-label="Список">☷</button>
-        <button class="dict-view-btn" type="button" data-dict-view="table" onclick="setDictView('table')" title="Таблица" aria-label="Таблица">▦</button>
+        <button class="dict-view-btn active" type="button" data-dict-view="list" onclick="setDictView('list')" title="Список" aria-label="Список"><span>☷</span> Список</button>
+        <button class="dict-view-btn" type="button" data-dict-view="table" onclick="setDictView('table')" title="Таблица" aria-label="Таблица"><span>▦</span> Таблица</button>
       </div>
       <div class="sc-title">Урок</div>
       <div class="lb-row-btns" id="dict-lesson-row">
