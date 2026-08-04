@@ -865,6 +865,23 @@ function setBookZoom(value) {
   }
 }
 
+function setBookZoomAtPoint(value, clientX, clientY) {
+  const stage = document.getElementById('book-reader-stage');
+  if (!stage) {
+    setBookZoom(value);
+    return;
+  }
+  const beforeZoom = currentBookZoom;
+  const rect = stage.getBoundingClientRect();
+  const pointX = Math.max(0, Math.min(rect.width, clientX - rect.left));
+  const pointY = Math.max(0, Math.min(rect.height, clientY - rect.top));
+  const contentX = (stage.scrollLeft + pointX) / beforeZoom;
+  const contentY = (stage.scrollTop + pointY) / beforeZoom;
+  setBookZoom(value);
+  stage.scrollLeft = contentX * currentBookZoom - pointX;
+  stage.scrollTop = contentY * currentBookZoom - pointY;
+}
+
 function bindBookReaderGestures() {
   const stage = document.getElementById('book-reader-stage');
   if (!stage) return;
@@ -891,7 +908,10 @@ function bindBookReaderGestures() {
     bookPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
     if (bookPointers.size >= 2 && bookPinchStartDistance > 0) {
       event.preventDefault();
-      setBookZoom(bookPinchStartZoom * (getBookPointerDistance() / bookPinchStartDistance));
+      const points = Array.from(bookPointers.values());
+      const centerX = (points[0].x + points[1].x) / 2;
+      const centerY = (points[0].y + points[1].y) / 2;
+      setBookZoomAtPoint(bookPinchStartZoom * (getBookPointerDistance() / bookPinchStartDistance), centerX, centerY);
       return;
     }
     if (currentBookZoom > 1 && bookPanStart) {
