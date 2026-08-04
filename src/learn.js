@@ -23,6 +23,10 @@ let learnDoneWords = [];
 let learnCardIdx = 0;
 let curLearnCard = null;
 
+function learnGetEl(id) {
+  return document.getElementById(id);
+}
+
 // QUEUE MODEL: learnCards holds only the work still remaining this
 // session. learnCardIdx always points at the slot that should be
 // shown next. The index is NEVER incremented on its own — every
@@ -90,50 +94,68 @@ function learnStageAdvance(ok) {
     learnRemoveAndMaybeReinsert(card, LEARN_REINSERT_ERR);
     updateWordLevel(card.key, false);
   }
-  addDailyWord();
+  if (ok) addDailyWord();
 }
 
 function renderLearnQ() {
   const doneCount = learnDoneWords.length;
-  document.getElementById('q-prog').textContent = doneCount + '/' + roundWords.length;
-  document.getElementById('q-bar').style.width = (roundWords.length ? (doneCount / roundWords.length) * 100 : 0) + '%';
-  document.getElementById('star-btn').textContent = App.favorites.includes(curWord.ar) ? '⭐' : '☆';
-  document.getElementById('feedback').textContent = '';
-  document.getElementById('feedback').className = 'feedback';
-  document.getElementById('btn-next').classList.add('hidden');
-  document.getElementById('btn-next').textContent = 'Дальше →';
-  const opts = document.getElementById('opts');
-  const typeArea = document.getElementById('type-area');
-  opts.classList.add('hidden');
-  typeArea.classList.add('hidden');
-  opts.innerHTML = '';
+  const qProg = learnGetEl('q-prog');
+  const qBar = learnGetEl('q-bar');
+  const starBtn = learnGetEl('star-btn');
+  const feedback = learnGetEl('feedback');
+  const btnNext = learnGetEl('btn-next');
+  const opts = learnGetEl('opts');
+  const typeArea = learnGetEl('type-area');
+  if (qProg) qProg.textContent = doneCount + '/' + roundWords.length;
+  if (qBar) qBar.style.width = (roundWords.length ? (doneCount / roundWords.length) * 100 : 0) + '%';
+  if (starBtn) renderFavoriteButton(starBtn, App.favorites.includes(curWord.ar));
+  if (feedback) {
+    feedback.textContent = '';
+    feedback.className = 'feedback';
+  }
+  if (btnNext) {
+    btnNext.classList.add('hidden');
+    btnNext.textContent = 'Дальше →';
+  }
+  if (opts) opts.classList.add('hidden');
+  if (typeArea) typeArea.classList.add('hidden');
+  if (opts) opts.innerHTML = '';
 
   const stage = curLearnCard.stage;
 
   if (stage === 0) {
-    document.getElementById('word-card').style.minHeight = '140px';
-    document.getElementById('word-display').innerHTML = `
+    const wordCard = learnGetEl('word-card');
+    const wordDisplay = learnGetEl('word-display');
+    if (wordCard) wordCard.style.minHeight = '140px';
+    if (wordDisplay) {
+      wordDisplay.innerHTML = `
       <div style="width:100%">
         <div class="learn-intro-ar">${esc(curWord.ar)}</div>
         <div class="learn-intro-ru">${esc(curWord.ru)}</div>
-        <div class="learn-intro-hint">Запомни — дальше будет несколько проверок ✍️</div>
+        <div class="learn-intro-hint">Значит — дальше можно продолжать с</div>
       </div>`;
-    document.getElementById('btn-next').classList.remove('hidden');
-    document.getElementById('btn-next').textContent = 'Запомнил, дальше →';
+    }
+    if (btnNext) {
+      btnNext.classList.remove('hidden');
+      btnNext.textContent = 'Запомнил, дальше →';
+    }
     return;
   }
 
-  document.getElementById('word-card').style.minHeight = '100px';
+  const wordCard = learnGetEl('word-card');
+  if (wordCard) wordCard.style.minHeight = '100px';
 
   if (stage === 3) {
     hintCount = 0;
-    document.getElementById('word-display').innerHTML = `<div class="w-ru">${esc(curWord.ru)}</div>`;
-    typeArea.classList.remove('hidden');
-    const inp = document.getElementById('type-input');
+    const wordDisplay = learnGetEl('word-display');
+    if (wordDisplay) wordDisplay.innerHTML = `<div class="w-ru">${esc(curWord.ru)}</div>`;
+    if (typeArea) typeArea.classList.remove('hidden');
+    const inp = learnGetEl('type-input');
+    if (!inp) return;
     inp.value = '';
     inp.disabled = false;
-    const hintBtn = document.getElementById('btn-hint');
-    const hintLbl = document.getElementById('hint-cost-label');
+    const hintBtn = learnGetEl('btn-hint');
+    const hintLbl = learnGetEl('hint-cost-label');
     if (hintBtn) {
       hintBtn.style.display = '';
       hintBtn.disabled = false;
@@ -143,90 +165,121 @@ function renderLearnQ() {
     return;
   }
 
-  const isArQ = stage === 1 || stage === 4;
-  document.getElementById('word-display').innerHTML = isArQ
-    ? `<div class="w-ar">${esc(curWord.ar)}</div>`
-    : `<div class="w-ru">${esc(curWord.ru)}</div>`;
-  opts.classList.remove('hidden');
+  const wordDisplay = learnGetEl('word-display');
+  if (!wordDisplay) return;
+
+  if (stage === 4) {
+    wordDisplay.innerHTML = `<div class="w-ar">${esc(curWord.ar)}</div><div class="w-ru">${esc(curWord.ru)}</div>`;
+    if (feedback) {
+      feedback.className = 'feedback ok';
+      feedback.textContent = 'Запомнил!';
+    }
+    if (btnNext) {
+      btnNext.classList.remove('hidden');
+      btnNext.textContent = 'Далее';
+    }
+    return;
+  }
+
+  const isArQ = stage === 1;
   const correct = isArQ ? curWord.ru : curWord.ar;
+  if (wordCard) {
+    wordDisplay.innerHTML = isArQ ? `<div class="w-ar">${esc(curWord.ar)}</div>` : `<div class="w-ru">${esc(curWord.ru)}</div>`;
+  }
+  if (opts) opts.classList.remove('hidden');
   genOpts(correct, isArQ ? 'ru' : 'ar').forEach((opt) => {
     const btn = document.createElement('button');
     btn.className = 'opt' + (!isArQ ? ' ar' : '');
     btn.textContent = opt;
     btn.onclick = () => {
-      handleLearnAns(btn, opt === correct, correct, !isArQ);
+      if (!isHist) handleLearnAns(btn, opt === correct, correct, stage === 2);
     };
-    opts.appendChild(btn);
+    if (opts) opts.appendChild(btn);
   });
+  return;
 }
 
 async function handleLearnAns(btn, ok, correct, isAr) {
-  document.querySelectorAll('.opt').forEach((b) => (b.disabled = true));
-  const fb = document.getElementById('feedback');
+  const optionButtons = document.querySelectorAll('.opt');
+  optionButtons.forEach((b) => (b.disabled = true));
+  const fb = learnGetEl('feedback');
   const stage = curLearnCard.stage;
   if (ok) {
-    btn.classList.add('ok');
+    if (btn) btn.classList.add('ok');
     let pts = stage === 2 ? 10 : 5;
     roundScore += pts;
-    fb.className = 'feedback ok';
-    fb.textContent = '✅ Правильно!' + (pts ? ' +' + pts : '');
+    if (fb) {
+      fb.className = 'feedback ok';
+      fb.textContent = 'Правильно' + (pts ? ' +' + pts : '');
+    }
     if (pts) logPts(pts);
     learnStageAdvance(true);
     pauseTmo = setTimeout(() => nextLearnCard(), 800);
   } else {
-    btn.classList.add('err');
-    document.querySelectorAll('.opt').forEach((b) => {
+    if (btn) btn.classList.add('err');
+    optionButtons.forEach((b) => {
       if (b.textContent === correct) b.classList.add('ok');
     });
-    fb.className = 'feedback err';
-    fb.innerHTML =
-      '❌ Ошибка. Правильно: <span style="' +
-      (isAr ? 'font-family:Times New Roman,serif;font-size:22px;direction:rtl;' : '') +
-      '">' +
-      esc(correct) +
-      '</span>';
-    curWord.userAnswer = btn.textContent;
+    if (fb) {
+      fb.className = 'feedback err';
+      fb.innerHTML =
+        'Неправильно. Правильно: <span class="' +
+        (isAr ? 'answer-ar' : '') +
+        '"' +
+        (isAr ? ' dir="rtl"' : '') +
+        '>' +
+        esc(correct) +
+        '</span>';
+    }
+    curWord.userAnswer = btn ? btn.textContent : '';
     learnStageAdvance(false);
-    document.getElementById('btn-next').classList.remove('hidden');
-    pauseTmo = setTimeout(() => nextLearnCard(), 3000);
-  }
 }
-
+}
 function checkTypedLearn() {
   if (isHist) return;
-  const val = document.getElementById('type-input').value.trim();
+  const inp = learnGetEl('type-input');
+  if (!inp) return;
+  const val = inp.value.trim();
   const correct = curWord.ar.replace(/\s*\(.*?\)\s*/g, '');
-  const fb = document.getElementById('feedback');
-  document.getElementById('type-input').disabled = true;
-  const hintBtn = document.getElementById('btn-hint');
+  const fb = learnGetEl('feedback');
+  inp.disabled = true;
+  const hintBtn = learnGetEl('btn-hint');
   if (hintBtn) hintBtn.style.display = 'none';
-  const hintLbl = document.getElementById('hint-cost-label');
+  const hintLbl = learnGetEl('hint-cost-label');
   if (hintLbl) hintLbl.textContent = '';
   if (isArabicAnswerCorrect(val, correct, Settings.answerCheck)) {
     const penalty = hintCount * 5;
     const pts = Math.max(0, 20 - penalty);
-    fb.className = 'feedback ok';
-    fb.textContent = hintCount > 0 ? '✅ Правильно! +' + pts + ' (−' + penalty + ' за подсказки)' : '✅ Правильно! +20';
+    if (fb) {
+      fb.className = 'feedback ok';
+      fb.textContent = hintCount > 0 ? 'Правильно! +' + pts + ' (−' + penalty + ' за подсказки)' : 'Правильно! +20';
+    }
     roundScore += pts;
     if (pts > 0) logPts(pts);
     learnStageAdvance(true);
     pauseTmo = setTimeout(() => nextLearnCard(), 800);
   } else {
-    fb.className = 'feedback err';
-    fb.innerHTML =
-      '❌ Ошибка. Правильно: <span style="font-family:Times New Roman,serif;font-size:22px;direction:rtl;">' + esc(curWord.ar) + '</span>';
+    if (fb) {
+      fb.className = 'feedback err';
+      fb.innerHTML = 'Ошибка. Правильно: <span class="answer-ar" dir="rtl">' + esc(curWord.ar) + '</span>';
+    }
     curWord.userAnswer = val;
     learnStageAdvance(false);
-    document.getElementById('btn-next').classList.remove('hidden');
+    const btnNext = learnGetEl('btn-next');
+    if (btnNext) btnNext.classList.remove('hidden');
     pauseTmo = setTimeout(() => nextLearnCard(), 3000);
   }
 }
-
 function goNextLearn() {
   clearTimers();
   if (curLearnCard.stage === 0) {
     curLearnCard.stage = 1;
     renderLearnQ();
+    return;
+  }
+  if (curLearnCard.stage === 4) {
+    learnStageAdvance(true);
+    nextLearnCard();
     return;
   }
   nextLearnCard();

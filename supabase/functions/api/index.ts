@@ -39,6 +39,9 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 const MOSCOW_OFFSET_MS = 3 * 60 * 60 * 1000;
+const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+const MAX_DAILY_WORDS = 30;
+const MAX_SCORE_POINTS = 500;
 
 function moscowDateKey(offsetDays = 0) {
   return new Date(Date.now() + MOSCOW_OFFSET_MS + offsetDays * 24 * 60 * 60 * 1000)
@@ -61,15 +64,16 @@ function unauthorized(msg = "Unauthorized") {
   return json({ error: msg }, 401);
 }
 
-// Legacy client-side hash, kept ONLY to verify (and then retire) old accounts.
-async function legacySha256(pw: string): Promise<string> {
-  const buf = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode("alfazi_2024" + pw),
-  );
+async function sha256Hex(value: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
   return Array.from(new Uint8Array(buf))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
+}
+
+// Legacy client-side hash, kept ONLY to verify (and then retire) old accounts.
+async function legacySha256(pw: string): Promise<string> {
+  return sha256Hex("alfazi_2024" + pw);
 }
 
 function isValidUsername(u: unknown): u is string {
@@ -79,29 +83,96 @@ function isValidPassword(p: unknown): p is string {
   return typeof p === "string" && p.length >= 4 && p.length <= 128;
 }
 
-// Verifies {username, password} against the DB, transparently migrating
-// a legacy sha256 account to bcrypt on success. Returns the user row
-// (sans password fields) on success, or null on failure.
-async function authenticate(username: string, password: string) {
+function isIntegerInRange(v: unknown, min: number, max: number): v is number {
+  return typeof v === "number" && Number.isFinite(v) && Number.isInteger(v) && v >= min && v <= max;
+}
+
+async function createSession(username: string): Promise<{ token: string | null; expiresAt: string | null }> {
+  try {
+    await db.from("user_sessions").delete().eq("username", username).lt("expires_at", new Date().toISOString());
+    const token = crypto.randomUUID() + "-" + crypto.randomUUID();
+    const tokenHash = await sha256Hex(token);
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + SESSION_TTL_MS).toISOString();
+    const { error } = await db.from("user_sessions").insert({
+      username,
+      token_hash: tokenHash,
+      created_at: now.toISOString(),
+      expires_at: expiresAt,
+      last_used_at: now.toISOString(),
+    });
+    if (error) throw error;
+    const { data: sessions } = await db
+      .from("user_sessions")
+      .select("token_hash")
+      .eq("username", username)
+      .order("created_at", { ascending: false })
+      .range(5, 50);
+    const oldHashes = (sessions || []).map((item) => item.token_hash).filter(Boolean);
+    if (oldHashes.length) await db.from("user_sessions").delete().in("token_hash", oldHashes);
+    return { token, expiresAt };
+  } catch {
+    return { token: null, expiresAt: null };
+  }
+}
+
+async function getUserByUsername(username: string) {
   const { data: user, error } = await db
     .from("users")
     .select("*")
     .eq("username", username)
     .maybeSingle();
   if (error || !user) return null;
+  return user;
+}
+
+// Verifies {username, password} against the DB, transparently migrating
+// a legacy sha256 account to bcrypt on success. Returns the user row
+// (sans password fields) on success, or null on failure.
+async function authenticate(username: string, password: unknown, sessionToken: unknown) {
+  const user = await getUserByUsername(username);
+  if (!user) return null;
+
+  if (typeof sessionToken === "string" && sessionToken.length > 10) {
+    const tokenHash = await sha256Hex(sessionToken);
+    const { data: session, error: sessionErr } = await db
+      .from("user_sessions")
+      .select("expires_at,last_used_at")
+      .eq("username", username)
+      .eq("token_hash", tokenHash)
+      .maybeSingle();
+    if (!sessionErr && session?.expires_at) {
+      if (new Date(session.expires_at).getTime() > Date.now()) {
+        const now = new Date();
+        const lastUsed = session.last_used_at ? new Date(session.last_used_at).getTime() : 0;
+        if (now.getTime() - lastUsed > 60 * 60 * 1000) {
+          const nextExpiresAt = new Date(now.getTime() + SESSION_TTL_MS).toISOString();
+          await db
+            .from("user_sessions")
+            .update({ last_used_at: now.toISOString(), expires_at: nextExpiresAt })
+            .eq("username", username)
+            .eq("token_hash", tokenHash);
+        }
+        return user;
+      }
+      await db.from("user_sessions").delete().eq("username", username).eq("token_hash", tokenHash);
+    }
+  }
+
+  if (!isValidPassword(password)) return null;
 
   // Case 1: already migrated — bcrypt is authoritative.
   if (user.password_hash_bcrypt) {
-    const ok = await bcrypt.compare(password, user.password_hash_bcrypt);
+    const ok = await bcrypt.compare(password as string, user.password_hash_bcrypt);
     return ok ? user : null;
   }
 
   // Case 2: legacy account — verify against the old client-side hash,
   // then migrate transparently.
   if (user.password_hash) {
-    const legacyHash = await legacySha256(password);
+    const legacyHash = await legacySha256(password as string);
     if (legacyHash !== user.password_hash) return null;
-    const newHash = await bcrypt.hash(password, 10);
+    const newHash = await bcrypt.hash(password as string, 10);
     await db
       .from("users")
       .update({ password_hash_bcrypt: newHash })
@@ -199,7 +270,8 @@ Deno.serve(async (req: Request) => {
           if ((error as { code?: string }).code === "23505") return badRequest("Логин занят");
           return badRequest("Ошибка регистрации: " + error.message);
         }
-        return json({ ok: true, username });
+        const { token } = await createSession(username);
+        return json({ ok: true, username, session_token: token });
       }
 
       // ---------------------------------------------------------------
@@ -209,9 +281,10 @@ Deno.serve(async (req: Request) => {
         if (!isValidUsername(username) || !isValidPassword(password)) {
           return unauthorized("Неверный логин или пароль");
         }
-        const user = await authenticate(username, password as string);
+        const user = await authenticate(username, password as string, undefined);
         if (!user) return unauthorized("Неверный логин или пароль");
-        return json({ ok: true, user: stripSecrets(user) });
+        const { token } = await createSession(username);
+        return json({ ok: true, user: stripSecrets(user), session_token: token });
       }
 
       // ---------------------------------------------------------------
@@ -225,10 +298,11 @@ Deno.serve(async (req: Request) => {
       default: {
         const username = typeof body.username === "string" ? body.username.trim().toLowerCase() : "";
         const password = body.password;
-        if (!isValidUsername(username) || !isValidPassword(password)) {
+        const sessionToken = body.session_token;
+        if (!isValidUsername(username) || (!isValidPassword(password) && typeof sessionToken !== "string")) {
           return unauthorized("Неверный логин или пароль");
         }
-        const user = await authenticate(username, password as string);
+        const user = await authenticate(username, password, sessionToken);
         if (!user) return unauthorized("Неверный логин или пароль");
 
         switch (action) {
@@ -240,14 +314,26 @@ Deno.serve(async (req: Request) => {
             return json({ ok: true, user: stripSecrets(user), wordStats: stats || [] });
           }
 
-          case "update-word-stat": {
+      case "update-word-stat": {
             const wordAr = body.word_ar;
             if (typeof wordAr !== "string" || !wordAr) return badRequest("word_ar required");
             const update: Record<string, unknown> = { username, word_ar: wordAr };
-            if (typeof body.seen_count === "number") update.seen_count = body.seen_count;
-            if (typeof body.level === "number") update.level = body.level;
-            if (typeof body.next_review === "string") update.next_review = body.next_review;
-            if (typeof body.is_favorite === "boolean") update.is_favorite = body.is_favorite;
+            if ("seen_count" in body) {
+              if (!isIntegerInRange(body.seen_count, 0, 1000000)) return badRequest("seen_count out of range");
+              update.seen_count = body.seen_count;
+            }
+            if ("level" in body) {
+              if (!isIntegerInRange(body.level, 1, 5)) return badRequest("level out of range");
+              update.level = body.level;
+            }
+            if ("next_review" in body) {
+              if (typeof body.next_review !== "string") return badRequest("next_review required");
+              update.next_review = body.next_review;
+            }
+            if ("is_favorite" in body) {
+              if (typeof body.is_favorite !== "boolean") return badRequest("is_favorite must be boolean");
+              update.is_favorite = body.is_favorite;
+            }
             const { error } = await db.from("word_stats").upsert(update, {
               onConflict: "username,word_ar",
             });
@@ -258,26 +344,48 @@ Deno.serve(async (req: Request) => {
           case "log-score": {
             const points = body.points;
             const courseName = body.course_name;
-            if (typeof points !== "number" || !Number.isFinite(points) || !Number.isInteger(points)) {
+            if (!isIntegerInRange(points, 1, MAX_SCORE_POINTS)) {
               return badRequest("integer points required");
             }
-            const { error: insErr } = await db.from("score_history").insert({
-              username,
-              course_name: typeof courseName === "string" ? courseName : null,
-              points,
-            });
-            if (insErr) return badRequest(insErr.message);
-            const { data: newTotal, error: updErr } = await db.rpc("increment_user_total_score", {
+            const normalizedCourse = typeof courseName === "string" ? courseName.slice(0, 64) : "";
+            if (!/^Мединский курс \(Том [1-4]\)$/.test(normalizedCourse)) {
+              return badRequest("Unsupported course");
+            }
+            const scoreEventId = typeof body.score_event_id === "string" ? body.score_event_id : crypto.randomUUID();
+            const logRes = await db.rpc("log_user_score", {
               p_username: username,
               p_points: points,
+              p_course_name: normalizedCourse,
+              p_event_id: scoreEventId,
             });
-            if (updErr) return badRequest(updErr.message);
+            if (logRes.error) return badRequest(logRes.error.message);
+            const newTotal = logRes.data as number;
+            if (typeof newTotal !== "number") {
+              return badRequest("Failed to update score");
+            }
             return json({ ok: true, total_score: newTotal });
+          }
+
+          case "revoke-session": {
+            if (typeof sessionToken === "string" && sessionToken.length > 0) {
+              const tokenHash = await sha256Hex(sessionToken);
+              const { error } = await db
+                .from("user_sessions")
+                .delete()
+                .eq("username", username)
+                .eq("token_hash", tokenHash);
+              if (error) return badRequest(error.message);
+              return json({ ok: true, revoked: "token" });
+            }
+
+            const { error } = await db.from("user_sessions").delete().eq("username", username);
+            if (error) return badRequest(error.message);
+            return json({ ok: true, revoked: "all" });
           }
 
           case "update-survival-record": {
             const val = body.survival_record;
-            if (typeof val !== "number") return badRequest("survival_record required");
+            if (!isIntegerInRange(val, 0, 1000000)) return badRequest("survival_record invalid");
             if (val <= (user.survival_record || 0)) return json({ ok: true, unchanged: true });
             const { error } = await db
               .from("users")
@@ -292,6 +400,9 @@ Deno.serve(async (req: Request) => {
             // trusting a client-supplied streak number directly, to
             // avoid letting a tampered client award itself days.
             const today = moscowDateKey();
+            if (user.last_count_date !== today || Number(user.daily_words || 0) < MAX_DAILY_WORDS) {
+              return json({ ok: true, streak: Number(user.streak || 0), max_streak: Number(user.max_streak || 0), unchanged: true });
+            }
             const last = user.last_activity as string | null;
             let streak = (user.streak as number) || 0;
             if (last !== today) {
@@ -308,7 +419,7 @@ Deno.serve(async (req: Request) => {
 
           case "update-daily-count": {
             const count = body.daily_words;
-            if (typeof count !== "number") return badRequest("daily_words required");
+            if (!isIntegerInRange(count, 0, MAX_DAILY_WORDS)) return badRequest("daily_words invalid");
             const today = moscowDateKey();
             const { error } = await db
               .from("users")
@@ -318,12 +429,29 @@ Deno.serve(async (req: Request) => {
             return json({ ok: true });
           }
 
+          case "increment-daily-count": {
+            const { data, error } = await db.rpc("increment_user_daily_words", { p_username: username });
+            if (error) return badRequest(error.message);
+            const dailyWords = Number(data || 0);
+            return json({ ok: true, daily_words: dailyWords, reached_goal: dailyWords === MAX_DAILY_WORDS });
+          }
+
           default:
             return badRequest("Unknown action: " + action);
         }
       }
     }
   } catch (e) {
-    return json({ error: "Internal error: " + (e instanceof Error ? e.message : String(e)) }, 500);
+    const error = e instanceof Error ? e : new Error(String(e));
+    await db.from("app_error_log").insert({
+      username: shortText(body.username, 32),
+      source: "edge-function",
+      message: shortText(error.message, 1000) || "Internal error",
+      stack: shortText(error.stack, 4000),
+      context: scrubLogValue({ action }),
+      client_ip: shortText(req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"), 80),
+      cf_ray: shortText(req.headers.get("cf-ray"), 80),
+    });
+    return json({ error: "Internal server error" }, 500);
   }
 });

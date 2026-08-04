@@ -1,18 +1,15 @@
 // state.js — central mutable app state.
 //
 // Note on the auth model: the client still needs to remember the
-// user's password (in memory + localStorage) to re-prove ownership on
-// every write call to the Edge Function, since this app intentionally
-// has no session/JWT layer (see auth.js for the rationale). This is
-// the same trust model the legacy app used (it stored a password hash
-// in localStorage); the difference now is the server independently
-// re-verifies it with bcrypt on every write, instead of trusting a
-// client-supplied username with no proof.
+// The owner intentionally retains password persistence for convenient
+// auto-login. A short-lived server session token is stored alongside it
+// and is preferred for authenticated writes when available.
 
 const App = {
   // session
   username: null,
-  password: null, // kept only in memory + localStorage for re-auth on writes; never sent anywhere except over HTTPS to our own Edge Function
+  password: null, // intentionally retained for auto-login and session fallback
+  sessionToken: null, // used for auto-login + write authorization after success
   course: null,
   volume: null,
 
@@ -35,14 +32,22 @@ const Dict = {
   rules: [],
 };
 
+function safeGetStorage(key, fallback) {
+  try {
+    return localStorage.getItem(key);
+  } catch (e) {
+    return fallback;
+  }
+}
+
 const Settings = {
   mode: 'learn',
-  answerCheck: localStorage.getItem('arabic_answer_check') || 'learning',
+  answerCheck: safeGetStorage('arabic_answer_check', 'learning') || 'learning',
   qtyNormal: 15,
   qtyFast: 50,
   lbFilters: { type: 'score', period: 'all' },
   dictLesson: 'all',
-  dictView: localStorage.getItem('arabic_dict_view') === 'table' ? 'table' : 'list',
+  dictView: safeGetStorage('arabic_dict_view', 'list') === 'table' ? 'table' : 'list',
   rulesLesson: 'all',
 };
 
@@ -125,6 +130,7 @@ function getVolumeBook(volumeId) {
 function resetApp() {
   App.username = null;
   App.password = null;
+  App.sessionToken = null;
   App.course = null;
   App.volume = null;
   App.totalScore = 0;

@@ -1,10 +1,10 @@
-const CACHE = 'arabic-v-5-20260804';
+const CACHE = 'arabic-__BUILD_HASH__';
 const FILES = [
   './',
   './index.html',
   './medina-premium-icon-512.png',
   './medina-premium-icon-192.png',
-  './manifest.json?v=5',
+  './manifest.json?v=6',
   './manifest.json',
   './src/api.js',
   './src/state.js',
@@ -24,12 +24,11 @@ const FILES = [
 
 const SHOULD_NETWORK_FIRST = [
   './manifest.json',
-  './manifest.json?v=5',
+  './manifest.json?v=6',
   './medina-premium-icon-512.png',
-  './medina-premium-icon-512.png?v=5',
-  './medina-premium-icon-512.png',
+  './medina-premium-icon-512.png?v=6',
   './medina-premium-icon-192.png',
-  './medina-premium-icon-192.png?v=5',
+  './medina-premium-icon-192.png?v=6',
   './medina-premium-icon-192.png'
 ];
 

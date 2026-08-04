@@ -33,7 +33,11 @@ function answerCheckLabel(mode = Settings.answerCheck || 'learning') {
 
 function setAnswerCheck(mode) {
   Settings.answerCheck = mode === 'strict' ? 'strict' : 'learning';
-  localStorage.setItem('arabic_answer_check', Settings.answerCheck);
+  try {
+    localStorage.setItem('arabic_answer_check', Settings.answerCheck);
+  } catch (e) {
+    /* non-fatal: settings will reset on next load in storage-disabled modes */
+  }
   updateAnswerCheckUI();
 }
 
@@ -72,8 +76,18 @@ function getDaysLabel(n) {
 }
 
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach((s) => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  const screens = document.querySelectorAll('.screen');
+  if (!screens.length) return;
+  const target = document.getElementById(id);
+  if (!target) return;
+  screens.forEach((s) => s.classList.remove('active'));
+  target.classList.add('active');
   window.scrollTo(0, 0);
-  if (id !== 'screen-loading') localStorage.setItem('arabic_last_screen', id);
+  if (id !== 'screen-loading') {
+    try {
+      localStorage.setItem('arabic_last_screen', id);
+    } catch (e) {
+      /* non-fatal */
+    }
+  }
 }

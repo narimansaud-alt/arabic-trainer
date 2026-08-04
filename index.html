@@ -5,14 +5,17 @@
 <title>Мединский курс и глаголы</title>
 <meta name="theme-color" content="#ffffff">
 <meta name="mobile-web-app-capable" content="yes">
-<link rel="manifest" href="./manifest.json?v=5">
+<link rel="manifest" href="./manifest.json?v=6">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Мединский курс и глаголы">
-<link rel="apple-touch-icon" sizes="180x180" href="./medina-premium-icon-512.png?v=5">
-<link rel="apple-touch-icon" sizes="152x152" href="./medina-premium-icon-512.png?v=5">
-<link rel="apple-touch-icon" sizes="120x120" href="./medina-premium-icon-512.png?v=5">
-<link rel="icon" type="image/png" sizes="192x192" href="./medina-premium-icon-192.png?v=5">
+<link rel="apple-touch-icon" sizes="180x180" href="./medina-premium-icon-512.png?v=6">
+<link rel="apple-touch-icon" sizes="152x152" href="./medina-premium-icon-512.png?v=6">
+<link rel="apple-touch-icon" sizes="120x120" href="./medina-premium-icon-512.png?v=6">
+<link rel="icon" type="image/png" sizes="192x192" href="./medina-premium-icon-192.png?v=6">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <script>
 if('serviceWorker' in navigator){
@@ -44,7 +47,6 @@ if('serviceWorker' in navigator){
 
     navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
     navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then(reg=>{
-      console.log('[SW] OK');
       if(reg.waiting){
         reg.waiting.postMessage('skipWaiting');
         return;
@@ -61,7 +63,10 @@ if('serviceWorker' in navigator){
         });
       });
       reg.update();
-    }).catch(e=>console.error('[SW]',e));
+    }).catch(error=>{
+      window.__earlyAppErrors = window.__earlyAppErrors || [];
+      window.__earlyAppErrors.push({ error, meta: { source: 'service-worker', action: 'register' } });
+    });
   });
 }
 function swUpdate(){
@@ -259,7 +264,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .dict-section-hdr{padding:10px 14px;background:var(--green);color:white;font-size:12px;font-weight:700;}
 .dict-item{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #f0f0f0;gap:8px;}
 .dict-item:last-child{border-bottom:none;}
-.dict-ar{font-family:'Times New Roman',serif;font-size:20px;direction:rtl;color:var(--green-dark);}
+.dict-ar{font-family:'Noto Naskh Arabic',serif;font-size:20px;direction:rtl;color:var(--green-dark);}
 .dict-ru{font-size:13px;color:#555;text-align:right;flex:1;}
 .dict-view-toggle{display:flex;gap:4px;margin:-2px 0 12px;}
 .dict-view-btn{width:36px;height:32px;border:1px solid #dbe6df;border-radius:7px;background:#fff;color:#6d7c73;font-size:17px;line-height:1;cursor:pointer;}
@@ -273,7 +278,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .dict-book-table td{padding:9px 8px;border-bottom:1px dotted #aebdb2;font-size:13px;color:#3d4842;vertical-align:middle;overflow-wrap:anywhere;}
 .dict-book-table tr:nth-child(even) td{background:#f8faf8;}
 .dict-book-table tr:last-child td{border-bottom:0;}
-.dict-book-table .dict-book-ar{font-family:'Times New Roman',serif;font-size:22px;line-height:1.35;direction:rtl;text-align:right;color:#1b3e2a;overflow-wrap:normal;word-break:normal;}
+.dict-book-table .dict-book-ar{font-family:'Noto Naskh Arabic',serif;font-size:22px;line-height:1.35;direction:rtl;text-align:right;color:#1b3e2a;overflow-wrap:normal;word-break:normal;}
 .dict-book-table .dict-book-plural{color:#5a6871;}
 .dict-book-dash{font-family:'Segoe UI',system-ui,sans-serif;color:#a5b1aa;font-size:16px;}
 
@@ -379,9 +384,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .rule-subpanel.is-logic b:first-child{color:#0f766e;}
 .rule-subpanel.is-table b:first-child{color:#1d4ed8;}
 .rule-subpanel.is-memorize b:first-child{color:#a16207;}
-.ar-text{font-family:'Times New Roman',serif;font-size:23px;line-height:2.1;direction:rtl;unicode-bidi:isolate;color:#111;word-break:normal;overflow-wrap:normal;}
-.ar-term,.ar-inline{display:inline-block;max-width:100%;white-space:nowrap;font-family:'Times New Roman',serif;font-size:inherit;line-height:inherit;direction:rtl;unicode-bidi:isolate;color:inherit;vertical-align:baseline;}
-.ar-sentence{display:block;margin:8px 0 5px;padding:5px 9px;border-right:3px solid currentColor;font-family:'Times New Roman',serif;font-size:25px;line-height:1.7;direction:rtl;unicode-bidi:plaintext;text-align:right;color:#18271f;}
+.ar-text{font-family:'Noto Naskh Arabic',serif;font-size:23px;line-height:2.1;direction:rtl;unicode-bidi:isolate;color:#111;word-break:normal;overflow-wrap:normal;}
+.ar-term,.ar-inline{display:inline-block;max-width:100%;white-space:nowrap;font-family:'Noto Naskh Arabic',serif;font-size:inherit;line-height:inherit;direction:rtl;unicode-bidi:isolate;color:inherit;vertical-align:baseline;}
+.ar-sentence{display:block;margin:8px 0 5px;padding:5px 9px;border-right:3px solid currentColor;font-family:'Noto Naskh Arabic',serif;font-size:25px;line-height:1.7;direction:rtl;unicode-bidi:plaintext;text-align:right;color:#18271f;}
 .rule-content .ar-text{display:inline;margin:0 2px;text-align:right;}
 .rule-content .ar-sentence + .ar-text{margin-left:0;}
 .rule-subpanel.is-example .ar-sentence{color:#8a4a00;border-color:#d97706;background:rgba(255,255,255,.5);}
@@ -484,12 +489,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .verb-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;}
 .verb-modal-box{background:white;border-radius:20px;padding:22px 18px;width:100%;max-width:420px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.4);position:relative;}
 .verb-modal-close{position:absolute;top:12px;right:12px;background:var(--bg);border:none;border-radius:50%;width:30px;height:30px;font-size:14px;cursor:pointer;color:#666;}
-.verb-modal-title{font-family:'Times New Roman',serif;font-size:32px;direction:rtl;text-align:center;color:var(--green-dark);margin-bottom:2px;}
+.verb-modal-title{font-family:'Noto Naskh Arabic',serif;font-size:32px;direction:rtl;text-align:center;color:var(--green-dark);margin-bottom:2px;}
 .verb-modal-sub{text-align:center;color:#999;font-size:12px;margin-bottom:14px;direction:rtl;}
 .verb-tense-title{font-size:12px;font-weight:700;color:var(--green);text-transform:uppercase;margin:14px 0 6px;}
 .verb-form-row{display:flex;justify-content:space-between;align-items:center;padding:6px 4px;border-bottom:1px solid var(--border);font-size:14px;}
 .verb-form-pron{color:#777;}
-.verb-form-ar{font-family:'Times New Roman',serif;font-size:20px;direction:rtl;color:var(--green-dark);}
+.verb-form-ar{font-family:'Noto Naskh Arabic',serif;font-size:20px;direction:rtl;color:var(--green-dark);}
 .verb-dual-toggle{font-size:12px;color:var(--green);text-align:center;margin-top:10px;cursor:pointer;text-decoration:underline;}
 .rule-lesson-badge{display:inline-block;font-size:10px;background:var(--green-light);color:var(--green);padding:2px 6px;border-radius:8px;font-weight:600;margin-bottom:6px;}
 
@@ -521,15 +526,15 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .quiz-body{padding:14px;flex:1;overflow-y:auto;}
 .word-card{background:white;border-radius:16px;padding:28px 16px;text-align:center;margin-bottom:14px;box-shadow:var(--shadow);min-height:100px;display:flex;align-items:center;justify-content:center;position:relative;}
 .star-btn{position:absolute;top:10px;left:12px;font-size:22px;background:none;border:none;cursor:pointer;}
-.w-ar{font-family:'Times New Roman',serif;font-size:44px;direction:rtl;line-height:1.3;}
+.w-ar{font-family:'Noto Naskh Arabic',serif;font-size:44px;direction:rtl;line-height:1.3;}
 .w-ru{font-size:20px;font-weight:600;color:#333;}
 .opts{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
 .opt{background:white;border:2px solid var(--border);border-radius:12px;padding:12px 14px;font-size:15px;cursor:pointer;text-align:center;width:100%;font-family:inherit;transition:0.15s;}
-.opt.ar{font-family:'Times New Roman',serif;font-size:28px;direction:rtl;}
+.opt.ar{font-family:'Noto Naskh Arabic',serif;font-size:28px;direction:rtl;}
 .opt:active{transform:scale(0.98);}
 .opt.ok{background:#e8f8f0!important;border-color:#27ae60!important;color:#1e8449;}
 .opt.err{background:#fdf0ef!important;border-color:var(--red)!important;color:var(--red);}
-.type-input{width:100%;padding:12px;font-size:26px;border:2px solid var(--border);border-radius:12px;text-align:center;direction:rtl;font-family:'Times New Roman',serif;margin-bottom:8px;outline:none;}
+.type-input{width:100%;padding:12px;font-size:26px;border:2px solid var(--border);border-radius:12px;text-align:center;direction:rtl;font-family:'Noto Naskh Arabic',serif;margin-bottom:8px;outline:none;}
 .type-input:focus{border-color:var(--green);}
 .btn-check{width:100%;padding:13px;background:var(--green);color:white;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px;}
 .btn-hint{width:100%;padding:10px;background:rgba(201,162,39,0.12);color:var(--gold);border:2px solid var(--gold);border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;}
@@ -544,7 +549,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 
 /* LEARN MODE - intro card */
 .learn-intro-card{background:white;border-radius:16px;padding:30px 20px;text-align:center;margin-bottom:14px;box-shadow:var(--shadow);}
-.learn-intro-ar{font-family:'Times New Roman',serif;font-size:52px;direction:rtl;color:var(--green-dark);line-height:1.3;margin-bottom:8px;}
+.learn-intro-ar{font-family:'Noto Naskh Arabic',serif;font-size:52px;direction:rtl;color:var(--green-dark);line-height:1.3;margin-bottom:8px;}
 .learn-intro-ru{font-size:22px;font-weight:700;color:#333;margin-bottom:16px;}
 .learn-intro-hint{font-size:13px;color:var(--gray);background:var(--green-light);padding:8px 14px;border-radius:10px;display:inline-block;}
 .learn-progress-dots{display:flex;justify-content:center;gap:6px;margin-bottom:12px;}
@@ -565,7 +570,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .wl-hdr{padding:10px 14px;background:var(--green-light);font-size:12px;font-weight:700;color:var(--green);}
 .wl-item{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #f5f5f5;gap:8px;}
 .wl-item:last-child{border-bottom:none;}
-.wl-ar{font-family:'Times New Roman',serif;font-size:19px;direction:rtl;color:var(--green-dark);}
+.wl-ar{font-family:'Noto Naskh Arabic',serif;font-size:19px;direction:rtl;color:var(--green-dark);}
 .wl-ru{font-size:13px;color:#555;text-align:right;flex:1;}
 .btn-res{width:100%;padding:13px;background:var(--green);color:white;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px;}
 .btn-res.sec{background:white;color:var(--green);border:2px solid var(--green);}
@@ -1876,30 +1881,338 @@ button:focus-visible{
   .btn-logout-c,
   .btn-back-vol{min-height: 44px!important;}
 }
+
+/* Minimalist icon, typography and spacing layer (requested cleanup) */
+:root{
+  --ui-font-ru: 'Manrope','Inter','Roboto','Segoe UI',sans-serif;
+  --ui-font-ar: 'Noto Naskh Arabic','Amiri','Scheherazade New','Traditional Arabic',serif;
+  --ui-radius: 8px;
+  --ui-radius-lg: 8px;
+  --ui-icon-gap: 0.45rem;
+  --green:#3f6178;
+  --green-dark:#2c4354;
+  --green-light:#edf3f6;
+  --gold:#6f7f8c;
+  --copper:#496a80;
+  --copper-dark:#314b5d;
+  --copper-soft:#eef3f6;
+  --app-bg:#f6f7f7;
+  --ink:#17212b;
+  --muted:#68737d;
+  --border:#dfe4e7;
+}
+
+body{
+  font-family: var(--ui-font-ru)!important;
+  line-height: 1.6!important;
+}
+
+.ui-icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:1.05em;
+  height:1.05em;
+  flex:0 0 auto;
+  vertical-align:middle;
+}
+
+.ui-icon svg{
+  width:1em;
+  height:1em;
+  stroke:currentColor;
+  fill:none;
+}
+
+.ui-icons{pointer-events:none;}
+button .ui-icon{margin-inline-end:.38rem;}
+.app-tab .ui-icon,.star-btn .ui-icon,.pw-toggle .ui-icon,.verb-modal-close .ui-icon{margin:0;}
+.pw-toggle{color:#5d6872!important;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px!important;}
+.pw-toggle:hover{background:#eef1f2!important;}
+.life-dots{display:inline-flex;align-items:center;gap:5px;}
+.life-dot{width:9px;height:9px;border-radius:50%;background:#d9dee1;border:1px solid #c8ced2;}
+.life-dot.is-active{background:#496a80;border-color:#496a80;}
+.star-btn.is-active{color:#3f6178!important;background:#edf2f5!important;}
+.star-btn.is-active svg{fill:currentColor!important;}
+
+.ui-icon--tiny{
+  width:0.92em;
+  height:0.92em;
+}
+
+.ui-inline-lives{
+  display:inline-flex;
+  gap:3px;
+  align-items:center;
+  margin:0 0.18em;
+  vertical-align:middle;
+}
+
+.ti .ui-icon{
+  margin: 0;
+}
+
+button,
+.btn-primary,
+.btn-announcement,
+.btn-check,
+.btn-res,
+.btn-start,
+.btn-nav,
+.btn-early,
+.btn-hint,
+.btn-tb,
+.btn-logout-c,
+.btn-back-vol,
+.btn-res.sec,
+.dict-view-btn,
+.lesson-pill,
+.mode-pill,
+.qty-pill,
+.lb-pill,
+.ctrl-btn,
+.answer-check-pill,
+.book-nav-btn,
+.book-format-btn,
+.q-exit,
+.app-tab,
+.tab-btn{
+  border-radius: var(--ui-radius)!important;
+}
+
+.sc,
+.word-card,
+.learn-intro-card,
+.rule-card,
+.rule-detail-hero,
+.rule-detail-outline,
+.rule-outline-row,
+.rules-home-head,
+.rule-subpanel,
+.rule-subpanel-body,
+.dict-section,
+.dict-book,
+.dict-book-table,
+.course-card,
+.vol-card,
+.chart-card,
+.instr-block,
+.book-frame{
+  border-radius: var(--ui-radius-lg)!important;
+}
+
+.sc,
+.course-card,
+.vol-card,
+.rule-card,
+.rule-detail-hero,
+.rule-detail-outline,
+.rule-subpanel,
+.rule-subpanel-body,
+.dict-section,
+.course-cards,
+.vol-cards,
+.rule-list,
+.rule-topic-list,
+.quiz-body,
+.res-body,
+.word-list,
+.lb-row-btns,
+.dict-view-toggle,
+.word-card,
+.learn-intro-card{
+  gap: var(--ui-icon-gap)!important;
+}
+
+.sc{ padding:16px!important; }
+
+.ar-text,
+.ar-term,
+.ar-inline,
+.ar-sentence,
+.dict-ar,
+.dict-book-table .dict-book-ar,
+.verb-form-ar,
+.verb-modal-title,
+.w-ar,
+.learn-intro-ar,
+.wl-ar,
+.opt.ar,
+.type-input,
+#verb-drill-input{
+  font-family: var(--ui-font-ar)!important;
+  font-kerning:normal;
+  font-variant-ligatures:common-ligatures;
+  text-rendering:optimizeLegibility;
+}
+
+.w-ar,
+.learn-intro-ar,
+.ar-text,
+.ar-sentence{
+  font-size: clamp(28px, 7vw, 50px)!important;
+  line-height: 1.58!important;
+}
+
+.dict-ar,
+.dict-book-table .dict-book-ar,
+.wl-ar{
+  font-size: clamp(20px, 5vw, 34px)!important;
+}
+
+.rule-content .ar-inline,
+.rule-subpanel-content .ar-inline,
+.rule-preview .ar-inline,
+.rule-title .ar-inline,
+.answer-ar,
+[dir="rtl"]{
+  font-family:var(--ui-font-ar)!important;
+  line-height:1.85!important;
+}
+.rule-content .ar-inline,.rule-subpanel-content .ar-inline,.rule-preview .ar-inline,.rule-title .ar-inline{font-size:1.22em!important;}
+.grammar-ref-table .ar-text{font-size:clamp(20px,4.8vw,27px)!important;line-height:1.75!important;}
+.answer-ar{font-size:24px;direction:rtl;unicode-bidi:isolate;}
+
+.type-input,
+.search-input,
+.field-group input,
+.book-page-input,
+.mode-pill,
+.lesson-pill,
+.qty-pill,
+.lb-pill,
+.answer-check-pill,
+.dict-view-btn{
+  min-height: 44px!important;
+}
+
+.cc-cover-placeholder,
+.ui-icon{
+  gap: var(--ui-icon-gap)!important;
+}
+
+.course-cards,
+.vol-cards{
+  gap: 14px!important;
+}
+
+.sc + .sc,
+.dict-section + .dict-section,
+.rule-list,
+.word-list{
+  margin-top: var(--ui-icon-gap)!important;
+}
+
+body,.screen{background:var(--app-bg)!important;color:var(--ink)!important;}
+.sc,.word-card,.learn-intro-card,.chart-card,.dict-section,.rule-card,.rule-detail-hero,.rule-detail-outline,.rule-subpanel,.book-frame{background:#fff!important;border-color:var(--border)!important;box-shadow:0 1px 2px rgba(20,31,40,.04),0 8px 28px rgba(20,31,40,.045)!important;}
+.mode-pill,.lesson-pill,.qty-pill,.lb-pill,.dict-view-btn,.answer-check-pill,.ctrl-btn{background:#fff!important;color:#394650!important;border:1px solid var(--border)!important;box-shadow:none!important;}
+.mode-pill.active,.lesson-pill.active,.qty-pill.active,.lb-pill.active,.dict-view-btn.active,.answer-check-pill.active{background:#eaf0f4!important;color:#263f51!important;border-color:#9dafba!important;box-shadow:inset 0 0 0 1px #9dafba!important;}
+.btn-primary,.btn-start.green,.btn-check,.btn-res:not(.sec){background:#3f6178!important;color:#fff!important;border-color:#3f6178!important;box-shadow:none!important;}
+.btn-start.gold,.mode-pill.fast.active,.lb-pill.gold.active{background:#edf2f5!important;color:#2f4d61!important;border-color:#9dafba!important;box-shadow:inset 0 0 0 1px #9dafba!important;}
+.streak-banner{background:#fff!important;border:1px solid var(--border)!important;box-shadow:0 8px 28px rgba(20,31,40,.05)!important;padding:18px!important;}
+.streak-big-num{display:flex!important;align-items:center;gap:8px!important;color:var(--ink)!important;text-shadow:none!important;}
+.streak-days{background:#eef3f6!important;border:1px solid #d7e0e5!important;color:#365267!important;border-radius:8px!important;}
+.streak-bar-fill{background:#496a80!important;}
+.streak-done{background:#edf4f2!important;border:1px solid #ccddd7!important;color:#294a40!important;}
+.streak-fire,.streak-hint,.streak-bar-label span,#banner-rank{color:var(--ink)!important;}
+.app-tabs{background:rgba(255,255,255,.96)!important;backdrop-filter:blur(14px);border-top:1px solid var(--border)!important;padding-top:5px;}
+.app-tab{color:#74808a!important;min-height:58px;}
+.app-tab.active{color:#304f63!important;font-weight:700;}
+.instr-block{background:#fff!important;border:1px solid var(--border)!important;border-radius:8px!important;box-shadow:none!important;}
+.instr-mode-title{color:var(--ink)!important;}
+.lb-item.is-current{background:#eef3f6!important;}
+.lb-rank.t1,.lb-rank.t2,.lb-rank.t3{color:#3f6178!important;font-size:14px!important;}
+
+.book-volume-grid,.book-action-grid{display:grid;grid-template-columns:1fr;gap:12px;}
+.book-volume-card,.book-action-card{width:100%;display:flex;align-items:center;gap:14px;text-align:left;padding:18px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--ink);box-shadow:0 8px 28px rgba(20,31,40,.045);cursor:pointer;}
+.book-volume-card:disabled{cursor:not-allowed;opacity:.52;}
+.book-choice-icon{width:42px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:#edf2f5;color:#35556a;flex:0 0 auto;}
+.book-choice-copy{min-width:0;flex:1;}
+.book-choice-title{font-size:16px;font-weight:700;}
+.book-choice-sub{font-size:12px;color:var(--muted);margin-top:3px;}
+.book-reader-fullscreen{position:fixed;inset:0;z-index:5000;background:#f1f2f2;display:grid;grid-template-rows:auto minmax(0,1fr) auto;padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0);}
+.book-reader-head,.book-reader-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;background:rgba(255,255,255,.96);border-bottom:1px solid var(--border);}
+.book-reader-foot{border-top:1px solid var(--border);border-bottom:0;justify-content:center;}
+.book-reader-stage{min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:8px;touch-action:pan-y;}
+.book-reader-stage .book-page-image{display:block;width:100%;height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none;}
+.book-reader-fullscreen .book-nav-btn{min-height:42px!important;padding:9px 12px!important;}
+.book-reader-title{font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.book-reader-page{font-size:12px;color:var(--muted);white-space:nowrap;}
+@media(max-width:600px){
+  .tab-content{padding:14px 12px 96px!important;}
+  .quiz-body,.res-body{padding-left:14px!important;padding-right:14px!important;}
+  .sc{padding:16px!important;margin-bottom:14px!important;}
+  .mode-grid{gap:9px!important;}
+  .mode-pill{min-height:54px!important;padding:11px 8px!important;}
+  .book-reader-head{padding:8px;}
+  .book-reader-title{max-width:42vw;}
+}
 </style>
 </head>
 <body>
+<svg class="ui-icons" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden;">
+  <defs>
+    <symbol id="ui-icon-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 4h10a2 2 0 012 2v15a1 1 0 01-1 1H4a2 2 0 01-2-2V6a2 2 0 012-2z"/>
+      <path d="M14 2h6a2 2 0 012 2v16"/>
+      <path d="M7 8h6M7 12h6M7 16h6"/>
+    </symbol>
+    <symbol id="ui-icon-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M17.65 6.35a8 8 0 1 0 2.64 7.65"/>
+      <polyline points="17 2 17 7 22 7"/>
+      <path d="M6.35 17.65A8 8 0 1 1 9 17.35"/>
+      <polyline points="7 22 7 17 2 17"/>
+    </symbol>
+    <symbol id="ui-icon-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M8 12l2.7 2.7L16.4 9"/>
+    </symbol>
+    <symbol id="ui-icon-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 21S5 15.5 5 10.2A4.2 4.2 0 0 1 9.2 6 4.9 4.9 0 0 1 12 7.3 4.9 4.9 0 0 1 14.8 6 4.2 4.2 0 0 1 19 10.2C19 15.5 12 21 12 21z"/>
+    </symbol>
+    <symbol id="ui-icon-eye" viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.5"/></symbol>
+    <symbol id="ui-icon-eye-off" viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 6.2A10.9 10.9 0 0112 6c6 0 9.5 6 9.5 6a15 15 0 01-2.1 2.8M6.1 6.1C3.7 7.8 2.5 12 2.5 12s3.5 6 9.5 6a9.8 9.8 0 003.1-.5M9.9 9.9a3 3 0 004.2 4.2"/></symbol>
+    <symbol id="ui-icon-download" viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16"/></symbol>
+    <symbol id="ui-icon-trophy" viewBox="0 0 24 24"><path d="M8 4h8v4a4 4 0 01-8 0V4zM8 6H4v2a4 4 0 004 4m8-6h4v2a4 4 0 01-4 4M12 12v5m-4 3h8m-6-3h4"/></symbol>
+    <symbol id="ui-icon-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4m8-4v4M3 10h18M8 14h3m2 0h3m-8 3h3"/></symbol>
+    <symbol id="ui-icon-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v4m9 5h-4"/></symbol>
+    <symbol id="ui-icon-keyboard" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 13h.01M10 13h.01M14 13h4M7 16h10"/></symbol>
+    <symbol id="ui-icon-shuffle" viewBox="0 0 24 24"><path d="M4 7h3c5 0 5 10 10 10h3M17 4l3 3-3 3M4 17h3c2 0 3-1.5 4-3M17 14l3 3-3 3"/></symbol>
+    <symbol id="ui-icon-bolt" viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></symbol>
+    <symbol id="ui-icon-star" viewBox="0 0 24 24"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3z"/></symbol>
+    <symbol id="ui-icon-bulb" viewBox="0 0 24 24"><path d="M9 18h6m-5 3h4m3-9a5 5 0 10-10 0c0 2 2 3 2 6h6c0-3 2-4 2-6z"/></symbol>
+    <symbol id="ui-icon-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+    <symbol id="ui-icon-table" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16m6-16v16"/></symbol>
+    <symbol id="ui-icon-file" viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6zM14 3v4h4M9 11h6m-6 4h6"/></symbol>
+    <symbol id="ui-icon-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12l2-1-2-4-2 1-2-1V4h-6v3L7 8 5 7l-2 4 2 1v2l-2 1 2 4 2-1 2 1v2h6v-2l2-1 2 1 2-4-2-1z"/></symbol>
+    <symbol id="ui-icon-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.8 9a2.4 2.4 0 114.2 1.6c-1 1-2 1.3-2 3M12 17h.01"/></symbol>
+    <symbol id="ui-icon-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v10h-6v-6H9v6H3z"/></symbol>
+    <symbol id="ui-icon-message" viewBox="0 0 24 24"><path d="M4 4h16v12H8l-4 4z"/></symbol>
+    <symbol id="ui-icon-play" viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z"/></symbol>
+    <symbol id="ui-icon-megaphone" viewBox="0 0 24 24"><path d="M3 10v4h4l9 4V6l-9 4H3zm4 4l2 6h3l-2-5"/><path d="M19 9c1 1 1 5 0 6"/></symbol>
+  </defs>
+</svg>
 <!-- Баннер автообновления -->
 <div id="sw-update-banner" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999;background:#fff;color:#171717;border:1px solid #cfcfcf;padding:12px 20px;border-radius:12px;box-shadow:0 12px 36px rgba(23,23,23,0.16);align-items:center;gap:12px;font-family:inherit;font-size:14px;max-width:90vw;">
-  <span>🔄 Доступно обновление</span>
+  <span><span class="ui-icon"><svg><use href="#ui-icon-refresh"></use></svg></span>Доступно обновление</span>
   <button onclick="swUpdate()" style="background:#c9a227;color:#fff;border:none;padding:7px 16px;border-radius:8px;cursor:pointer;font-weight:bold;font-size:14px;">Обновить</button>
-  <button onclick="this.parentElement.style.display='none'" style="background:transparent;color:#fff;border:none;font-size:18px;cursor:pointer;line-height:1;">✕</button>
+  <button aria-label="Закрыть" onclick="this.parentElement.style.display='none'" style="background:transparent;color:#68737d;border:none;font-size:15px;cursor:pointer;line-height:1;">X</button>
 </div>
 
 <!-- ANNOUNCEMENT POPUP -->
 <div class="announcement-overlay hidden" id="announcement-overlay">
   <div class="announcement-box">
-    <div class="announcement-icon">📢</div>
+    <div class="announcement-icon"><span class="ui-icon"><svg><use href="#ui-icon-megaphone"></use></svg></span></div>
     <div class="announcement-title">Важное сообщение</div>
     <div class="announcement-msg" id="announcement-msg"></div>
-    <button class="btn-announcement" onclick="closeAnnouncement()">Понял ✓</button>
+    <button class="btn-announcement" onclick="closeAnnouncement()">Понятно</button>
   </div>
 </div>
 
 <!-- VERB DETAIL MODAL -->
 <div class="verb-modal-overlay hidden" id="verb-modal-overlay">
   <div class="verb-modal-box">
-    <button class="verb-modal-close" onclick="closeVerbModal()">✕</button>
+    <button class="verb-modal-close" aria-label="Закрыть" onclick="closeVerbModal()">X</button>
     <div class="verb-modal-title" id="verb-modal-title"></div>
     <div class="verb-modal-sub" id="verb-modal-sub">تصريف الفعل</div>
     <div id="verb-modal-body"></div>
@@ -1930,13 +2243,13 @@ button:focus-visible{
     </div>
     <div id="login-form">
       <div class="field-group"><label>Логин</label><input type="text" id="l-user" placeholder="Ваш логин" autocapitalize="none" autocomplete="username"></div>
-      <div class="field-group"><label>Пароль</label><div style="position:relative;"><input type="password" id="l-pass" placeholder="Пароль" autocomplete="current-password" style="padding-right:42px;width:100%;box-sizing:border-box;"><button type="button" onclick="togglePw('l-pass',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:20px;padding:0;">👁️</button></div></div>
+      <div class="field-group"><label>Пароль</label><div style="position:relative;"><input type="password" id="l-pass" placeholder="Пароль" autocomplete="current-password" style="padding-right:50px;width:100%;box-sizing:border-box;"><button class="pw-toggle" type="button" aria-label="Показать пароль" onclick="togglePw('l-pass',this)" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;"><span class="ui-icon"><svg><use href="#ui-icon-eye"></use></svg></span></button></div></div>
       <button class="btn-primary" onclick="doLogin()">Войти →</button>
     </div>
     <div id="reg-form" class="hidden">
       <div class="field-group"><label>Логин</label><input type="text" id="r-user" placeholder="Минимум 3 символа" autocapitalize="none"></div>
-      <div class="field-group"><label>Пароль</label><div style="position:relative;"><input type="password" id="r-pass" placeholder="Минимум 4 символа" style="padding-right:42px;width:100%;box-sizing:border-box;"><button type="button" onclick="togglePw('r-pass',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:20px;padding:0;">👁️</button></div></div>
-      <div class="field-group"><label>Повтор пароля</label><div style="position:relative;"><input type="password" id="r-pass2" placeholder="Повторите пароль" style="padding-right:42px;width:100%;box-sizing:border-box;"><button type="button" onclick="togglePw('r-pass2',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:20px;padding:0;">👁️</button></div></div>
+      <div class="field-group"><label>Пароль</label><div style="position:relative;"><input type="password" id="r-pass" placeholder="Минимум 4 символа" style="padding-right:50px;width:100%;box-sizing:border-box;"><button class="pw-toggle" type="button" aria-label="Показать пароль" onclick="togglePw('r-pass',this)" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;"><span class="ui-icon"><svg><use href="#ui-icon-eye"></use></svg></span></button></div></div>
+      <div class="field-group"><label>Повтор пароля</label><div style="position:relative;"><input type="password" id="r-pass2" placeholder="Повторите пароль" style="padding-right:50px;width:100%;box-sizing:border-box;"><button class="pw-toggle" type="button" aria-label="Показать пароль" onclick="togglePw('r-pass2',this)" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;"><span class="ui-icon"><svg><use href="#ui-icon-eye"></use></svg></span></button></div></div>
       <button class="btn-primary" onclick="doRegister()">Создать аккаунт →</button>
     </div>
     <div class="login-msg" id="login-msg"></div>
@@ -1954,14 +2267,22 @@ button:focus-visible{
   <div class="course-cards">
     <div class="course-card" onclick="showVolumeScreen('Мединский курс','med')">
       <img class="cc-cover" src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Medina_arabic_book.jpg/400px-Medina_arabic_book.jpg" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" alt="Мединский курс">
-      <div class="cc-cover-placeholder" style="display:none;">📖</div>
+      <div class="cc-cover-placeholder" style="display:none;">
+        <span class="ui-icon ui-icon-book">
+          <svg><use href="#ui-icon-book"></use></svg>
+        </span>
+      </div>
       <div class="cc-body-row">
         <div class="cc-body"><div class="cc-title">Мединский курс</div><div class="cc-sub">4 тома — классический арабский</div></div>
         <div class="cc-arrow">›</div>
       </div>
     </div>
     <div class="course-card" onclick="showScreen('screen-verbs')">
-      <div class="cc-cover-placeholder">🔁</div>
+      <div class="cc-cover-placeholder">
+        <span class="ui-icon ui-icon-refresh">
+          <svg><use href="#ui-icon-refresh"></use></svg>
+        </span>
+      </div>
       <div class="cc-body-row">
         <div class="cc-body"><div class="cc-title">Глаголы и спряжения</div><div class="cc-sub">Любой арабский глагол — полная таблица форм</div></div>
         <div class="cc-arrow">›</div>
@@ -1979,7 +2300,7 @@ button:focus-visible{
   </div>
 
   <div class="vol-cards" id="vol-cards"></div>
-  <button id="btn-install-pwa" class="btn-back-vol" style="display:none;background:rgba(255,255,255,0.25);margin-bottom:8px;" onclick="installPWA()">📲 Установить приложение</button>
+  <button id="btn-install-pwa" class="btn-back-vol" style="display:none;background:rgba(255,255,255,0.25);margin-bottom:8px;" onclick="installPWA()"><span class="ui-icon"><svg><use href="#ui-icon-download"></use></svg></span>Установить приложение</button>
   <button class="btn-back-vol" onclick="showScreen('screen-course')">← Назад к курсам</button>
 </div>
 
@@ -1993,7 +2314,12 @@ button:focus-visible{
     <div class="sc-title">Спряжение любого глагола</div>
     <input class="type-input" id="verb-input" type="text" placeholder="اكتب الفعل الماضي" dir="rtl">
     <div style="font-size:12px;color:var(--gray);margin:-4px 0 12px;text-align:center;">Пишите глагол в прошедшем времени (كتب или كَتَبَ) — огласовку настоящего времени подберём по словарю</div>
-    <button class="btn-start green" id="verb-conjugate-btn" onclick="conjugateTypedVerb()">🔁 Спрягать</button>
+    <button class="btn-start green" id="verb-conjugate-btn" onclick="conjugateTypedVerb()">
+      <span class="ui-icon ui-icon-refresh">
+        <svg><use href="#ui-icon-refresh"></use></svg>
+      </span>
+      Спрягать
+    </button>
     <div class="feedback" id="verb-input-feedback"></div>
   </div>
   <button class="btn-back-vol" onclick="showScreen('screen-course')">← Назад к курсам</button>
@@ -2003,10 +2329,10 @@ button:focus-visible{
 <div class="screen" id="screen-app">
   <div class="topbar">
     <div class="tb-left">
-      <span class="tb-user" id="app-rank" onclick="switchTab('lb')" style="cursor:pointer;">🏆 Рейтинг</span>
+      <span class="tb-user" id="app-rank" onclick="switchTab('lb')" style="cursor:pointer;"><span class="ui-icon"><svg><use href="#ui-icon-trophy"></use></svg></span>Рейтинг</span>
     </div>
     <div class="tb-right">
-      <button class="btn-tb" onclick="switchTab('instr')">❓</button>
+      <button class="btn-tb" aria-label="Справка" onclick="switchTab('instr')"><span class="ui-icon"><svg><use href="#ui-icon-help"></use></svg></span></button>
       <button class="btn-tb" onclick="goToCourse()">≡ Курсы</button>
     </div>
   </div>
@@ -2017,33 +2343,38 @@ button:focus-visible{
     <div class="streak-banner" id="streak-banner">
       <div class="streak-top">
         <div class="streak-fire" id="banner-fire">
-          <span class="streak-big-num">🔥 <span id="banner-days">0</span></span>
+          <span class="streak-big-num"><span class="ui-icon"><svg><use href="#ui-icon-calendar"></use></svg></span><span id="banner-days">0</span></span>
           Ты занимаешься уже <span id="banner-days-label">0 дней</span> подряд!
         </div>
         <div class="streak-days" id="banner-today-count">0 / 30 слов</div>
       </div>
       <div class="streak-hint" id="banner-hint">Повтори 30 слов до полуночи — продли серию!</div>
       <div class="streak-bar-bg"><div class="streak-bar-fill" id="streak-bar-fill" style="width:0%"></div></div>
-      <div class="streak-bar-label"><span>0 слов</span><span>🎯 30 слов</span></div>
-      <div class="streak-done hidden" id="streak-done">🎉 Отлично! Серия продлена на ещё один день!</div>
+      <div class="streak-bar-label"><span>0 слов</span><span>Цель: 30 слов</span></div>
+      <div class="streak-done hidden" id="streak-done">
+        <span class="ui-icon ui-icon-success">
+          <svg><use href="#ui-icon-success"></use></svg>
+        </span>
+        Отлично! Серия продлена на ещё один день!
+      </div>
       <div id="banner-rank"></div>
     </div>
     <div class="sc">
       <div class="sc-title">Уроки</div>
       <div class="ctrl-row">
-        <button class="ctrl-btn" onclick="selAll(true)">✓ Выбрать все</button>
-        <button class="ctrl-btn" onclick="selAll(false)">✗ Снять все</button>
+        <button class="ctrl-btn" onclick="selAll(true)">Выбрать все</button>
+        <button class="ctrl-btn" onclick="selAll(false)">Снять все</button>
       </div>
       <div class="lesson-grid" id="lesson-grid"><div style="grid-column:span 4;text-align:center;color:#aaa;font-size:13px;padding:10px;">Загрузка...</div></div>
     </div>
     <div class="sc">
       <div class="sc-title">Режим тренировки</div>
       <div class="mode-grid" id="mode-btns">
-        <button class="mode-pill active" onclick="setMode('learn',this)">🌱 Учить новые слова</button>
-        <button class="mode-pill" onclick="setMode('type-ar',this)">✍️ Арабский ввод</button>
-        <button class="mode-pill" onclick="setMode('review',this)">🔄 Обычное повторение</button>
-        <button class="mode-pill" onclick="setMode('mix',this)">🔀 Микс</button>
-        <button class="mode-pill fast" onclick="setMode('fast',this)">⚡ Быстрое повторение — 7 сек на слово</button>
+        <button class="mode-pill active" onclick="setMode('learn',this)"><span class="ui-icon"><svg><use href="#ui-icon-book"></use></svg></span>Учить новые слова</button>
+        <button class="mode-pill" onclick="setMode('type-ar',this)"><span class="ui-icon"><svg><use href="#ui-icon-keyboard"></use></svg></span>Арабский ввод</button>
+        <button class="mode-pill" onclick="setMode('review',this)"><span class="ui-icon"><svg><use href="#ui-icon-refresh"></use></svg></span>Обычное повторение</button>
+        <button class="mode-pill" onclick="setMode('mix',this)"><span class="ui-icon"><svg><use href="#ui-icon-shuffle"></use></svg></span>Микс</button>
+        <button class="mode-pill fast" onclick="setMode('fast',this)"><span class="ui-icon"><svg><use href="#ui-icon-bolt"></use></svg></span>Быстрое повторение — 7 сек</button>
       </div>
       <div class="answer-check-row">
         <div class="answer-check-title">Проверка арабского ввода</div>
@@ -2055,7 +2386,7 @@ button:focus-visible{
       </div>
     </div>
     <div id="cloud-status" style="font-size:12px;color:var(--gray);text-align:center;padding:4px 0;"></div>
-    <button class="btn-start green" id="btn-start" onclick="startQuiz(false)" disabled>▶ Начать тренировку</button>
+    <button class="btn-start green" id="btn-start" onclick="startQuiz(false)" disabled><span class="ui-icon"><svg><use href="#ui-icon-play"></use></svg></span>Начать тренировку</button>
     <button class="btn-start gold" id="btn-fav" onclick="startQuiz(true)" disabled>⭐ Только трудные слова</button>
   </div>
 
@@ -2064,8 +2395,8 @@ button:focus-visible{
     <div class="sc">
       <input class="search-input" id="dict-search" type="text" placeholder="Поиск на арабском или русском..." oninput="renderDict()">
       <div class="dict-view-toggle" role="group" aria-label="Вид словаря">
-        <button class="dict-view-btn active" type="button" data-dict-view="list" onclick="setDictView('list')" title="Список" aria-label="Список"><span>☷</span> Список</button>
-        <button class="dict-view-btn" type="button" data-dict-view="table" onclick="setDictView('table')" title="Таблица" aria-label="Таблица"><span>▦</span> Таблица</button>
+        <button class="dict-view-btn active" type="button" data-dict-view="list" onclick="setDictView('list')" title="Список" aria-label="Список"><span class="ui-icon"><svg><use href="#ui-icon-list"></use></svg></span>Список</button>
+        <button class="dict-view-btn" type="button" data-dict-view="table" onclick="setDictView('table')" title="Таблица" aria-label="Таблица"><span class="ui-icon"><svg><use href="#ui-icon-table"></use></svg></span>Таблица</button>
       </div>
       <div class="sc-title">Урок</div>
       <div class="lb-row-btns" id="dict-lesson-row">
@@ -2077,7 +2408,7 @@ button:focus-visible{
 
   <!-- TAB: BOOK -->
   <div class="tab-content" id="tab-book">
-    <div id="book-content"><div class="lb-empty">📘 Загрузите том, чтобы открыть книгу.</div></div>
+    <div id="book-content"><div class="lb-empty">Выберите том, чтобы открыть книгу.</div></div>
   </div>
 
   <!-- TAB: RULES -->
@@ -2093,9 +2424,9 @@ button:focus-visible{
     <div class="sc">
       <div class="sc-title">Тип рейтинга</div>
       <div class="lb-row-btns" id="lb-type-row">
-        <button class="lb-pill gold active" onclick="setLbFilter('type','score',this)">🌟 Очки</button>
-        <button class="lb-pill" onclick="setLbFilter('type','fast',this)">⚡ Быстрый режим</button>
-        <button class="lb-pill" onclick="setLbFilter('type','streak',this)">🔥 Серия дней</button>
+        <button class="lb-pill gold active" onclick="setLbFilter('type','score',this)"><span class="ui-icon"><svg><use href="#ui-icon-trophy"></use></svg></span>Очки</button>
+        <button class="lb-pill" onclick="setLbFilter('type','fast',this)"><span class="ui-icon"><svg><use href="#ui-icon-bolt"></use></svg></span>Быстрый режим</button>
+        <button class="lb-pill" onclick="setLbFilter('type','streak',this)"><span class="ui-icon"><svg><use href="#ui-icon-calendar"></use></svg></span>Серия дней</button>
       </div>
       <div id="lb-time-section">
         <div class="sc-title" style="margin-top:8px;">Период</div>
@@ -2112,61 +2443,66 @@ button:focus-visible{
 
   <!-- TAB: INSTRUCTION -->
   <div class="tab-content" id="tab-instr">
-    <div class="instr-block" style="background:linear-gradient(135deg,var(--green-dark),var(--green));border-radius:16px;">
-      <div class="instr-mode-title" style="color:white;font-size:17px;">👋 С чего начать?</div>
-      <div class="instr-text" style="color:rgba(255,255,255,0.92);line-height:1.9;">
-        <b style="color:white;">1.</b> Выбери Мединский курс или тренажёр глаголов<br>
-        <b style="color:white;">2.</b> Выбери том<br>
-        <b style="color:white;">3.</b> На экране тренировки выбери уроки (можно несколько)<br>
-        <b style="color:white;">4.</b> Выбери режим тренировки<br>
-        <b style="color:white;">5.</b> Нажми <b style="color:white;">«Начать тренировку»</b><br><br>
-        💡 Прокрути вниз чтобы узнать о каждом режиме подробнее
+    <div class="instr-block">
+      <div class="instr-mode-title" style="font-size:17px;">С чего начать?</div>
+      <div class="instr-text" style="line-height:1.9;">
+        <b>1.</b> Выбери Мединский курс или тренажёр глаголов<br>
+        <b>2.</b> Выбери том<br>
+        <b>3.</b> Выбери один или несколько уроков<br>
+        <b>4.</b> Выбери режим и нажми «Начать тренировку»<br><br>
+        Ниже подробно описан каждый режим.
       </div>
     </div>
     <div class="instr-block">
-      <div class="instr-mode-title">🌱 Учить новые слова</div>
+      <div class="instr-mode-title">Учить новые слова</div>
       <div class="instr-text">
         Сначала показывается карточка: арабское слово + перевод — запомни. Затем тест: выбери правильный перевод из 4 вариантов. Слова повторяются пока не ответишь правильно. <b>+5 очков</b> за правильный ответ.
       </div>
     </div>
     <div class="instr-block">
-      <div class="instr-mode-title">✍️ Арабский ввод</div>
+      <div class="instr-mode-title">Арабский ввод</div>
       <div class="instr-text">
-        Показывается русское слово — напиши арабский перевод вручную. <b>+20 очков</b> за правильный ответ. Есть кнопка <b>💡 Подсказка</b> — каждое нажатие открывает следующую букву слова, но <b>−5 очков</b> за каждое нажатие (1 нажатие = +15, 2 нажатия = +10 и т.д.). Лучший режим для запоминания написания и харакатов.
+        Показывается русское слово — напиши арабский перевод вручную. <b>+20 очков</b> за правильный ответ. Кнопка <b>«Подсказка»</b> открывает следующую букву и уменьшает результат на <b>5 очков</b> за нажатие.
       </div>
     </div>
     <div class="instr-block">
-      <div class="instr-mode-title">🔄 Обычное повторение</div>
+      <div class="instr-mode-title">Обычное повторение</div>
       <div class="instr-text">
         Интервальное повторение (SRS). Система отслеживает каждое слово — чем лучше знаешь, тем реже появляется. Правильный ответ → уровень слова растёт → слово приходит позже. Ошибка → уровень падает → слово вернётся скорее. <b>+5 очков</b> за арабский→русский, <b>+10 очков</b> за русский→арабский.
       </div>
     </div>
     <div class="instr-block">
-      <div class="instr-mode-title">🔀 Микс</div>
+      <div class="instr-mode-title">Микс</div>
       <div class="instr-text">
         Случайное чередование трёх форматов: арабский→русский (+5), русский→арабский (+10), арабский ввод (+20). Лучший режим для разносторонней тренировки и набора очков.
       </div>
     </div>
     <div class="instr-block">
-      <div class="instr-mode-title">⚡ Быстрое повторение</div>
+      <div class="instr-mode-title">Быстрое повторение</div>
       <div class="instr-text">
-        Показывается русское слово — выбери арабский перевод из 4 вариантов за <b>7 секунд</b>. Есть 3 жизни ❤️. Ошибка или время вышло — жизнь теряется, слово попадает в трудные. Сначала выбери режим, затем нажми «Начать тренировку». Рекорд сохраняется в рейтинге <b>«⚡ Быстрый режим»</b>.
+        Показывается русское слово — выбери арабский перевод из 4 вариантов за <b>7 секунд</b>. Доступно 3 жизни. Ошибка или истёкшее время отнимает жизнь, а слово попадает в трудные. Рекорд сохраняется в рейтинге быстрого режима.
       </div>
     </div>
     <div class="instr-block">
-      <div class="instr-mode-title">⭐ Трудные слова</div>
+      <div class="instr-mode-title">Трудные слова</div>
       <div class="instr-text">
-        Слова которые вызвали ошибку в быстром режиме автоматически попадают в трудные. Кнопка <b>«Только трудные слова»</b> запускает тренировку по ним в режиме «Учить новые слова» — сначала карточка, потом тест. Можно также добавлять слова вручную через звёздочку ⭐ во время тренировки.
+        Слова, которые вызвали ошибку в быстром режиме, автоматически попадают в трудные. Кнопка <b>«Только трудные слова»</b> запускает отдельную тренировку. Добавлять слова можно и вручную кнопкой избранного.
       </div>
     </div>
     <div class="instr-block">
-      <div class="instr-mode-title">🏆 Рейтинги</div>
+      <div class="instr-mode-title">Рейтинги и серия дней</div>
       <div class="instr-text">
-        Текущий рейтинг теперь выводится вверху в виде значка «🏆» и числа в скобках. Рейтинг обновляется при попадании очков в систему.
+        Рейтинг обновляется после подтверждения очков сервером. Дневная цель — 30 правильных ответов. Новый день и серия рассчитываются по московскому времени; после обновления страницы значение восстанавливается из аккаунта.
       </div>
     </div>
     <div class="instr-block">
-      <div class="instr-mode-title">📲 Установка приложения</div>
+      <div class="instr-mode-title">Книга</div>
+      <div class="instr-text">
+        Открой раздел «Книга», выбери том, затем формат. «Читать в приложении» запускает полноэкранный режим: листай кнопками, стрелками клавиатуры или свайпом. «Открыть PDF» показывает исходный файл отдельно.
+      </div>
+    </div>
+    <div class="instr-block">
+      <div class="instr-mode-title">Установка приложения</div>
       <div class="instr-text">
         <b>Android:</b> нажмите кнопку <b>«Установить приложение»</b> на экране выбора тома. Приложение появится на рабочем столе как обычное.<br><br>
         <b>iPhone / iPad (iOS):</b> автоматическая установка не поддерживается Apple. Сделайте вручную:<br>
@@ -2174,16 +2510,16 @@ button:focus-visible{
         2. Нажмите кнопку <b>«Поделиться»</b> (квадрат со стрелкой вверх) внизу экрана<br>
         3. Выберите <b>«На экран "Домой"»</b><br>
         4. Нажмите <b>«Добавить»</b><br><br>
-        Иконка приложения появится на рабочем столе 📱
+        Иконка приложения появится на рабочем столе.
       </div>
     </div>
     <div class="instr-block">
-      <div class="instr-mode-title">📞 Связь и поддержка</div>
+      <div class="instr-mode-title">Связь и поддержка</div>
       <div class="instr-text" style="margin-bottom:12px;">
         По вопросам, предложениям и при неполадках — пишите напрямую:
       </div>
       <a class="instr-wa" href="https://wa.me/79634018877" target="_blank">
-        <div class="instr-wa-icon">💬</div>
+        <div class="instr-wa-icon"><span class="ui-icon"><svg><use href="#ui-icon-message"></use></svg></span></div>
         <div class="instr-wa-text">
           <div class="instr-wa-title">Написать в WhatsApp</div>
           <div class="instr-wa-sub">+7 963 401 88 77</div>
@@ -2213,7 +2549,7 @@ button:focus-visible{
         <button class="qty-pill active" data-val="50" onclick="setQty('fast',50,this)">50</button>
         <button class="qty-pill" data-val="100" onclick="setQty('fast',100,this)">100</button>
         <button class="qty-pill" data-val="200" onclick="setQty('fast',200,this)">200</button>
-        <button class="qty-pill" data-val="inf" onclick="setQty('fast','inf',this)">♾️</button>
+        <button class="qty-pill" data-val="inf" onclick="setQty('fast','inf',this)">&infin;</button>
       </div>
     </div>
     <div class="sc">
@@ -2225,13 +2561,20 @@ button:focus-visible{
 
   <!-- BOTTOM TABS -->
   <div class="app-tabs">
-    <button class="app-tab active" id="at-train" onclick="switchTab('train')"><span class="ti">📚</span>Тренировка</button>
-    <button class="app-tab" id="at-dict" onclick="switchTab('dict')"><span class="ti">📖</span>Словарь</button>
-    <button class="app-tab" id="at-book" onclick="switchTab('book')"><span class="ti">📘</span>Книга</button>
-    <button class="app-tab" id="at-rules" onclick="switchTab('rules')"><span class="ti">📋</span>Правила</button>
-    <button class="app-tab" id="at-lb" onclick="switchTab('lb')" style="display:none;"><span class="ti">🏆</span>Рейтинг</button>
+    <button class="app-tab active" id="at-train" onclick="switchTab('train')"><span class="ti"><span class="ui-icon"><svg><use href="#ui-icon-target"></use></svg></span></span>Тренировка</button>
+    <button class="app-tab" id="at-dict" onclick="switchTab('dict')">
+      <span class="ti">
+        <span class="ui-icon ui-icon-book ui-icon--tiny">
+          <svg><use href="#ui-icon-book"></use></svg>
+        </span>
+      </span>
+      Словарь
+    </button>
+    <button class="app-tab" id="at-book" onclick="switchTab('book')"><span class="ti"><span class="ui-icon"><svg><use href="#ui-icon-book"></use></svg></span></span>Книга</button>
+    <button class="app-tab" id="at-rules" onclick="switchTab('rules')"><span class="ti"><span class="ui-icon"><svg><use href="#ui-icon-file"></use></svg></span></span>Правила</button>
+    <button class="app-tab" id="at-lb" onclick="switchTab('lb')" style="display:none;"><span class="ti"><span class="ui-icon"><svg><use href="#ui-icon-trophy"></use></svg></span></span>Рейтинг</button>
     <button class="app-tab" id="at-instr" onclick="switchTab('instr')" style="display:none;"></button>
-    <button class="app-tab" id="at-settings" onclick="switchTab('settings')"><span class="ti">⚙️</span>Настройки</button>
+    <button class="app-tab" id="at-settings" onclick="switchTab('settings')"><span class="ti"><span class="ui-icon"><svg><use href="#ui-icon-settings"></use></svg></span></span>Настройки</button>
   </div>
 </div>
 
@@ -2239,39 +2582,48 @@ button:focus-visible{
 <div class="screen" id="screen-quiz">
   <div class="quiz-top">
     <div class="q-info"><div class="q-mode" id="q-mode">Тренировка</div><div class="q-prog" id="q-prog">1/10</div></div>
-    <button class="q-exit" onclick="confirmExit()">✕ Завершить</button>
+    <button class="q-exit" onclick="confirmExit()">Завершить</button>
   </div>
   <div class="quiz-bar"><div class="quiz-bar-fill" id="q-bar" style="width:0%"></div></div>
   <div class="fast-stats hidden" id="fast-stats">
     <div class="fs-cell"><div class="fs-lbl">Слов</div><div class="fs-val" id="fs-words">0</div></div>
-    <div class="fs-cell"><div class="fs-lbl">Жизни</div><div class="fs-val" id="fs-lives">❤️❤️❤️</div></div>
+      <div class="fs-cell"><div class="fs-lbl">Жизни</div>
+        <div class="fs-val" id="fs-lives">
+          <span class="life-dots"><span class="life-dot is-active"></span><span class="life-dot is-active"></span><span class="life-dot is-active"></span></span>
+        </div>
+      </div>
     <div class="fs-cell"><div class="fs-lbl">Время</div><div class="fs-val" id="fs-timer">7</div></div>
   </div>
-  <div id="fast-leader" class="hidden" style="text-align:center;font-size:11px;color:#888;padding:3px 0;background:#f5f5f5;">🏆 <span id="fast-leader-text">—</span></div>
+  <div id="fast-leader" class="hidden" style="text-align:center;font-size:11px;color:#68737d;padding:5px 0;background:#f4f6f7;"><span class="ui-icon"><svg><use href="#ui-icon-trophy"></use></svg></span><span id="fast-leader-text">—</span></div>
   <div class="quiz-body">
     <div class="word-card" id="word-card">
-      <button class="star-btn" id="star-btn" onclick="toggleStar()">☆</button>
+      <button class="star-btn" id="star-btn" aria-label="Добавить в трудные слова" aria-pressed="false" onclick="toggleStar()"><span class="ui-icon"><svg><use href="#ui-icon-star"></use></svg></span></button>
       <div id="word-display"></div>
     </div>
     <div class="opts hidden" id="opts"></div>
     <div class="hidden" id="type-area">
       <input class="type-input" id="type-input" type="text" placeholder="اكتب بالعربية..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" dir="rtl">
-      <button class="btn-check" onclick="checkTyped()">Проверить ✓</button>
+      <button class="btn-check" onclick="checkTyped()">Проверить</button>
       <div class="hint-cost" id="hint-cost-label"></div>
-      <button class="btn-hint" id="btn-hint" onclick="showHint()">💡 Подсказка (−5 очков)</button>
+      <button class="btn-hint" id="btn-hint" onclick="showHint()"><span class="ui-icon"><svg><use href="#ui-icon-bulb"></use></svg></span>Подсказка (−5 очков)</button>
     </div>
     <div class="feedback" id="feedback"></div>
     <div class="quiz-nav">
       <button class="btn-nav hidden" id="btn-next" onclick="goNext()">Дальше →</button>
     </div>
-    <button class="btn-early" onclick="confirmExit()">🏠 Завершить досрочно</button>
+    <button class="btn-early" onclick="confirmExit()"><span class="ui-icon"><svg><use href="#ui-icon-home"></use></svg></span>Завершить досрочно</button>
   </div>
 </div>
 
 <!-- RESULTS -->
 <div class="screen" id="screen-results">
   <div class="res-hdr">
-    <h2 id="res-title">🎉 Урок завершён!</h2>
+    <h2 id="res-title">
+      <span class="ui-icon ui-icon-success">
+        <svg><use href="#ui-icon-success"></use></svg>
+      </span>
+      Урок завершён!
+    </h2>
     <div class="res-stats">
       <div class="rs"><div class="rs-val" id="r-pts">0</div><div class="rs-lbl">Очков</div></div>
       <div class="rs"><div class="rs-val" id="r-total">0</div><div class="rs-lbl">Слов</div></div>
@@ -2279,8 +2631,8 @@ button:focus-visible{
     </div>
   </div>
   <div class="res-body">
-    <button class="btn-res" onclick="backToMenu()">🏠 В меню</button>
-    <button class="btn-res sec" onclick="restartQuiz()">🔄 Повторить</button>
+    <button class="btn-res" onclick="backToMenu()"><span class="ui-icon"><svg><use href="#ui-icon-home"></use></svg></span>В меню</button>
+    <button class="btn-res sec" onclick="restartQuiz()"><span class="ui-icon"><svg><use href="#ui-icon-refresh"></use></svg></span>Повторить</button>
     <div class="word-list" id="res-word-list"></div>
   </div>
 </div>

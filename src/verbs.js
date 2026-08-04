@@ -155,7 +155,7 @@ async function conjugateTypedVerb() {
     fb.textContent = 'Не удалось показать спряжение. Попробуйте ещё раз.';
   } finally {
     btn.disabled = false;
-    btn.textContent = '🔁 Спрягать';
+    setIconLabel(btn, 'refresh', 'Спрягать');
   }
 }
 
@@ -218,7 +218,7 @@ function renderConjugationTable(v) {
   let html = '';
   if (!v.dictionary) {
     html +=
-      '<div class="feedback err" style="margin-bottom:12px;">⚠️ Этого глагола нет в словаре, огласовка настоящего времени подобрана вручную (' +
+      '<div class="feedback err" style="margin-bottom:12px;">Этого глагола нет в словаре, огласовка настоящего времени подобрана вручную (' +
       esc(VOWEL_LABELS[v.futureType] || v.futureType) +
       '). Если формы выглядят странно — попробуйте другую огласовку ниже и спрягите заново.</div>' +
       '<div class="lb-row-btns" id="verb-manual-vowel-row" style="margin-bottom:12px;">' +
@@ -271,7 +271,7 @@ function renderConjugationTable(v) {
     .join('');
   html += '<div class="verb-dual-toggle" onclick="toggleVerbDual(this)">Показать двойственное число ▾</div>';
   html += '<div class="hidden" id="verb-dual-block">' + dualBlocks + '</div>';
-  html += '<button class="btn-start green" style="margin-top:16px;" onclick="startVerbDrill()">🎯 Потренироваться</button>';
+  html += '<button class="btn-start green" style="margin-top:16px;" onclick="startVerbDrill()">' + uiIcon('target') + 'Потренироваться</button>';
   return html;
 }
 
@@ -366,10 +366,10 @@ function checkVerbDrill() {
   inp.disabled = true;
   if (val === correct) {
     fb.className = 'feedback ok';
-    fb.textContent = '✅ Правильно!';
+    fb.textContent = 'Правильно';
   } else {
     fb.className = 'feedback err';
-    fb.innerHTML = '❌ Правильно: <span style="font-family:Times New Roman,serif;font-size:22px;direction:rtl;">' + esc(verbDrillAnswer) + '</span>';
+    fb.innerHTML = 'Правильный ответ: <span class="answer-ar" dir="rtl">' + esc(verbDrillAnswer) + '</span>';
   }
   btn.textContent = 'Далее →';
   btn.onclick = nextVerbDrillPrompt;

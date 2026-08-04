@@ -91,7 +91,7 @@ async function loadLB() {
       cont.innerHTML = '<div class="lb-empty">' + lbQueryErrorMessage() + '</div>';
       return;
     }
-    const items = data.map((r) => ({ name: r.nickname, val: (r.total_score || 0) + ' 🌟' }));
+    const items = data.map((r) => ({ name: r.nickname, val: (r.total_score || 0) + ' баллов' }));
     cont.innerHTML = '';
     const chart = buildChart(Array.isArray(myData) ? myData : []);
     if (chart) cont.innerHTML += chart;
@@ -101,7 +101,7 @@ async function loadLB() {
 
   // Period scores are aggregated from Moscow calendar periods:
   // day starts at 00:00 MSK, week starts on Sunday, month starts on the 1st.
-  let q = db.from('score_history').select('username,points,course_name,created_at');
+  let q = db.from('score_history').select('username,points,course_name,created_at').like('course_name', 'Мединский курс%');
   const d = appPeriodStart(period);
   q = q.gte('created_at', d.toISOString());
   const d30 = new Date();
@@ -129,7 +129,7 @@ async function loadLB() {
     cont.innerHTML += '<div class="lb-empty">Нет данных</div>';
     return;
   }
-  renderLbTable(cont, sorted.map(([name, val]) => ({ name, val: val + ' 🌟' })), true);
+  renderLbTable(cont, sorted.map(([name, val]) => ({ name, val: val + ' баллов' })), true);
 }
 
 function buildChart(records) {
@@ -150,7 +150,7 @@ function buildChart(records) {
   const vals = days.map((d) => byDay[d] || 0);
   const max = Math.max(...vals, 1);
   const dn = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-  return `<div class="chart-card"><div class="chart-title">📈 Мой прогресс — 7 дней</div><div class="chart-wrap">${days
+  return `<div class="chart-card"><div class="chart-title">Мой прогресс — 7 дней</div><div class="chart-wrap">${days
     .map((d, i) => {
       const pct = Math.round((vals[i] / max) * 100);
       const isT = i === 6;
@@ -169,14 +169,13 @@ function renderLbTable(cont, rows, append) {
     cont.innerHTML += '<div class="lb-empty">Пока нет результатов</div>';
     return;
   }
-  const m = ['🥇', '🥈', '🥉'];
   const html =
     '<div class="lb-table">' +
     rows
       .map(
         (r, i) => `
-    <div class="lb-item" style="${r.name === App.username ? 'background:#e8f5ee;' : ''}">
-      <div class="lb-rank ${i === 0 ? 't1' : i === 1 ? 't2' : i === 2 ? 't3' : ''}">${m[i] || i + 1 + '.'}</div>
+    <div class="lb-item ${r.name === App.username ? 'is-current' : ''}">
+      <div class="lb-rank ${i === 0 ? 't1' : i === 1 ? 't2' : i === 2 ? 't3' : ''}">${i + 1}.</div>
       <div class="lb-name ${r.name === App.username ? 'me' : ''}">${esc(r.name)}${
           r.name === App.username ? ' ← ты' : ''
         }${r.extra ? '<div style="font-size:10px;color:#e67e22">' + esc(r.extra) + '</div>' : ''}</div>
