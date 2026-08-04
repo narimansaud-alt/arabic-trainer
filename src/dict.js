@@ -561,6 +561,97 @@ function closeAllRuleCards(scope) {
   });
   document.querySelectorAll('.rule-outline-row[data-card]').forEach((row) => row.classList.remove('active'));
 }
+
+let currentBookPage = 1;
+
+function getBookStorageKey(volumeId) {
+  return 'arabic_book_page_' + String(volumeId);
+}
+
+function bookPageFromInput(page) {
+  const parsed = parseInt(String(page), 10);
+  if (!Number.isFinite(parsed)) return 1;
+  return Math.max(1, parsed);
+}
+
+function buildBookUrl(url, page) {
+  return `${url}#page=${bookPageFromInput(page)}&zoom=page-width`;
+}
+
+function setBookPage(volumeId, page) {
+  if (!volumeId) return;
+  const newPage = bookPageFromInput(page);
+  currentBookPage = newPage;
+  localStorage.setItem(getBookStorageKey(volumeId), String(newPage));
+
+  const frame = document.getElementById('book-frame');
+  const input = document.getElementById('book-page-input');
+  const book = getVolumeBook(volumeId);
+  if (!frame || !input || !book) return;
+
+  input.value = String(newPage);
+  frame.src = buildBookUrl(book.url, newPage);
+}
+
+function nextBookPage(delta) {
+  const volume = findVolumeById(App.volume);
+  const book = volume ? getVolumeBook(volume.id) : null;
+  if (!book) return;
+  const next = currentBookPage + delta;
+  setBookPage(volume.id, next);
+}
+
+function applyBookPageFromInput() {
+  const volume = findVolumeById(App.volume);
+  const input = document.getElementById('book-page-input');
+  if (!volume || !input) return;
+  setBookPage(volume.id, input.value);
+}
+
+function renderBookTab() {
+  const cont = document.getElementById('book-content');
+  const volume = findVolumeById(App.volume);
+  const book = volume ? getVolumeBook(volume.id) : null;
+
+  if (!cont || !volume) {
+    if (cont) cont.innerHTML = '<div class="lb-empty">Книга недоступна. Выберите том.</div>';
+    return;
+  }
+
+  if (!book) {
+    cont.innerHTML =
+      '<div class="lb-empty">📘 Книга для ' +
+      esc(volume.label) +
+      ' пока не добавлена.<br>Когда добавите файл, здесь появится отдельная книга.</div>';
+    return;
+  }
+
+  const savedPage = bookPageFromInput(localStorage.getItem(getBookStorageKey(volume.id)));
+  setBookPage(volume.id, savedPage);
+
+  cont.innerHTML =
+    '<div class="sc">' +
+    '<div class="sc-title">📘 ' +
+    esc(book.title || volume.label) +
+    '</div>' +
+    '<div class="book-reader-toolbar">' +
+    '<button class="book-nav-btn" type="button" onclick="nextBookPage(-1)">← Предыдущая</button>' +
+    '<input class="book-page-input" id="book-page-input" type="number" min="1" value="' +
+    currentBookPage +
+    '" onchange="applyBookPageFromInput()">' +
+    '<button class="book-nav-btn" type="button" onclick="nextBookPage(1)">Следующая →</button>' +
+    '</div>' +
+    '<div class="book-meta">Введите номер страницы для быстрого перехода</div>' +
+    '<iframe class="book-frame" id="book-frame" src="' +
+    buildBookUrl(book.url, currentBookPage) +
+    '" title="Книга тома"></iframe>' +
+    '<div class="book-meta">Можно двигать страницу через встроенные кнопки PDF на экране.</div>' +
+    '</div>';
+
+  const frame = document.getElementById('book-frame');
+  if (frame) frame.src = buildBookUrl(book.url, currentBookPage);
+}
+
 function pushAppHistoryState(state) {
   if (!window.history || !history.pushState) return;
   history.pushState({ app: 'arabic-trainer', ...state }, '', window.location.href);
@@ -807,6 +898,7 @@ function switchTab(t) {
   if (t === 'lb') loadLB();
   if (t === 'dict') renderDict();
   if (t === 'rules') renderRules();
+  if (t === 'book') renderBookTab();
 }
 
 function selAll(v) {

@@ -17,6 +17,7 @@ const FILES = [
   './src/quiz.js',
   './src/learn.js',
   './src/main.js',
+  './books/ar_01_Lessons_in_Arabic_Language.pdf',
 ];
 
 self.addEventListener('install', e => {

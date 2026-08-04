@@ -72,10 +72,28 @@ function msUntilNextAppMidnight() {
 
 const VOLUMES = {
   med: [
-    { id: 'Мединский курс (Том 1)', label: 'Том 1', sub: 'Уроки 1–22' },
-    { id: 'Мединский курс (Том 2)', label: 'Том 2', sub: 'Уроки 1–5+' },
-    { id: 'Мединский курс (Том 3)', label: 'Том 3', sub: 'В разработке' },
-    { id: 'Мединский курс (Том 4)', label: 'Том 4', sub: 'В разработке' },
+    {
+      id: 'Мединский курс (Том 1)',
+      label: 'Том 1',
+      sub: 'Уроки 1–22',
+      book: {
+        url: './books/ar_01_Lessons_in_Arabic_Language.pdf',
+        title: 'Мединский курс (Том 1)',
+        status: 'ready',
+      },
+    },
+    {
+      id: 'Мединский курс (Том 2)',
+      label: 'Том 2',
+      sub: 'Уроки 1–5+',
+      book: {
+        url: './books/ar_02_Lessons_in_Arabic_Language.pdf',
+        title: 'Мединский курс (Том 2)',
+        status: 'not-uploaded',
+      },
+    },
+    { id: 'Мединский курс (Том 3)', label: 'Том 3', sub: 'В разработке', book: null },
+    { id: 'Мединский курс (Том 4)', label: 'Том 4', sub: 'В разработке', book: null },
   ],
 };
 
@@ -92,6 +110,13 @@ function getCourseKeyByVolume(volumeId) {
     if (vols.some((v) => v.id === volumeId)) return key;
   }
   return null;
+}
+
+function getVolumeBook(volumeId) {
+  const volume = findVolumeById(volumeId);
+  if (!volume || !volume.book) return null;
+  if (!volume.book.url || volume.book.status !== 'ready') return null;
+  return volume.book;
 }
 
 function resetApp() {
