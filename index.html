@@ -12,6 +12,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="./medina-course-icon-512.png">
 <link rel="apple-touch-icon" sizes="152x152" href="./medina-course-icon-512.png">
 <link rel="apple-touch-icon" sizes="120x120" href="./medina-course-icon-512.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./medina-course-icon-192.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <script>
 if('serviceWorker' in navigator){
@@ -901,6 +902,151 @@ body{background:radial-gradient(circle at 50% -15%,#fff8f1 0,#fff 32rem);color:v
   .btn-tb{padding:7px 10px;}.lesson-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;}
   .lesson-pill{min-height:40px;}.quiz-body{padding:12px;}.word-card{padding:28px 14px;}
 }
+/* Final control layer: must remain last so legacy section styles cannot win */
+:root{
+  --green:#1c1a18;
+  --green-dark:#1c1a18;
+  --green-light:#f5f2ee;
+  --gold:#a9582b;
+}
+
+button{font-family:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+.btn-primary,
+.btn-announcement,
+.btn-check,
+.btn-res:not(.sec),
+.btn-start:not(.gold),
+.verb-modal .btn-start{
+  min-height:50px!important;
+  padding:13px 20px!important;
+  border:1px solid #1c1a18!important;
+  border-radius:14px!important;
+  background:#1c1a18!important;
+  color:#fff!important;
+  font-weight:750!important;
+  box-shadow:0 8px 22px rgba(28,26,24,.11)!important;
+}
+.btn-primary:hover,
+.btn-announcement:hover,
+.btn-check:hover,
+.btn-res:not(.sec):hover,
+.btn-start:not(.gold):hover{background:#2d2926!important;border-color:#2d2926!important;}
+
+.btn-start.gold,
+.mode-pill.fast{
+  border:1px solid #a9582b!important;
+  background:#fff8f2!important;
+  color:#91471f!important;
+  box-shadow:none!important;
+}
+.btn-start.gold:hover,
+.mode-pill.fast:hover{background:#a9582b!important;color:#fff!important;}
+
+.btn-logout-c,
+.btn-back-vol,
+.btn-tb,
+.ctrl-btn,
+.btn-nav,
+.btn-early,
+.btn-res.sec,
+.book-nav-btn,
+.book-format-btn,
+.rules-back-btn,
+.rules-open-btn,
+.rule-detail-actions button{
+  min-height:42px!important;
+  border:1px solid #d8d2cb!important;
+  border-radius:12px!important;
+  background:#fff!important;
+  color:#1c1a18!important;
+  font-weight:700!important;
+  box-shadow:0 3px 10px rgba(28,26,24,.05)!important;
+}
+.btn-logout-c:hover,
+.btn-back-vol:hover,
+.btn-tb:hover,
+.ctrl-btn:hover,
+.btn-nav:hover,
+.btn-early:hover,
+.btn-res.sec:hover,
+.book-nav-btn:hover,
+.book-format-btn:hover,
+.rules-back-btn:hover,
+.rules-open-btn:hover,
+.rule-detail-actions button:hover{background:#f5f2ee!important;border-color:#c4bbb1!important;}
+
+.lesson-pill,
+.mode-pill,
+.qty-pill,
+.lb-pill,
+.answer-check-pill,
+.dict-view-btn{
+  border:1px solid #ddd7d0!important;
+  border-radius:11px!important;
+  background:#fff!important;
+  color:#625d57!important;
+  box-shadow:none!important;
+}
+.lesson-pill:hover,
+.mode-pill:hover,
+.qty-pill:hover,
+.lb-pill:hover,
+.answer-check-pill:hover,
+.dict-view-btn:hover{background:#f5f2ee!important;color:#1c1a18!important;border-color:#c4bbb1!important;}
+.lesson-pill.active,
+.mode-pill.active,
+.qty-pill.active,
+.lb-pill.active,
+.answer-check-pill.active,
+.dict-view-btn.active{
+  border-color:#1c1a18!important;
+  background:#1c1a18!important;
+  color:#fff!important;
+  box-shadow:0 5px 14px rgba(28,26,24,.12)!important;
+}
+.mode-pill.fast.active{border-color:#a9582b!important;background:#a9582b!important;color:#fff!important;}
+
+.rules-lesson-tile,
+.rule-outline-row{
+  border:1px solid #e2ddd7!important;
+  border-radius:16px!important;
+  background:#fff!important;
+  color:#1c1a18!important;
+  box-shadow:0 5px 18px rgba(28,26,24,.055)!important;
+}
+.rules-lesson-tile:hover,
+.rule-outline-row:hover{
+  border-color:#bfb5aa!important;
+  background:#fffdfa!important;
+  box-shadow:0 9px 24px rgba(28,26,24,.09)!important;
+  transform:translateY(-1px);
+}
+.rules-lesson-open{color:#a9582b!important;font-weight:750!important;}
+.rules-open-btn{color:#91471f!important;border-color:#d8b59e!important;}
+
+.tab-btn{min-height:42px!important;border-radius:11px!important;background:transparent!important;color:#706a64!important;}
+.tab-btn.active{background:#fff!important;color:#1c1a18!important;box-shadow:0 3px 12px rgba(28,26,24,.08)!important;}
+.app-tab{background:#fff!important;color:#77716b!important;border:0!important;}
+.app-tab.active{color:#1c1a18!important;font-weight:750!important;}
+.app-tab.active::before{background:#a9582b!important;}
+
+.btn-hint{min-height:44px!important;border:1px solid #e0bca3!important;border-radius:13px!important;background:#fff8f2!important;color:#91471f!important;}
+.star-btn{background:#fff!important;border:1px solid #ded8d1!important;color:#a9582b!important;box-shadow:0 3px 10px rgba(28,26,24,.06)!important;}
+.q-exit{background:#fff!important;border:1px solid #d8d2cb!important;color:#1c1a18!important;border-radius:11px!important;}
+
+#sw-update-banner{background:#fff!important;color:#1c1a18!important;border-bottom:1px solid #ded8d1!important;}
+#sw-update-banner button:first-of-type{background:#1c1a18!important;color:#fff!important;border-radius:10px!important;}
+#sw-update-banner button:last-of-type{color:#1c1a18!important;}
+
+button:focus-visible{outline:3px solid rgba(169,88,43,.24)!important;outline-offset:3px;}
+button:active:not(:disabled){transform:translateY(1px) scale(.985);}
+button:disabled{opacity:.42!important;box-shadow:none!important;}
+
+@media(max-width:640px){
+  .btn-primary,.btn-announcement,.btn-check,.btn-res:not(.sec),.btn-start:not(.gold){min-height:52px!important;border-radius:13px!important;}
+  .rules-lesson-tile,.rule-outline-row{border-radius:14px!important;}
+  .app-tab{min-height:62px!important;}
+}
 </style>
 </head>
 <body>
@@ -934,7 +1080,7 @@ body{background:radial-gradient(circle at 50% -15%,#fff8f1 0,#fff 32rem);color:v
 <!-- SPLASH -->
 <div class="screen active" id="screen-loading">
   <div class="splash-box">
-    <img src="/icon-v2.png" alt="Мединский курс и глаголы">
+    <img src="./medina-course-icon-512.png" alt="Мединский курс и глаголы">
     <h1>Мединский курс и глаголы</h1>
     <p>Арабский язык: уроки, слова и спряжения</p>
     <div class="splash-spinner"></div>
@@ -945,7 +1091,7 @@ body{background:radial-gradient(circle at 50% -15%,#fff8f1 0,#fff 32rem);color:v
 <div class="screen" id="screen-login">
   <div class="login-box">
     <div class="login-logo">
-      <img src="/icon-v2.png" alt="Мединский курс и глаголы">
+      <img src="./medina-course-icon-512.png" alt="Мединский курс и глаголы">
       <h1>Мединский курс и глаголы</h1>
       <p>Учите арабский язык каждый день</p>
     </div>
