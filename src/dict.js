@@ -742,6 +742,16 @@ let currentBookVolumeId = null;
 let bookSwipeStartX = null;
 let bookKeyHandler = null;
 let currentBookZoom = 1;
+let bookPointers = new Map();
+let bookPinchStartDistance = 0;
+let bookPinchStartZoom = 1;
+let bookPanStart = null;
+
+function getBookPointerDistance() {
+  const points = Array.from(bookPointers.values());
+  if (points.length < 2) return 0;
+  return Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+}
 
 function renderBookTab() {
   const cont = document.getElementById('book-content');
@@ -845,7 +855,7 @@ function setBookZoom(value) {
   const stage = document.getElementById('book-reader-stage');
   const image = document.getElementById('book-page-image');
   const label = document.getElementById('book-zoom-value');
-  currentBookZoom = Math.min(3, Math.max(1, Math.round(Number(value || 1) * 4) / 4));
+  currentBookZoom = Math.min(3, Math.max(1, Math.round(Number(value || 1) * 20) / 20));
   if (stage) stage.classList.toggle('is-zoomed', currentBookZoom > 1);
   if (image) image.style.width = currentBookZoom > 1 ? currentBookZoom * 100 + '%' : '';
   if (label) label.textContent = Math.round(currentBookZoom * 100) + '%';
@@ -858,16 +868,61 @@ function setBookZoom(value) {
 function bindBookReaderGestures() {
   const stage = document.getElementById('book-reader-stage');
   if (!stage) return;
+  bookPointers = new Map();
   stage.addEventListener('pointerdown', (event) => {
+    bookPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (stage.setPointerCapture) stage.setPointerCapture(event.pointerId);
     bookSwipeStartX = event.clientX;
-  });
+    bookPanStart = {
+      x: event.clientX,
+      y: event.clientY,
+      left: stage.scrollLeft,
+      top: stage.scrollTop
+    };
+    if (bookPointers.size >= 2) {
+      bookSwipeStartX = null;
+      bookPanStart = null;
+      bookPinchStartDistance = getBookPointerDistance();
+      bookPinchStartZoom = currentBookZoom;
+    }
+  }, { passive: false });
+  stage.addEventListener('pointermove', (event) => {
+    if (!bookPointers.has(event.pointerId)) return;
+    bookPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (bookPointers.size >= 2 && bookPinchStartDistance > 0) {
+      event.preventDefault();
+      setBookZoom(bookPinchStartZoom * (getBookPointerDistance() / bookPinchStartDistance));
+      return;
+    }
+    if (currentBookZoom > 1 && bookPanStart) {
+      event.preventDefault();
+      stage.scrollLeft = bookPanStart.left + (bookPanStart.x - event.clientX);
+      stage.scrollTop = bookPanStart.top + (bookPanStart.y - event.clientY);
+    }
+  }, { passive: false });
   stage.addEventListener('pointerup', (event) => {
+    const wasPinching = bookPointers.size >= 2;
+    bookPointers.delete(event.pointerId);
+    if (stage.hasPointerCapture && stage.hasPointerCapture(event.pointerId)) stage.releasePointerCapture(event.pointerId);
+    if (wasPinching) {
+      bookSwipeStartX = null;
+      bookPanStart = null;
+      if (bookPointers.size < 2) bookPinchStartDistance = 0;
+      return;
+    }
     if (bookSwipeStartX == null) return;
     const delta = event.clientX - bookSwipeStartX;
     bookSwipeStartX = null;
+    bookPanStart = null;
     if (currentBookZoom > 1) return;
     if (Math.abs(delta) < 45) return;
     nextBookPage(delta < 0 ? 1 : -1);
+  });
+  stage.addEventListener('pointercancel', (event) => {
+    bookPointers.delete(event.pointerId);
+    bookSwipeStartX = null;
+    bookPanStart = null;
+    if (bookPointers.size < 2) bookPinchStartDistance = 0;
   });
   stage.addEventListener('dblclick', () => setBookZoom(currentBookZoom > 1 ? 1 : 2));
   stage.addEventListener('wheel', (event) => {
