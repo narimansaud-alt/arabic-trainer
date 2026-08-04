@@ -17,6 +17,44 @@ const QUTRUB_WORKER_URL = 'https://arabic-trainer-qutrub.narimansaud.workers.dev
 let currentDrillVerb = null;
 let verbDrillAnswer = '';
 let manualVerbVowel = 'ضمة';
+const QUTRUB_TIMEOUT_MS = 12000;
+
+function escapeJsSingle(value) {
+  return String(value || '')
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/\r?\n/g, ' ')
+    .replace(/\r/g, ' ');
+}
+
+function sanitizeConjugationPayload(payload) {
+  if (!payload || typeof payload !== 'object') return null;
+  if (payload.ok === false) {
+    return { ok: false, error: String(payload.error || 'Невозможно получить корректный ответ по этому глаголу.') };
+  }
+  const verb = String(payload.verb || '').trim();
+  const forms = payload.forms || {};
+  if (!verb || !forms || typeof forms !== 'object') {
+    return null;
+  }
+  return {
+    ok: true,
+    verb,
+    future_type: String(payload.future_type || manualVerbVowel),
+    forms: {
+      past: forms.past && typeof forms.past === 'object' ? forms.past : {},
+      present: forms.present && typeof forms.present === 'object' ? forms.present : {},
+      imperative: forms.imperative && typeof forms.imperative === 'object' ? forms.imperative : {},
+    },
+    dictionary: Boolean(payload.dictionary),
+    alternatives: (Array.isArray(payload.alternatives) ? payload.alternatives : [])
+      .map((alt) => ({
+        verb: String(alt?.verb || '').trim(),
+        future_type: String(alt?.future_type || '').trim(),
+      }))
+      .filter((alt) => alt.verb && alt.future_type),
+  };
+}
 
 const PERSON_LABELS = {
   هو: 'Он',
@@ -37,20 +75,58 @@ const TENSE_LABELS = { past: 'Прошедшее время', present: 'Наст
 const VOWEL_LABELS = { ضمة: 'ضمة (у)', فتحة: 'فتحة (а)', كسرة: 'كسرة (и)' };
 
 function setVerbVowel(btn) {
+  if (!btn || !btn.dataset) return;
   manualVerbVowel = btn.dataset.v;
   document.querySelectorAll('#verb-manual-vowel-row .lb-pill').forEach((b) => b.classList.remove('active'));
-  btn.classList.add('active');
+  if (btn.classList) btn.classList.add('active');
 }
 
 async function fetchConjugation(params) {
+  const requestedVerb = String(params?.verb || '').trim();
+  const controller = new AbortController();
   const url = QUTRUB_WORKER_URL + '/conjugate?' + new URLSearchParams(params).toString();
-  const res = await fetch(url);
-  return res.json();
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+  }, QUTRUB_TIMEOUT_MS);
+  try {
+    const res = await fetch(url, {
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      return {
+        ok: false,
+        error: `Worker error ${res.status}: не удалось выполнить запрос.`,
+      };
+    }
+    const raw = await res.json();
+    const normalized = sanitizeConjugationPayload(raw);
+    if (!normalized) {
+      return { ok: false, error: 'Неполный ответ сервиса спряжения.' };
+    }
+    if (normalized.verb.toLowerCase() !== requestedVerb.toLowerCase()) {
+      normalized.verb = requestedVerb;
+    }
+    return normalized;
+  } catch (e) {
+    if (e?.name === 'AbortError') {
+      ErrorLog.capture(e, { source: 'verbs', action: 'fetch-conjugation-timeout' });
+      return { ok: false, error: 'Таймаут соединения с сервисом спряжения (12 сек).' };
+    }
+    ErrorLog.capture(e, { source: 'verbs', action: 'fetch-conjugation' });
+    return { ok: false, error: 'Сервис временно недоступен. Попробуйте ещё раз через пару секунд.' };
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 async function conjugateTypedVerb() {
-  const verb = document.getElementById('verb-input').value.trim();
+  const input = document.getElementById('verb-input');
   const fb = document.getElementById('verb-input-feedback');
+  const btn = document.getElementById('verb-conjugate-btn');
+
+  if (!input || !fb || !btn) return;
+
+  const verb = input.value.trim();
   fb.className = 'feedback';
   fb.textContent = '';
   if (!verb) {
@@ -59,20 +135,24 @@ async function conjugateTypedVerb() {
     return;
   }
 
-  const btn = document.getElementById('verb-conjugate-btn');
   btn.disabled = true;
   btn.textContent = '⏳ Спрягаю...';
   try {
     const json = await fetchConjugation({ verb, future_type: manualVerbVowel });
     if (!json.ok) {
       fb.className = 'feedback err';
-      fb.textContent = '❌ Не получилось спрягать. Проверьте написание глагола (форма прошедшего времени).';
+      fb.textContent = json.error || 'Проблема при запросе к сервису. Попробуйте ещё раз.';
       return;
     }
-    openVerbResult(json);
+    const rendered = openVerbResult(json);
+    if (!rendered) {
+      fb.className = 'feedback err';
+      fb.textContent = 'Результат от сервиса пришел в неожиданном формате. Попробуйте ещё раз.';
+    }
   } catch (e) {
+    ErrorLog.capture(e, { source: 'verbs', action: 'render-conjugation' });
     fb.className = 'feedback err';
-    fb.textContent = '⚠️ Сервис временно недоступен. Попробуйте ещё раз через пару секунд.';
+    fb.textContent = 'Не удалось показать спряжение. Попробуйте ещё раз.';
   } finally {
     btn.disabled = false;
     btn.textContent = '🔁 Спрягать';
@@ -80,6 +160,12 @@ async function conjugateTypedVerb() {
 }
 
 function openVerbResult(json) {
+  if (!json || !json.ok || !json.verb || !json.forms) return false;
+  const title = document.getElementById('verb-modal-title');
+  const sub = document.getElementById('verb-modal-sub');
+  const body = document.getElementById('verb-modal-body');
+  const overlay = document.getElementById('verb-modal-overlay');
+  if (!title || !sub || !body || !overlay) return false;
   currentDrillVerb = {
     ar: json.verb,
     futureType: json.future_type,
@@ -87,15 +173,21 @@ function openVerbResult(json) {
     dictionary: !!json.dictionary,
     alternatives: json.alternatives || [],
   };
-  document.getElementById('verb-modal-title').textContent = json.verb;
-  document.getElementById('verb-modal-sub').textContent = 'تصريف الفعل';
-  document.getElementById('verb-modal-body').innerHTML = renderConjugationTable(currentDrillVerb);
-  document.getElementById('verb-modal-overlay').classList.remove('hidden');
+  title.textContent = json.verb;
+  sub.textContent = 'تصريف الفعل';
+  body.innerHTML = renderConjugationTable(currentDrillVerb);
+  overlay.classList.remove('hidden');
+  return true;
 }
 
 async function pickVerbAlternative(altVerb, altFutureType) {
   const body = document.getElementById('verb-modal-body');
+  if (!body) return;
   const prevHtml = body.innerHTML;
+  if (!currentDrillVerb) {
+    body.innerHTML = prevHtml;
+    return;
+  }
   body.innerHTML = '<div style="text-align:center;padding:20px;">⏳ Спрягаю...</div>';
   try {
     const json = await fetchConjugation({
@@ -107,7 +199,9 @@ async function pickVerbAlternative(altVerb, altFutureType) {
       body.innerHTML = prevHtml;
       return;
     }
-    openVerbResult(json);
+    if (!openVerbResult(json)) {
+      body.innerHTML = prevHtml;
+    }
   } catch (e) {
     body.innerHTML = prevHtml;
   }
@@ -150,9 +244,9 @@ function renderConjugationTable(v) {
         .map(
           (a) =>
             '<button class="lb-pill" style="margin:0 4px 4px 0;" onclick="pickVerbAlternative(\'' +
-            a.verb +
+            escapeJsSingle(a.verb) +
             "', '" +
-            a.future_type +
+            escapeJsSingle(a.future_type) +
             '\')">' +
             esc(a.verb) +
             ' (' +
@@ -186,18 +280,21 @@ function closeVerbModal(fromHistory = false) {
     history.back();
     return;
   }
-  document.getElementById('verb-modal-overlay').classList.add('hidden');
+  const overlay = document.getElementById('verb-modal-overlay');
+  if (overlay) overlay.classList.add('hidden');
   currentDrillVerb = null;
 }
 
 function toggleVerbDual(el) {
   const block = document.getElementById('verb-dual-block');
+  if (!block || !el || !el.textContent) return;
   block.classList.toggle('hidden');
   el.textContent = block.classList.contains('hidden') ? 'Показать двойственное число ▾' : 'Скрыть двойственное число ▴';
 }
 
 function toggleVerbAlternatives(el) {
   const block = document.getElementById('verb-alt-block');
+  if (!block || !el || !el.textContent) return;
   block.classList.toggle('hidden');
   el.textContent = block.classList.contains('hidden') ? 'Есть другое значение этого глагола ▾' : 'Скрыть другие значения ▴';
 }
@@ -208,12 +305,32 @@ function startVerbDrill() {
 
 function nextVerbDrillPrompt() {
   const v = currentDrillVerb;
+  const modalBody = document.getElementById('verb-modal-body');
+  const feedback = document.getElementById('verb-drill-feedback');
+  if (!v || !v.forms || !modalBody) {
+    if (modalBody) {
+      modalBody.innerHTML = '<div class="verb-empty">Не удалось загрузить задание. Нажмите ещё раз.</div>';
+    }
+    if (feedback) {
+      feedback.className = 'feedback err';
+      feedback.textContent = 'Нет данных для тренировки. Попробуйте еще раз.';
+    }
+    return;
+  }
   const tenses = ['past', 'present'].filter((t) => v.forms[t]);
+  if (!tenses.length) {
+    modalBody.innerHTML = '<div class="verb-empty">Нет доступных форм для тренировки.</div>';
+    return;
+  }
   const tense = tenses[Math.floor(Math.random() * tenses.length)];
   const persons = PERSON_ORDER.filter((p) => v.forms[tense][p]);
+  if (!persons.length) {
+    modalBody.innerHTML = '<div class="verb-empty">Нет доступных форм для выбранного времени.</div>';
+    return;
+  }
   const person = persons[Math.floor(Math.random() * persons.length)];
   verbDrillAnswer = v.forms[tense][person];
-  document.getElementById('verb-modal-body').innerHTML =
+  modalBody.innerHTML =
     '<div style="text-align:center;margin-bottom:14px;">' +
     '<div class="verb-modal-title" style="font-size:26px;">' +
     esc(v.ar) +
@@ -227,7 +344,8 @@ function nextVerbDrillPrompt() {
     '<input class="type-input" id="verb-drill-input" type="text" placeholder="اكتب بالعربية..." dir="rtl">' +
     '<div class="feedback" id="verb-drill-feedback"></div>' +
     '<button class="btn-start green" id="verb-drill-check" onclick="checkVerbDrill()">Проверить</button>';
-  document.getElementById('verb-drill-input').focus();
+  const input = document.getElementById('verb-drill-input');
+  if (input) input.focus();
 }
 
 function normHamzaSeat(t) {
@@ -239,9 +357,12 @@ function normHamzaSeat(t) {
 
 function checkVerbDrill() {
   const inp = document.getElementById('verb-drill-input');
+  const btn = document.getElementById('verb-drill-check');
+  const fb = document.getElementById('verb-drill-feedback');
+  if (!inp || !btn || !fb || !verbDrillAnswer) return;
+
   const val = normHamzaSeat(rmH(inp.value.trim()));
   const correct = normHamzaSeat(rmH(verbDrillAnswer));
-  const fb = document.getElementById('verb-drill-feedback');
   inp.disabled = true;
   if (val === correct) {
     fb.className = 'feedback ok';
@@ -250,7 +371,6 @@ function checkVerbDrill() {
     fb.className = 'feedback err';
     fb.innerHTML = '❌ Правильно: <span style="font-family:Times New Roman,serif;font-size:22px;direction:rtl;">' + esc(verbDrillAnswer) + '</span>';
   }
-  const btn = document.getElementById('verb-drill-check');
   btn.textContent = 'Далее →';
   btn.onclick = nextVerbDrillPrompt;
 }

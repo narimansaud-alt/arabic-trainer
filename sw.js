@@ -2,9 +2,9 @@ const CACHE = 'arabic-v__BUILD_HASH__';
 const FILES = [
   './',
   './index.html',
-  './medina-course-icon-512.png',
-  './medina-course-icon-192.png',
-  './manifest.json?v=3',
+  './medina-premium-icon-512.png',
+  './medina-premium-icon-192.png',
+  './manifest.json?v=4',
   './src/api.js',
   './src/state.js',
   './src/helpers.js',

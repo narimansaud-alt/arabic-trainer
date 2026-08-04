@@ -1,42 +1,69 @@
 // lb.js — leaderboard tab. All reads here are public/non-sensitive
 // (the `leaderboard` view exposes no password data, kept in sync with
 // `users` by a database trigger — see the schema migration).
+const LB_QUERY_TIMEOUT_MS = 5000;
+
+function lbQueryErrorMessage() {
+  return 'Сейчас данные рейтинга недоступны. Проверьте интернет и попробуйте позже.';
+}
+
+async function safeLbQuery(queryFactory, label) {
+  try {
+    const queryPromise = queryFactory();
+    const promise = typeof withTimeout === 'function' ? withTimeout(queryPromise, LB_QUERY_TIMEOUT_MS, `lb-${label}`) : queryPromise;
+    const result = await promise;
+    if (!result || result.error) throw new Error((result && result.error && result.error.message) || `Leaderboard query failed: ${label}`);
+    return Array.isArray(result.data) ? result.data : [];
+  } catch (e) {
+    ErrorLog.capture(e, { source: 'lb', action: label });
+    return null;
+  }
+}
 
 function setLbFilter(dim, val, btn) {
   Settings.lbFilters[dim] = val;
   const rowId = dim === 'type' ? 'lb-type-row' : 'lb-period-row';
   document.querySelectorAll('#' + rowId + ' .lb-pill').forEach((b) => b.classList.remove('active'));
-  btn.classList.add('active');
+  if (btn && btn.classList) btn.classList.add('active');
   if (dim === 'type') {
-    document.getElementById('lb-time-section').classList.toggle('hidden', ['fast', 'streak'].includes(val));
+    const section = document.getElementById('lb-time-section');
+    if (section) section.classList.toggle('hidden', ['fast', 'streak'].includes(val));
   }
   loadLB();
 }
 
 async function loadLB() {
   const cont = document.getElementById('lb-content');
+  if (!cont) return;
   cont.innerHTML = '<div class="lb-empty">Загрузка...</div>';
   const { type, period } = Settings.lbFilters;
+  const username = typeof App?.username === 'string' && App.username ? App.username : null;
 
   if (type === 'fast') {
-    const { data } = await db
-      .from('leaderboard')
-      .select('nickname,fast_mode_high_score')
-      .order('fast_mode_high_score', { ascending: false })
-      .limit(20);
-    const items = (data || []).map((r) => ({ name: r.nickname, val: (r.fast_mode_high_score || 0) + ' слов' }));
+    const data = await safeLbQuery(() =>
+      db.from('leaderboard').select('nickname,fast_mode_high_score').order('fast_mode_high_score', { ascending: false }).limit(20),
+      'fast'
+    );
+    if (data === null) {
+      cont.innerHTML = '<div class="lb-empty">' + lbQueryErrorMessage() + '</div>';
+      return;
+    }
+    const items = data.map((r) => ({ name: r.nickname, val: (r.fast_mode_high_score || 0) + ' слов' }));
     cont.innerHTML = '';
     renderLbTable(cont, items, true);
     return;
   }
 
   if (type === 'streak') {
-    const { data } = await db
-      .from('leaderboard')
-      .select('nickname,streak,max_streak')
-      .order('streak', { ascending: false })
-      .limit(20);
-    const items = (data || []).map((r) => ({
+    const data = await safeLbQuery(() =>
+      db.from('leaderboard').select('nickname,streak,max_streak').order('streak', { ascending: false }).limit(20),
+      'streak'
+    );
+    if (data === null) {
+      cont.innerHTML = '<div class="lb-empty">' + lbQueryErrorMessage() + '</div>';
+      return;
+    }
+    const items = data.map((r) => ({
       name: r.nickname,
       val: (r.streak || 0) + ' дн.',
       extra: r.max_streak > 0 ? 'Макс: ' + r.max_streak + ' дн.' : '',
@@ -49,21 +76,24 @@ async function loadLB() {
   // All-time score is the canonical total kept on users/leaderboard.
   // score_history is still used for time windows and the personal chart.
   if (period === 'all') {
-    const { data } = await db
-      .from('leaderboard')
-      .select('nickname,total_score')
-      .order('total_score', { ascending: false })
-      .limit(20);
+    const data = await safeLbQuery(() =>
+      db.from('leaderboard').select('nickname,total_score').order('total_score', { ascending: false }).limit(20),
+      'score'
+    );
+    if (data === null) {
+      cont.innerHTML = '<div class="lb-empty">' + lbQueryErrorMessage() + '</div>';
+      return;
+    }
     const d30 = new Date();
     d30.setDate(d30.getDate() - 30);
-    const { data: myData } = await db
-      .from('score_history')
-      .select('points,created_at')
-      .eq('username', App.username)
-      .gte('created_at', d30.toISOString());
-    const items = (data || []).map((r) => ({ name: r.nickname, val: (r.total_score || 0) + ' 🌟' }));
+    const myData = username ? await safeLbQuery(() => db.from('score_history').select('points,created_at').eq('username', username).gte('created_at', d30.toISOString()), 'history-all') : [];
+    if (myData === null) {
+      cont.innerHTML = '<div class="lb-empty">' + lbQueryErrorMessage() + '</div>';
+      return;
+    }
+    const items = data.map((r) => ({ name: r.nickname, val: (r.total_score || 0) + ' 🌟' }));
     cont.innerHTML = '';
-    const chart = buildChart(myData || []);
+    const chart = buildChart(Array.isArray(myData) ? myData : []);
     if (chart) cont.innerHTML += chart;
     renderLbTable(cont, items, true);
     return;
@@ -76,12 +106,17 @@ async function loadLB() {
   q = q.gte('created_at', d.toISOString());
   const d30 = new Date();
   d30.setDate(d30.getDate() - 30);
-  const { data: myData } = await db
-    .from('score_history')
-    .select('points,created_at')
-    .eq('username', App.username)
-    .gte('created_at', d30.toISOString());
-  const { data } = await q;
+  const myData = username ? await safeLbQuery(() => db.from('score_history').select('points,created_at').eq('username', username).gte('created_at', d30.toISOString()), 'history-period') : [];
+  let data = await safeLbQuery(() => q, 'period');
+  if (data === null) {
+    cont.innerHTML = '<div class="lb-empty">' + lbQueryErrorMessage() + '</div>';
+    return;
+  }
+  if (myData === null) {
+    cont.innerHTML = '<div class="lb-empty">' + lbQueryErrorMessage() + '</div>';
+    return;
+  }
+  if (!Array.isArray(data)) data = [];
   const agg = {};
   (data || []).forEach((r) => {
     agg[r.username] = (agg[r.username] || 0) + r.points;
@@ -105,8 +140,12 @@ function buildChart(records) {
   }
   const byDay = {};
   records.forEach((r) => {
-    const d = r.created_at ? appDateKey(new Date(r.created_at)) : null;
-    if (d) byDay[d] = (byDay[d] || 0) + r.points;
+    if (!r || !r.created_at) return;
+    const d = appDateKey(new Date(r.created_at));
+    if (!d) return;
+    const points = Number(r.points);
+    if (!Number.isFinite(points)) return;
+    byDay[d] = (byDay[d] || 0) + points;
   });
   const vals = days.map((d) => byDay[d] || 0);
   const max = Math.max(...vals, 1);

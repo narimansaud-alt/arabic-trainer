@@ -5,14 +5,14 @@
 <title>Мединский курс и глаголы</title>
 <meta name="theme-color" content="#ffffff">
 <meta name="mobile-web-app-capable" content="yes">
-<link rel="manifest" href="./manifest.json?v=3">
+<link rel="manifest" href="./manifest.json?v=4">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Мединский курс и глаголы">
-<link rel="apple-touch-icon" sizes="180x180" href="./medina-course-icon-512.png">
-<link rel="apple-touch-icon" sizes="152x152" href="./medina-course-icon-512.png">
-<link rel="apple-touch-icon" sizes="120x120" href="./medina-course-icon-512.png">
-<link rel="icon" type="image/png" sizes="192x192" href="./medina-course-icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./medina-premium-icon-512.png">
+<link rel="apple-touch-icon" sizes="152x152" href="./medina-premium-icon-512.png">
+<link rel="apple-touch-icon" sizes="120x120" href="./medina-premium-icon-512.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./medina-premium-icon-192.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <script>
 if('serviceWorker' in navigator){
@@ -1047,6 +1047,81 @@ button:disabled{opacity:.42!important;box-shadow:none!important;}
   .rules-lesson-tile,.rule-outline-row{border-radius:14px!important;}
   .app-tab{min-height:62px!important;}
 }
+/* Warm premium theme: final visual authority */
+:root{
+  --lux-ink:#332e2a;--lux-muted:#766d66;
+  --lux-primary:#a45f43;--lux-primary-deep:#884a34;--lux-primary-soft:#fbf1eb;
+  --lux-canvas:#fbfaf8;--lux-soft:#f5f1ed;
+  --lux-line:#e2d9d1;--lux-line-strong:#cec0b5;
+  --lux-blue:#657f92;--lux-blue-soft:#eef3f6;
+  --lux-gold:#9a7a42;--lux-gold-soft:#faf5e9;
+  --lux-wine:#8b6170;--lux-wine-soft:#f8f0f3;--lux-taupe:#74675e;
+  --green:var(--lux-primary);--green-dark:var(--lux-primary-deep);
+  --green-light:var(--lux-primary-soft);--gold:var(--lux-gold);--ink:var(--lux-ink);
+}
+body{background:radial-gradient(circle at 50% -10%,#fff 0,#fff 34%,var(--lux-canvas) 78%)!important;color:var(--lux-ink)!important;}
+
+.btn-primary,.btn-announcement,.btn-check,.btn-res:not(.sec),.btn-start:not(.gold),.verb-modal .btn-start{
+  border-color:var(--lux-primary)!important;background:var(--lux-primary)!important;color:#fff!important;
+  box-shadow:0 8px 20px rgba(164,95,67,.18)!important;
+}
+.btn-primary:hover,.btn-announcement:hover,.btn-check:hover,.btn-res:not(.sec):hover,.btn-start:not(.gold):hover,.verb-modal .btn-start:hover{
+  border-color:var(--lux-primary-deep)!important;background:var(--lux-primary-deep)!important;
+  box-shadow:0 10px 26px rgba(136,74,52,.22)!important;
+}
+.btn-logout-c,.btn-back-vol,.btn-tb,.ctrl-btn,.btn-nav,.btn-early,.btn-res.sec,.book-nav-btn,.book-format-btn,.rules-back-btn,.rules-open-btn,.rule-detail-actions button,.q-exit{
+  border-color:var(--lux-line)!important;background:linear-gradient(180deg,#fff 0,#fdfbf9 100%)!important;
+  color:var(--lux-ink)!important;box-shadow:0 3px 12px rgba(75,53,42,.055)!important;
+}
+.btn-logout-c:hover,.btn-back-vol:hover,.btn-tb:hover,.ctrl-btn:hover,.btn-nav:hover,.btn-early:hover,.btn-res.sec:hover,.book-nav-btn:hover,.book-format-btn:hover,.rules-back-btn:hover,.rules-open-btn:hover,.rule-detail-actions button:hover,.q-exit:hover{
+  border-color:var(--lux-line-strong)!important;background:var(--lux-soft)!important;color:var(--lux-primary-deep)!important;
+}
+
+.lesson-pill,.mode-pill,.qty-pill,.lb-pill,.answer-check-pill,.dict-view-btn{
+  border-color:var(--lux-line)!important;background:#fff!important;color:var(--lux-muted)!important;
+}
+.lesson-pill.active,.mode-pill.active,.qty-pill.active,.lb-pill.active,.answer-check-pill.active{
+  border-color:var(--lux-primary)!important;background:var(--lux-primary-soft)!important;
+  color:var(--lux-primary-deep)!important;box-shadow:0 4px 12px rgba(164,95,67,.10)!important;
+}
+.mode-pill.fast,.mode-pill.fast.active,.btn-start.gold{
+  border-color:#d8c39c!important;background:var(--lux-gold-soft)!important;color:#795d2d!important;box-shadow:none!important;
+}
+
+#tab-dict .dict-view-btn.active,#tab-dict .lb-pill.active{
+  border-color:var(--lux-blue)!important;background:var(--lux-blue-soft)!important;color:#496477!important;
+  box-shadow:0 4px 12px rgba(101,127,146,.12)!important;
+}
+#tab-book .book-nav-btn,#tab-book .book-format-btn{
+  border-color:#d8c8a8!important;background:var(--lux-gold-soft)!important;color:#725929!important;
+}
+#tab-rules .rules-back-btn,#tab-rules .rules-open-btn,#tab-rules .rule-detail-actions button{
+  border-color:#dbc5ce!important;background:var(--lux-wine-soft)!important;color:#76505f!important;
+}
+#tab-settings .qty-pill.active,#tab-settings .btn-start:not(.gold){
+  border-color:var(--lux-taupe)!important;background:var(--lux-taupe)!important;color:#fff!important;
+}
+.rules-lesson-tile,.rule-outline-row{
+  border-color:#e7dde1!important;background:linear-gradient(145deg,#fff 0,#fefcfd 100%)!important;
+  color:var(--lux-ink)!important;box-shadow:0 7px 22px rgba(92,61,73,.065)!important;
+}
+.rules-lesson-tile:hover,.rule-outline-row:hover{
+  border-color:#cdb4be!important;background:var(--lux-wine-soft)!important;
+  box-shadow:0 10px 27px rgba(92,61,73,.10)!important;
+}
+.rules-lesson-open,.rules-home-kicker,.rule-lesson-kicker{color:var(--lux-wine)!important;}
+
+.tab-btn.active{background:#fff!important;color:var(--lux-primary-deep)!important;box-shadow:0 4px 14px rgba(75,53,42,.08)!important;}
+.app-tab{color:#817870!important;}.app-tab.active{background:#fff!important;color:var(--lux-primary)!important;}
+.app-tab.active::before{background:currentColor!important;}
+#at-dict.active{color:var(--lux-blue)!important;}#at-book.active{color:var(--lux-gold)!important;}
+#at-rules.active{color:var(--lux-wine)!important;}#at-settings.active{color:var(--lux-taupe)!important;}
+.btn-hint{border-color:#d9c59f!important;background:var(--lux-gold-soft)!important;color:#765a2b!important;}
+.star-btn{border-color:#ddc9a2!important;background:#fffdf8!important;color:var(--lux-gold)!important;}
+.quiz-option:hover{border-color:#d4ad9b!important;background:#fffaf7!important;}
+.quiz-option.selected:not(.correct):not(.wrong){border-color:var(--lux-primary)!important;background:var(--lux-primary-soft)!important;box-shadow:0 0 0 3px rgba(164,95,67,.15)!important;}
+#sw-update-banner button:first-of-type{background:var(--lux-primary)!important;border-color:var(--lux-primary)!important;}
+button:focus-visible{outline-color:rgba(164,95,67,.25)!important;}
 </style>
 </head>
 <body>
@@ -1080,7 +1155,7 @@ button:disabled{opacity:.42!important;box-shadow:none!important;}
 <!-- SPLASH -->
 <div class="screen active" id="screen-loading">
   <div class="splash-box">
-    <img src="./medina-course-icon-512.png" alt="Мединский курс и глаголы">
+    <img src="./medina-premium-icon-512.png" alt="Мединский курс и глаголы">
     <h1>Мединский курс и глаголы</h1>
     <p>Арабский язык: уроки, слова и спряжения</p>
     <div class="splash-spinner"></div>
@@ -1091,7 +1166,7 @@ button:disabled{opacity:.42!important;box-shadow:none!important;}
 <div class="screen" id="screen-login">
   <div class="login-box">
     <div class="login-logo">
-      <img src="./medina-course-icon-512.png" alt="Мединский курс и глаголы">
+      <img src="./medina-premium-icon-512.png" alt="Мединский курс и глаголы">
       <h1>Мединский курс и глаголы</h1>
       <p>Учите арабский язык каждый день</p>
     </div>

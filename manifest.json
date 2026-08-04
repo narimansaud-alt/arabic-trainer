@@ -14,19 +14,19 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "medina-course-icon-192.png",
+      "src": "medina-premium-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "medina-course-icon-512.png",
+      "src": "medina-premium-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "medina-course-icon-512.png",
+      "src": "medina-premium-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
