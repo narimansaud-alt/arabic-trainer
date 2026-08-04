@@ -163,7 +163,12 @@ function wrapArabic(text) {
     }
   );
   return protectedText
-    .replace(/[\u0600-\u06FF]+/gu, (m) => '<span class="ar-text" dir="rtl">' + m + '</span>')
+    .replace(/[\u0600-\u06FF]+(?:\s+[\u0600-\u06FF]+)*/gu, (phrase) => {
+      const isShortTerm =
+        phrase.length <= 34 && phrase.trim().split(/\s+/).length <= 4 && !/[،؛؟.!]/.test(phrase);
+      const className = isShortTerm ? 'ar-term' : 'ar-text';
+      return '<span class="' + className + '" dir="rtl">' + phrase + '</span>';
+    })
     .replace(/@@ARABIC_GROUP_(\d+)@@/g, (_, index) => groups[Number(index)] || '');
 }
 function stripRuleHtml(html) {

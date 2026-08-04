@@ -314,8 +314,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .rule-subpanel.is-table b:first-child{color:#1d4ed8;}
 .rule-subpanel.is-memorize b:first-child{color:#a16207;}
 .ar-text{font-family:'Times New Roman',serif;font-size:23px;line-height:2.1;direction:rtl;unicode-bidi:isolate;color:#111;word-break:normal;overflow-wrap:normal;}
-.ar-inline{display:inline-block;white-space:nowrap;font-family:'Times New Roman',serif;font-size:inherit;line-height:inherit;direction:rtl;unicode-bidi:isolate;color:inherit;}
-.rule-content .ar-text{display:inline-block;margin:0 2px;text-align:right;}
+.ar-term,.ar-inline{display:inline-block;max-width:100%;white-space:nowrap;font-family:'Times New Roman',serif;font-size:inherit;line-height:inherit;direction:rtl;unicode-bidi:isolate;color:inherit;vertical-align:baseline;}
+.rule-content .ar-text{display:inline;margin:0 2px;text-align:right;}
 .rule-content td .ar-text{font-size:20px;}
 .rule-content th .ar-text{font-size:18px;color:#fff;}
 .tbl-wrap{overflow-x:auto;margin:10px 0;border-radius:10px;border:1px solid var(--green-light);}
@@ -379,8 +379,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .rule-outline-row{grid-template-columns:27px minmax(0,1fr);align-items:start;gap:10px;border:0;border-radius:0;padding:7px 0;background:transparent;}
 .rule-outline-row span{width:auto;height:auto;border-radius:0;background:transparent;color:var(--rule-accent);font-size:18px;line-height:1.25;}
 .rule-outline-row.active{border:0;box-shadow:none;background:transparent;}
+.rule-detail-title,.rules-lesson-name,.rule-title,.rule-outline-row b{min-width:0;overflow-wrap:break-word;text-wrap:pretty;}
 .rule-outline-row b{font-size:15px;line-height:1.45;color:#303a34;}
-.rule-title .ar-text,.rule-outline-row .ar-text,.rules-lesson-name .ar-text{display:inline-block;white-space:nowrap;}
+.rule-title .ar-term,.rule-title .ar-inline,.rule-outline-row .ar-term,.rule-outline-row .ar-inline,.rules-lesson-name .ar-term,.rules-lesson-name .ar-inline{white-space:nowrap;}
 .rule-card{border:0;border-radius:0;background:#fff;overflow:visible;box-shadow:none;padding:0 18px;}
 .rule-card:last-child{padding-bottom:8px;}
 .rule-card-head{width:auto;grid-template-columns:32px minmax(0,1fr);gap:10px;padding:3px 0 9px;cursor:default;pointer-events:none;}
