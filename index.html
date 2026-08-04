@@ -2146,7 +2146,7 @@ body,.screen{background:var(--app-bg)!important;color:var(--ink)!important;}
 .streak-calendar-mark{display:inline-flex;width:42px;height:42px;flex:0 0 42px;align-items:center;justify-content:center;border:1px solid #bdccd4;border-radius:8px;background:#edf3f6;color:#496a80;box-shadow:none;}
 .streak-calendar-mark::before,.streak-calendar-mark::after{display:none!important;}
 .streak-calendar-mark svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
-.app-tabs{background:rgba(247,250,251,.28)!important;backdrop-filter:blur(22px) saturate(125%);-webkit-backdrop-filter:blur(22px) saturate(125%);border-top-color:rgba(158,174,183,.28)!important;box-shadow:none!important;}
+.app-tabs{background:rgba(247,250,251,.08)!important;backdrop-filter:blur(16px) saturate(112%);-webkit-backdrop-filter:blur(16px) saturate(112%);border-top-color:rgba(158,174,183,.24)!important;box-shadow:none!important;}
 .app-tab{position:relative;background:transparent!important;border:0!important;box-shadow:none!important;}
 .app-tabs .app-tab.active{background:transparent!important;color:#28485d!important;box-shadow:none!important;}
 .app-tab::before{display:none!important;content:none!important;}
@@ -2168,6 +2168,25 @@ body,.screen{background:var(--app-bg)!important;color:var(--ink)!important;}
 .rules-lesson-preview-row{grid-template-columns:24px minmax(0,1fr)!important;gap:9px!important;align-items:start!important;}
 .rules-preview-title{font-family:'Manrope','Noto Naskh Arabic',sans-serif!important;font-size:13px!important;font-weight:600!important;line-height:1.55!important;color:#283942!important;unicode-bidi:plaintext;overflow-wrap:anywhere;}
 .rules-lesson-open,.rules-lesson-name{display:none!important;}
+#tab-rules .rule-detail-title{font-family:'Manrope','Noto Naskh Arabic',sans-serif!important;font-size:clamp(18px,4.8vw,22px)!important;font-weight:700!important;line-height:1.55!important;color:#253740!important;unicode-bidi:plaintext;overflow-wrap:anywhere;}
+#tab-rules .rule-outline-row{grid-template-columns:28px minmax(0,1fr)!important;align-items:start!important;padding:11px 12px!important;gap:10px!important;background:rgba(255,255,255,.56)!important;border:1px solid rgba(145,160,170,.34)!important;border-radius:8px!important;box-shadow:none!important;}
+#tab-rules .rule-outline-row > span{width:24px!important;height:24px!important;display:flex!important;align-items:center!important;justify-content:center!important;border-radius:7px!important;background:var(--rule-soft)!important;font-size:11px!important;line-height:1!important;}
+#tab-rules .rule-outline-title-text{font-family:'Manrope','Noto Naskh Arabic',sans-serif!important;font-size:14px!important;font-weight:600!important;line-height:1.6!important;color:#253740!important;unicode-bidi:plaintext;overflow-wrap:anywhere;}
+#tab-dict .dict-book-title,#tab-dict .dict-book-table th{background:#f0f4f6!important;color:#2f4858!important;border-color:#d7e0e5!important;}
+#tab-dict .dict-book-table td{background:#fff!important;border-color:#e1e7ea!important;}
+#tab-dict .dict-book-table tr:nth-child(even) td{background:#f8fafb!important;}
+#tab-dict .dict-section{overflow:hidden!important;border:1px solid #d7e0e5!important;border-radius:8px!important;background:rgba(255,255,255,.72)!important;box-shadow:0 8px 24px rgba(25,43,54,.04)!important;}
+#tab-dict .dict-book-title{padding:14px 16px!important;font-family:'Manrope',sans-serif!important;font-size:13px!important;font-weight:700!important;letter-spacing:.02em!important;border-bottom:1px solid #d7e0e5!important;}
+#tab-dict .dict-book-table{width:100%!important;table-layout:fixed!important;border-collapse:separate!important;border-spacing:0!important;background:#fff!important;}
+#tab-dict .dict-book-table th{padding:13px 9px!important;font-family:'Manrope',sans-serif!important;font-size:12px!important;font-weight:700!important;line-height:1.45!important;text-align:center!important;vertical-align:middle!important;border-right:1px solid #d7e0e5!important;border-bottom:1px solid #d7e0e5!important;}
+#tab-dict .dict-book-table th:first-child{width:34%!important;text-align:left!important;padding-left:13px!important;}
+#tab-dict .dict-book-table th:last-child{border-right:0!important;}
+#tab-dict .dict-book-table td{padding:13px 10px!important;line-height:1.5!important;vertical-align:middle!important;border-right:1px solid #e1e7ea!important;border-bottom:1px solid #e1e7ea!important;}
+#tab-dict .dict-book-table td:first-child{font-family:'Manrope',sans-serif!important;font-size:13px!important;color:#34434d!important;text-align:left!important;padding-left:13px!important;}
+#tab-dict .dict-book-table td:last-child{border-right:0!important;}
+#tab-dict .dict-book-table tr:last-child td{border-bottom:0!important;}
+#tab-dict .dict-book-table .dict-book-ar{font-family:'Noto Naskh Arabic',serif!important;font-size:23px!important;font-weight:500!important;line-height:1.7!important;color:#263942!important;text-align:right!important;direction:rtl!important;}
+#tab-dict .dict-book-table .dict-book-plural{color:#52636e!important;}
 @media(max-width:600px){
   .tab-content{padding:14px 12px 96px!important;}
   .quiz-body,.res-body{padding-left:14px!important;padding-right:14px!important;}

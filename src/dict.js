@@ -652,8 +652,8 @@ function lessonOutline(items) {
         esc(String(r.id)) +
         '"><span>' +
         (i + 1) +
-        '</span><b>' +
-        wrapArabic(esc(r.title)) +
+        '</span><b class="rule-outline-title-text" dir="auto">' +
+        esc(r.title) +
         '</b></button>'
     )
     .join('');
@@ -1037,8 +1037,8 @@ function renderRuleLessonDetail(cont, lesson, items, query) {
   cont.innerHTML =
     '<div class="rule-detail-page"><div class="rule-detail-hero"><button class="rules-back-btn" type="button" onclick="goBackFromRuleLesson()">← Все уроки</button><div class="rule-lesson-kicker">Урок ' +
     esc(String(lesson)) +
-    '</div><div class="rule-detail-title">' +
-    wrapArabic(esc(items[0]?.title || 'Правила урока')) +
+    '</div><div class="rule-detail-title" dir="auto">' +
+    esc(items[0]?.title || 'Правила урока') +
     '</div><div class="rule-detail-sub">' +
     items.length +
     ' ' +
