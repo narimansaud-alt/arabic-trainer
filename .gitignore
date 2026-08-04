@@ -19,3 +19,6 @@ supabase/.temp/
 
 # local database backups
 backups/
+
+# machine-local project knowledge and credentials
+.local/
