@@ -202,8 +202,7 @@ document.addEventListener('keypress', (e) => {
   }
 });
 
-window.addEventListener('popstate', (e) => {
-  const state = e.state || {};
+function restoreNestedAppHistory(state) {
   const modal = document.getElementById('verb-modal-overlay');
   const modalOpen = modal && !modal.classList.contains('hidden');
 
@@ -217,7 +216,12 @@ window.addEventListener('popstate', (e) => {
   }
 
   if (state.app === 'arabic-trainer' && state.appView === 'rule-lesson') {
-    if (document.querySelector('.screen.active')?.id !== 'screen-app') showScreen('screen-app');
+    appScreenHistoryRestoring = true;
+    try {
+      if (document.querySelector('.screen.active')?.id !== 'screen-app') showScreen('screen-app');
+    } finally {
+      appScreenHistoryRestoring = false;
+    }
     switchTab('rules');
     showRuleLesson(state.lesson, false);
     if (state.ruleCardId) {
@@ -230,21 +234,27 @@ window.addEventListener('popstate', (e) => {
     } else {
       closeAllRuleCards();
     }
-    return;
+    return true;
   }
 
   if (state.app === 'arabic-trainer' && state.appView === 'rules-index') {
-    if (document.querySelector('.screen.active')?.id !== 'screen-app') showScreen('screen-app');
+    appScreenHistoryRestoring = true;
+    try {
+      if (document.querySelector('.screen.active')?.id !== 'screen-app') showScreen('screen-app');
+    } finally {
+      appScreenHistoryRestoring = false;
+    }
     switchTab('rules');
     showRulesIndex(false);
     closeAllRuleCards();
-    return;
+    return true;
   }
 
   if (document.querySelector('.tab-content.active')?.id === 'tab-rules' && Settings.rulesLesson !== 'all') {
     showRulesIndex(false);
   }
-});
+  return false;
+}
 
 // Keep Android/system Back inside the PWA. Every screen transition gets a
 // history entry; on the root screen we restore a guard entry instead of exit.
@@ -278,7 +288,8 @@ function setupAppScreenHistory() {
     return result;
   };
   window.addEventListener('popstate', (event) => {
-    const state = event.state;
+    const state = event.state || {};
+    if (restoreNestedAppHistory(state)) return;
     if (!state?.appNavigation || !APP_NAVIGATION_SCREENS.has(state.screen)) return;
     appScreenHistoryRestoring = true;
     try { baseShowScreen(state.screen); } finally { appScreenHistoryRestoring = false; }
