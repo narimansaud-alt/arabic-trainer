@@ -96,7 +96,27 @@ function dictBookTokens(value) {
     .filter((token) => token.length >= 3);
 }
 
+function normalizeArabicDictForm(value) {
+  return String(value || '')
+    .normalize('NFC')
+    .replace(/[\u064B-\u065F\u0670ـ]/gu, '')
+    .replace(/[\s(),،]+/gu, '')
+    .trim();
+}
+
+function normalizeRussianDictForm(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[«»"'.,:;!?()]/gu, ' ')
+    .replace(/\s+/gu, ' ')
+    .trim();
+}
+
 function sharesRussianStem(first, second) {
+  const firstText = normalizeRussianDictForm(first);
+  const secondText = normalizeRussianDictForm(second);
+  if (firstText === 'это' && /^эти(?:\s|$)/u.test(secondText)) return true;
+  if (/^(этот|эта|тот|та)$/u.test(firstText) && /^(эти|те)(?:\s|$)/u.test(secondText)) return true;
   const firstTokens = dictBookTokens(first);
   const secondTokens = dictBookTokens(second);
   return firstTokens.some((a) => secondTokens.some((b) => a.slice(0, 3) === b.slice(0, 3)));
@@ -121,11 +141,15 @@ function russianPluralDirection(first, second) {
 }
 
 function isDictionarySingularForm(arabic) {
+  const normalized = normalizeArabicDictForm(arabic);
+  if (['هذا', 'هذه', 'ذلك', 'تلك'].includes(normalized)) return true;
   const value = String(arabic || '').trim();
   return !/[\s()،,]/u.test(value) && /(?:ٌ|ةٌ|ٌّ)$/u.test(value);
 }
 
 function isDictionaryPluralForm(arabic, singularRu, pluralRu) {
+  const normalized = normalizeArabicDictForm(arabic);
+  if (['هؤلاء', 'أولئك', 'هذان', 'هاتان'].includes(normalized)) return true;
   const value = String(arabic || '').trim().split(/[\s(،,]/u)[0];
   if (/(?:ات|ون|ين|اء|ان|ى)[ٌٍَُِ]?$/u.test(value)) return true;
   return /[ٌٍُ]$/u.test(value) && russianPluralDirection(singularRu, pluralRu);
