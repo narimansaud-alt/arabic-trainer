@@ -221,6 +221,18 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .dict-item:last-child{border-bottom:none;}
 .dict-ar{font-family:'Times New Roman',serif;font-size:20px;direction:rtl;color:var(--green-dark);}
 .dict-ru{font-size:13px;color:#555;text-align:right;flex:1;}
+.dict-view-toggle{display:flex;gap:4px;margin:-2px 0 12px;}
+.dict-view-btn{width:36px;height:32px;border:1px solid #dbe6df;border-radius:7px;background:#fff;color:#6d7c73;font-size:17px;line-height:1;cursor:pointer;}
+.dict-view-btn.active{background:#eaf6ee;border-color:#6aaf84;color:#17683b;}
+.dict-book{border:1px solid #dce5df;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 1px 7px rgba(20,70,45,.04);margin-bottom:12px;}
+.dict-book-title{padding:10px 12px;background:#f0f4f1;color:#355145;font-size:12px;font-weight:800;}
+.dict-book-table{width:100%;border-collapse:collapse;table-layout:fixed;}
+.dict-book-table th{background:#e4e9e5;color:#46554c;padding:9px 10px;font-size:11px;font-weight:800;text-align:left;border-bottom:1px solid #cfd8d1;}
+.dict-book-table th:last-child{text-align:right;}
+.dict-book-table td{padding:9px 10px;border-bottom:1px dotted #b8c6bc;font-size:13px;color:#3d4842;vertical-align:middle;overflow-wrap:anywhere;}
+.dict-book-table tr:nth-child(even) td{background:#f8faf8;}
+.dict-book-table tr:last-child td{border-bottom:0;}
+.dict-book-table .dict-book-ar{font-family:'Times New Roman',serif;font-size:23px;line-height:1.35;direction:rtl;text-align:right;color:#1b3e2a;}
 .rule-list{display:flex;flex-direction:column;gap:14px;}
 .rules-home-head{background:white;border-radius:10px;padding:18px 16px;margin-bottom:12px;box-shadow:0 1px 10px rgba(20,70,45,.06);border:1px solid #edf2ef;}
 .rules-home-kicker{font-size:11px;font-weight:800;color:var(--green);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;}
@@ -315,7 +327,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .rule-subpanel.is-memorize b:first-child{color:#a16207;}
 .ar-text{font-family:'Times New Roman',serif;font-size:23px;line-height:2.1;direction:rtl;unicode-bidi:isolate;color:#111;word-break:normal;overflow-wrap:normal;}
 .ar-term,.ar-inline{display:inline-block;max-width:100%;white-space:nowrap;font-family:'Times New Roman',serif;font-size:inherit;line-height:inherit;direction:rtl;unicode-bidi:isolate;color:inherit;vertical-align:baseline;}
+.ar-sentence{display:block;margin:8px 0 5px;padding:5px 9px;border-right:3px solid currentColor;font-family:'Times New Roman',serif;font-size:25px;line-height:1.7;direction:rtl;unicode-bidi:plaintext;text-align:right;color:#18271f;}
 .rule-content .ar-text{display:inline;margin:0 2px;text-align:right;}
+.rule-content .ar-sentence + .ar-text{margin-left:0;}
+.rule-subpanel.is-example .ar-sentence{color:#8a4a00;border-color:#d97706;background:rgba(255,255,255,.5);}
+.rule-subpanel.is-irab .ar-sentence{color:#5132a2;border-color:#7c3aed;background:rgba(255,255,255,.5);}
 .rule-content td .ar-text{font-size:20px;}
 .rule-content th .ar-text{font-size:18px;color:#fff;}
 .tbl-wrap{overflow-x:auto;margin:10px 0;border-radius:10px;border:1px solid var(--green-light);}
@@ -692,6 +708,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
   <div class="tab-content" id="tab-dict">
     <div class="sc">
       <input class="search-input" id="dict-search" type="text" placeholder="Поиск на арабском или русском..." oninput="renderDict()">
+      <div class="dict-view-toggle" role="group" aria-label="Вид словаря">
+        <button class="dict-view-btn active" type="button" data-dict-view="list" onclick="setDictView('list')" title="Список" aria-label="Список">☷</button>
+        <button class="dict-view-btn" type="button" data-dict-view="table" onclick="setDictView('table')" title="Таблица" aria-label="Таблица">▦</button>
+      </div>
       <div class="sc-title">Урок</div>
       <div class="lb-row-btns" id="dict-lesson-row">
         <button class="lb-pill active" onclick="setDictLesson('all',this)">Все</button>

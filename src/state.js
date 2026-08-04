@@ -41,6 +41,7 @@ const Settings = {
   qtyFast: 50,
   lbFilters: { type: 'score', period: 'all' },
   dictLesson: 'all',
+  dictView: localStorage.getItem('arabic_dict_view') === 'table' ? 'table' : 'list',
   rulesLesson: 'all',
 };
 

@@ -77,7 +77,40 @@ function setDictLesson(l, btn) {
   btn.classList.add('active');
   renderDict();
 }
+
+function setDictView(view) {
+  if (view !== 'list' && view !== 'table') return;
+  Settings.dictView = view;
+  localStorage.setItem('arabic_dict_view', view);
+  document.querySelectorAll('[data-dict-view]').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.dictView === view);
+  });
+  renderDict();
+}
+
+function renderDictBook(words, lesson) {
+  return (
+    '<div class="dict-book">' +
+    (lesson === null ? '' : '<div class="dict-book-title">Урок ' + esc(String(lesson)) + '</div>') +
+    '<table class="dict-book-table"><thead><tr><th>Перевод</th><th>Арабское слово</th></tr></thead><tbody>' +
+    words
+      .map(
+        (w) =>
+          '<tr><td>' +
+          esc(w.ru) +
+          '</td><td class="dict-book-ar" dir="rtl">' +
+          esc(w.ar) +
+          '</td></tr>'
+      )
+      .join('') +
+    '</tbody></table></div>'
+  );
+}
+
 function renderDict() {
+  document.querySelectorAll('[data-dict-view]').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.dictView === Settings.dictView);
+  });
   const q = (document.getElementById('dict-search').value || '').trim().toLowerCase();
   let words = Dict.allWords;
   if (Settings.dictLesson !== 'all') words = words.filter((w) => String(w.lesson) === Settings.dictLesson);
@@ -85,6 +118,22 @@ function renderDict() {
   const cont = document.getElementById('dict-content');
   if (!words.length) {
     cont.innerHTML = '<div class="lb-empty">Ничего не найдено</div>';
+    return;
+  }
+  if (Settings.dictView === 'table') {
+    if (Settings.dictLesson === 'all' && !q) {
+      const byLesson = {};
+      words.forEach((w) => {
+        if (!byLesson[w.lesson]) byLesson[w.lesson] = [];
+        byLesson[w.lesson].push(w);
+      });
+      cont.innerHTML = Object.keys(byLesson)
+        .sort((a, b) => (isNaN(a) || isNaN(b) ? String(a).localeCompare(String(b)) : Number(a) - Number(b)))
+        .map((lesson) => renderDictBook(byLesson[lesson], lesson))
+        .join('');
+    } else {
+      cont.innerHTML = renderDictBook(words, null);
+    }
     return;
   }
   if (Settings.dictLesson === 'all' && !q) {
@@ -166,7 +215,8 @@ function wrapArabic(text) {
     .replace(/[\u0600-\u06FF]+(?:\s+[\u0600-\u06FF]+)*/gu, (phrase) => {
       const isShortTerm =
         phrase.length <= 34 && phrase.trim().split(/\s+/).length <= 4 && !/[،؛؟.!]/.test(phrase);
-      const className = isShortTerm ? 'ar-term' : 'ar-text';
+      const isSentence = phrase.trim().split(/\s+/).length > 4 || /[،؛؟.!]/.test(phrase);
+      const className = isSentence ? 'ar-sentence' : isShortTerm ? 'ar-term' : 'ar-text';
       return '<span class="' + className + '" dir="rtl">' + phrase + '</span>';
     })
     .replace(/@@ARABIC_GROUP_(\d+)@@/g, (_, index) => groups[Number(index)] || '');
