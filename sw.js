@@ -5,6 +5,7 @@ const FILES = [
   './medina-premium-icon-512.png',
   './medina-premium-icon-192.png',
   './manifest.json?v=5',
+  './manifest.json',
   './src/api.js',
   './src/state.js',
   './src/helpers.js',
@@ -26,8 +27,10 @@ const SHOULD_NETWORK_FIRST = [
   './manifest.json?v=5',
   './medina-premium-icon-512.png',
   './medina-premium-icon-512.png?v=5',
+  './medina-premium-icon-512.png',
   './medina-premium-icon-192.png',
-  './medina-premium-icon-192.png?v=5'
+  './medina-premium-icon-192.png?v=5',
+  './medina-premium-icon-192.png'
 ];
 
 self.addEventListener('install', e => {
@@ -44,8 +47,7 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  const normalized = new URL(e.request.url).pathname.replace(self.location.origin, '').replace(/^\//, './');
-  const requested = normalizeRequestUrl(normalized);
+  const requested = normalizeRequestUrl(e.request.url);
   if (SHOULD_NETWORK_FIRST.includes(requested)) {
     e.respondWith(
       fetch(e.request).then(response => {
@@ -71,8 +73,13 @@ self.addEventListener('fetch', e => {
   );
 });
 
-function normalizeRequestUrl(pathname) {
-  return pathname === '/manifest.json' ? './manifest.json' : pathname;
+function normalizeRequestUrl(rawUrl) {
+  const url = new URL(rawUrl);
+  const path = url.pathname.replace(/^\//, './');
+  if (path === './manifest.json') return './manifest.json';
+  if (path === './medina-premium-icon-192.png') return './medina-premium-icon-192.png';
+  if (path === './medina-premium-icon-512.png') return './medina-premium-icon-512.png';
+  return path;
 }
 
 // Сообщаем странице что есть новая версия

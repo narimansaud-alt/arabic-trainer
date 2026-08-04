@@ -1,14 +1,14 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Мединский курс и глаголы</title>
+<title>РњРµРґРёРЅСЃРєРёР№ РєСѓСЂСЃ Рё РіР»Р°РіРѕР»С‹</title>
 <meta name="theme-color" content="#ffffff">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="./manifest.json?v=5">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Мединский курс и глаголы">
+<meta name="apple-mobile-web-app-title" content="РњРµРґРёРЅСЃРєРёР№ РєСѓСЂСЃ Рё РіР»Р°РіРѕР»С‹">
 <link rel="apple-touch-icon" sizes="180x180" href="./medina-premium-icon-512.png?v=5">
 <link rel="apple-touch-icon" sizes="152x152" href="./medina-premium-icon-512.png?v=5">
 <link rel="apple-touch-icon" sizes="120x120" href="./medina-premium-icon-512.png?v=5">
@@ -17,30 +17,69 @@
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('./sw.js').then(reg=>{
+    let refreshing=false;
+
+    const activateWaiting = ()=>{
+      navigator.serviceWorker.getRegistration().then(reg=>{
+        if(!reg){ return; }
+        if(reg.waiting){ reg.waiting.postMessage('skipWaiting'); return; }
+        if(reg.installing){
+          const installStateHandler = ()=>{
+            if(reg.waiting){
+              reg.waiting.postMessage('skipWaiting');
+              reg.installing.removeEventListener('statechange', installStateHandler);
+            }
+          };
+          reg.installing.addEventListener('statechange', installStateHandler);
+        }
+      });
+    };
+
+    const onControllerChange = ()=>{
+      if(!refreshing){
+        refreshing=true;
+        window.location.reload();
+      }
+    };
+
+    navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
+    navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then(reg=>{
       console.log('[SW] OK');
+      if(reg.waiting){
+        reg.waiting.postMessage('skipWaiting');
+        return;
+      }
       reg.addEventListener('updatefound',()=>{
         const nw = reg.installing;
+        if(!nw){ return; }
         nw.addEventListener('statechange',()=>{
-          if(nw.state==='installed' && navigator.serviceWorker.controller){
-            document.getElementById('sw-update-banner').style.display='flex';
+          if(nw.state === 'installed' && navigator.serviceWorker.controller){
+            const banner = document.getElementById('sw-update-banner');
+            if(banner){ banner.style.display='flex'; }
+            activateWaiting();
           }
         });
       });
+      reg.update();
     }).catch(e=>console.error('[SW]',e));
-
-    // Когда новый SW активировался — перезагружаем страницу
-    let refreshing=false;
-    navigator.serviceWorker.addEventListener('controllerchange',()=>{
-      if(!refreshing){ refreshing=true; window.location.reload(); }
-    });
   });
 }
 function swUpdate(){
   navigator.serviceWorker.getRegistration().then(reg=>{
-    if(reg && reg.waiting){ reg.waiting.postMessage('skipWaiting'); }
+    if(!reg){ return; }
+    if(reg.waiting){ reg.waiting.postMessage('skipWaiting'); return; }
+    if(reg.installing){
+      const installStateHandler = ()=>{
+        if(reg.waiting){
+          reg.waiting.postMessage('skipWaiting');
+          reg.installing.removeEventListener('statechange', installStateHandler);
+        }
+      };
+      reg.installing.addEventListener('statechange', installStateHandler);
+    }
   });
 }
+
 </script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
@@ -1125,29 +1164,29 @@ button:focus-visible{outline-color:rgba(164,95,67,.25)!important;}
 </style>
 </head>
 <body>
-<!-- Баннер автообновления -->
+<!-- Р‘Р°РЅРЅРµСЂ Р°РІС‚РѕРѕР±РЅРѕРІР»РµРЅРёСЏ -->
 <div id="sw-update-banner" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999;background:#fff;color:#171717;border:1px solid #cfcfcf;padding:12px 20px;border-radius:12px;box-shadow:0 12px 36px rgba(23,23,23,0.16);align-items:center;gap:12px;font-family:inherit;font-size:14px;max-width:90vw;">
-  <span>🔄 Доступно обновление</span>
-  <button onclick="swUpdate()" style="background:#c9a227;color:#fff;border:none;padding:7px 16px;border-radius:8px;cursor:pointer;font-weight:bold;font-size:14px;">Обновить</button>
-  <button onclick="this.parentElement.style.display='none'" style="background:transparent;color:#fff;border:none;font-size:18px;cursor:pointer;line-height:1;">✕</button>
+  <span>рџ”„ Р”РѕСЃС‚СѓРїРЅРѕ РѕР±РЅРѕРІР»РµРЅРёРµ</span>
+  <button onclick="swUpdate()" style="background:#c9a227;color:#fff;border:none;padding:7px 16px;border-radius:8px;cursor:pointer;font-weight:bold;font-size:14px;">РћР±РЅРѕРІРёС‚СЊ</button>
+  <button onclick="this.parentElement.style.display='none'" style="background:transparent;color:#fff;border:none;font-size:18px;cursor:pointer;line-height:1;">вњ•</button>
 </div>
 
 <!-- ANNOUNCEMENT POPUP -->
 <div class="announcement-overlay hidden" id="announcement-overlay">
   <div class="announcement-box">
-    <div class="announcement-icon">📢</div>
-    <div class="announcement-title">Важное сообщение</div>
+    <div class="announcement-icon">рџ“ў</div>
+    <div class="announcement-title">Р’Р°Р¶РЅРѕРµ СЃРѕРѕР±С‰РµРЅРёРµ</div>
     <div class="announcement-msg" id="announcement-msg"></div>
-    <button class="btn-announcement" onclick="closeAnnouncement()">Понял ✓</button>
+    <button class="btn-announcement" onclick="closeAnnouncement()">РџРѕРЅСЏР» вњ“</button>
   </div>
 </div>
 
 <!-- VERB DETAIL MODAL -->
 <div class="verb-modal-overlay hidden" id="verb-modal-overlay">
   <div class="verb-modal-box">
-    <button class="verb-modal-close" onclick="closeVerbModal()">✕</button>
+    <button class="verb-modal-close" onclick="closeVerbModal()">вњ•</button>
     <div class="verb-modal-title" id="verb-modal-title"></div>
-    <div class="verb-modal-sub" id="verb-modal-sub">تصريف الفعل</div>
+    <div class="verb-modal-sub" id="verb-modal-sub">ШЄШµШ±ЩЉЩЃ Ш§Щ„ЩЃШ№Щ„</div>
     <div id="verb-modal-body"></div>
   </div>
 </div>
@@ -1155,9 +1194,9 @@ button:focus-visible{outline-color:rgba(164,95,67,.25)!important;}
 <!-- SPLASH -->
 <div class="screen active" id="screen-loading">
   <div class="splash-box">
-    <img src="./medina-premium-icon-512.png" alt="Мединский курс и глаголы">
-    <h1>Мединский курс и глаголы</h1>
-    <p>Арабский язык: уроки, слова и спряжения</p>
+    <img src="./medina-premium-icon-512.png" alt="РњРµРґРёРЅСЃРєРёР№ РєСѓСЂСЃ Рё РіР»Р°РіРѕР»С‹">
+    <h1>РњРµРґРёРЅСЃРєРёР№ РєСѓСЂСЃ Рё РіР»Р°РіРѕР»С‹</h1>
+    <p>РђСЂР°Р±СЃРєРёР№ СЏР·С‹Рє: СѓСЂРѕРєРё, СЃР»РѕРІР° Рё СЃРїСЂСЏР¶РµРЅРёСЏ</p>
     <div class="splash-spinner"></div>
   </div>
 </div>
@@ -1166,24 +1205,24 @@ button:focus-visible{outline-color:rgba(164,95,67,.25)!important;}
 <div class="screen" id="screen-login">
   <div class="login-box">
     <div class="login-logo">
-      <img src="./medina-premium-icon-512.png" alt="Мединский курс и глаголы">
-      <h1>Мединский курс и глаголы</h1>
-      <p>Учите арабский язык каждый день</p>
+      <img src="./medina-premium-icon-512.png" alt="РњРµРґРёРЅСЃРєРёР№ РєСѓСЂСЃ Рё РіР»Р°РіРѕР»С‹">
+      <h1>РњРµРґРёРЅСЃРєРёР№ РєСѓСЂСЃ Рё РіР»Р°РіРѕР»С‹</h1>
+      <p>РЈС‡РёС‚Рµ Р°СЂР°Р±СЃРєРёР№ СЏР·С‹Рє РєР°Р¶РґС‹Р№ РґРµРЅСЊ</p>
     </div>
     <div class="tab-row">
-      <button class="tab-btn active" onclick="switchLoginTab('login')">Войти</button>
-      <button class="tab-btn" onclick="switchLoginTab('reg')">Регистрация</button>
+      <button class="tab-btn active" onclick="switchLoginTab('login')">Р’РѕР№С‚Рё</button>
+      <button class="tab-btn" onclick="switchLoginTab('reg')">Р РµРіРёСЃС‚СЂР°С†РёСЏ</button>
     </div>
     <div id="login-form">
-      <div class="field-group"><label>Логин</label><input type="text" id="l-user" placeholder="Ваш логин" autocapitalize="none" autocomplete="username"></div>
-      <div class="field-group"><label>Пароль</label><div style="position:relative;"><input type="password" id="l-pass" placeholder="Пароль" autocomplete="current-password" style="padding-right:42px;width:100%;box-sizing:border-box;"><button type="button" onclick="togglePw('l-pass',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:20px;padding:0;">👁️</button></div></div>
-      <button class="btn-primary" onclick="doLogin()">Войти →</button>
+      <div class="field-group"><label>Р›РѕРіРёРЅ</label><input type="text" id="l-user" placeholder="Р’Р°С€ Р»РѕРіРёРЅ" autocapitalize="none" autocomplete="username"></div>
+      <div class="field-group"><label>РџР°СЂРѕР»СЊ</label><div style="position:relative;"><input type="password" id="l-pass" placeholder="РџР°СЂРѕР»СЊ" autocomplete="current-password" style="padding-right:42px;width:100%;box-sizing:border-box;"><button type="button" onclick="togglePw('l-pass',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:20px;padding:0;">рџ‘ЃпёЏ</button></div></div>
+      <button class="btn-primary" onclick="doLogin()">Р’РѕР№С‚Рё в†’</button>
     </div>
     <div id="reg-form" class="hidden">
-      <div class="field-group"><label>Логин</label><input type="text" id="r-user" placeholder="Минимум 3 символа" autocapitalize="none"></div>
-      <div class="field-group"><label>Пароль</label><div style="position:relative;"><input type="password" id="r-pass" placeholder="Минимум 4 символа" style="padding-right:42px;width:100%;box-sizing:border-box;"><button type="button" onclick="togglePw('r-pass',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:20px;padding:0;">👁️</button></div></div>
-      <div class="field-group"><label>Повтор пароля</label><div style="position:relative;"><input type="password" id="r-pass2" placeholder="Повторите пароль" style="padding-right:42px;width:100%;box-sizing:border-box;"><button type="button" onclick="togglePw('r-pass2',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:20px;padding:0;">👁️</button></div></div>
-      <button class="btn-primary" onclick="doRegister()">Создать аккаунт →</button>
+      <div class="field-group"><label>Р›РѕРіРёРЅ</label><input type="text" id="r-user" placeholder="РњРёРЅРёРјСѓРј 3 СЃРёРјРІРѕР»Р°" autocapitalize="none"></div>
+      <div class="field-group"><label>РџР°СЂРѕР»СЊ</label><div style="position:relative;"><input type="password" id="r-pass" placeholder="РњРёРЅРёРјСѓРј 4 СЃРёРјРІРѕР»Р°" style="padding-right:42px;width:100%;box-sizing:border-box;"><button type="button" onclick="togglePw('r-pass',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:20px;padding:0;">рџ‘ЃпёЏ</button></div></div>
+      <div class="field-group"><label>РџРѕРІС‚РѕСЂ РїР°СЂРѕР»СЏ</label><div style="position:relative;"><input type="password" id="r-pass2" placeholder="РџРѕРІС‚РѕСЂРёС‚Рµ РїР°СЂРѕР»СЊ" style="padding-right:42px;width:100%;box-sizing:border-box;"><button type="button" onclick="togglePw('r-pass2',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:20px;padding:0;">рџ‘ЃпёЏ</button></div></div>
+      <button class="btn-primary" onclick="doRegister()">РЎРѕР·РґР°С‚СЊ Р°РєРєР°СѓРЅС‚ в†’</button>
     </div>
     <div class="login-msg" id="login-msg"></div>
   </div>
@@ -1192,68 +1231,68 @@ button:focus-visible{outline-color:rgba(164,95,67,.25)!important;}
 <!-- COURSE SELECT -->
 <div class="screen" id="screen-course">
   <div class="course-header">
-    <div class="hello" id="course-hello">Добро пожаловать!</div>
-    <h2>Выбор курса</h2>
-    <p style="font-size:13px;opacity:0.7;margin-top:6px;">Нажми на курс чтобы выбрать том</p>
+    <div class="hello" id="course-hello">Р”РѕР±СЂРѕ РїРѕР¶Р°Р»РѕРІР°С‚СЊ!</div>
+    <h2>Р’С‹Р±РѕСЂ РєСѓСЂСЃР°</h2>
+    <p style="font-size:13px;opacity:0.7;margin-top:6px;">РќР°Р¶РјРё РЅР° РєСѓСЂСЃ С‡С‚РѕР±С‹ РІС‹Р±СЂР°С‚СЊ С‚РѕРј</p>
   </div>
 
   <div class="course-cards">
-    <div class="course-card" onclick="showVolumeScreen('Мединский курс','med')">
-      <img class="cc-cover" src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Medina_arabic_book.jpg/400px-Medina_arabic_book.jpg" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" alt="Мединский курс">
-      <div class="cc-cover-placeholder" style="display:none;">📖</div>
+    <div class="course-card" onclick="showVolumeScreen('РњРµРґРёРЅСЃРєРёР№ РєСѓСЂСЃ','med')">
+      <img class="cc-cover" src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Medina_arabic_book.jpg/400px-Medina_arabic_book.jpg" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" alt="РњРµРґРёРЅСЃРєРёР№ РєСѓСЂСЃ">
+      <div class="cc-cover-placeholder" style="display:none;">рџ“–</div>
       <div class="cc-body-row">
-        <div class="cc-body"><div class="cc-title">Мединский курс</div><div class="cc-sub">4 тома — классический арабский</div></div>
-        <div class="cc-arrow">›</div>
+        <div class="cc-body"><div class="cc-title">РњРµРґРёРЅСЃРєРёР№ РєСѓСЂСЃ</div><div class="cc-sub">4 С‚РѕРјР° вЂ” РєР»Р°СЃСЃРёС‡РµСЃРєРёР№ Р°СЂР°Р±СЃРєРёР№</div></div>
+        <div class="cc-arrow">вЂє</div>
       </div>
     </div>
     <div class="course-card" onclick="showScreen('screen-verbs')">
-      <div class="cc-cover-placeholder">🔁</div>
+      <div class="cc-cover-placeholder">рџ”Ѓ</div>
       <div class="cc-body-row">
-        <div class="cc-body"><div class="cc-title">Глаголы и спряжения</div><div class="cc-sub">Любой арабский глагол — полная таблица форм</div></div>
-        <div class="cc-arrow">›</div>
+        <div class="cc-body"><div class="cc-title">Р“Р»Р°РіРѕР»С‹ Рё СЃРїСЂСЏР¶РµРЅРёСЏ</div><div class="cc-sub">Р›СЋР±РѕР№ Р°СЂР°Р±СЃРєРёР№ РіР»Р°РіРѕР» вЂ” РїРѕР»РЅР°СЏ С‚Р°Р±Р»РёС†Р° С„РѕСЂРј</div></div>
+        <div class="cc-arrow">вЂє</div>
       </div>
     </div>
   </div>
-  <button class="btn-logout-c" onclick="doLogout()">Выйти из аккаунта</button>
+  <button class="btn-logout-c" onclick="doLogout()">Р’С‹Р№С‚Рё РёР· Р°РєРєР°СѓРЅС‚Р°</button>
 </div>
 
 <!-- VOLUME SELECT -->
 <div class="screen" id="screen-volume">
   <div class="vol-header">
-    <h2 id="vol-course-title">Курс</h2>
-    <p id="vol-course-sub">Выберите том</p>
+    <h2 id="vol-course-title">РљСѓСЂСЃ</h2>
+    <p id="vol-course-sub">Р’С‹Р±РµСЂРёС‚Рµ С‚РѕРј</p>
   </div>
 
   <div class="vol-cards" id="vol-cards"></div>
-  <button id="btn-install-pwa" class="btn-back-vol" style="display:none;background:rgba(255,255,255,0.25);margin-bottom:8px;" onclick="installPWA()">📲 Установить приложение</button>
-  <button class="btn-back-vol" onclick="showScreen('screen-course')">← Назад к курсам</button>
+  <button id="btn-install-pwa" class="btn-back-vol" style="display:none;background:rgba(255,255,255,0.25);margin-bottom:8px;" onclick="installPWA()">рџ“І РЈСЃС‚Р°РЅРѕРІРёС‚СЊ РїСЂРёР»РѕР¶РµРЅРёРµ</button>
+  <button class="btn-back-vol" onclick="showScreen('screen-course')">в†ђ РќР°Р·Р°Рґ Рє РєСѓСЂСЃР°Рј</button>
 </div>
 
 <!-- VERB CONJUGATION (standalone) -->
 <div class="screen" id="screen-verbs">
   <div class="vol-header">
-    <h2>Глаголы и спряжения</h2>
-    <p>Введите глагол — получите таблицу спряжения</p>
+    <h2>Р“Р»Р°РіРѕР»С‹ Рё СЃРїСЂСЏР¶РµРЅРёСЏ</h2>
+    <p>Р’РІРµРґРёС‚Рµ РіР»Р°РіРѕР» вЂ” РїРѕР»СѓС‡РёС‚Рµ С‚Р°Р±Р»РёС†Сѓ СЃРїСЂСЏР¶РµРЅРёСЏ</p>
   </div>
   <div class="sc" style="width:100%;max-width:420px;">
-    <div class="sc-title">Спряжение любого глагола</div>
-    <input class="type-input" id="verb-input" type="text" placeholder="اكتب الفعل الماضي" dir="rtl">
-    <div style="font-size:12px;color:var(--gray);margin:-4px 0 12px;text-align:center;">Пишите глагол в прошедшем времени (كتب или كَتَبَ) — огласовку настоящего времени подберём по словарю</div>
-    <button class="btn-start green" id="verb-conjugate-btn" onclick="conjugateTypedVerb()">🔁 Спрягать</button>
+    <div class="sc-title">РЎРїСЂСЏР¶РµРЅРёРµ Р»СЋР±РѕРіРѕ РіР»Р°РіРѕР»Р°</div>
+    <input class="type-input" id="verb-input" type="text" placeholder="Ш§ЩѓШЄШЁ Ш§Щ„ЩЃШ№Щ„ Ш§Щ„Щ…Ш§Ш¶ЩЉ" dir="rtl">
+    <div style="font-size:12px;color:var(--gray);margin:-4px 0 12px;text-align:center;">РџРёС€РёС‚Рµ РіР»Р°РіРѕР» РІ РїСЂРѕС€РµРґС€РµРј РІСЂРµРјРµРЅРё (ЩѓШЄШЁ РёР»Рё ЩѓЩЋШЄЩЋШЁЩЋ) вЂ” РѕРіР»Р°СЃРѕРІРєСѓ РЅР°СЃС‚РѕСЏС‰РµРіРѕ РІСЂРµРјРµРЅРё РїРѕРґР±РµСЂС‘Рј РїРѕ СЃР»РѕРІР°СЂСЋ</div>
+    <button class="btn-start green" id="verb-conjugate-btn" onclick="conjugateTypedVerb()">рџ”Ѓ РЎРїСЂСЏРіР°С‚СЊ</button>
     <div class="feedback" id="verb-input-feedback"></div>
   </div>
-  <button class="btn-back-vol" onclick="showScreen('screen-course')">← Назад к курсам</button>
+  <button class="btn-back-vol" onclick="showScreen('screen-course')">в†ђ РќР°Р·Р°Рґ Рє РєСѓСЂСЃР°Рј</button>
 </div>
 
 <!-- MAIN APP -->
 <div class="screen" id="screen-app">
   <div class="topbar">
     <div class="tb-left">
-      <span class="tb-user" id="app-rank" onclick="switchTab('lb')" style="cursor:pointer;">🏆 Рейтинг</span>
+      <span class="tb-user" id="app-rank" onclick="switchTab('lb')" style="cursor:pointer;">рџЏ† Р РµР№С‚РёРЅРі</span>
     </div>
     <div class="tb-right">
-      <button class="btn-tb" onclick="switchTab('instr')">❓</button>
-      <button class="btn-tb" onclick="goToCourse()">≡ Курсы</button>
+      <button class="btn-tb" onclick="switchTab('instr')">вќ“</button>
+      <button class="btn-tb" onclick="goToCourse()">в‰Ў РљСѓСЂСЃС‹</button>
     </div>
   </div>
 
@@ -1263,178 +1302,178 @@ button:focus-visible{outline-color:rgba(164,95,67,.25)!important;}
     <div class="streak-banner" id="streak-banner">
       <div class="streak-top">
         <div class="streak-fire" id="banner-fire">
-          <span class="streak-big-num">🔥 <span id="banner-days">0</span></span>
-          Ты занимаешься уже <span id="banner-days-label">0 дней</span> подряд!
+          <span class="streak-big-num">рџ”Ґ <span id="banner-days">0</span></span>
+          РўС‹ Р·Р°РЅРёРјР°РµС€СЊСЃСЏ СѓР¶Рµ <span id="banner-days-label">0 РґРЅРµР№</span> РїРѕРґСЂСЏРґ!
         </div>
-        <div class="streak-days" id="banner-today-count">0 / 30 слов</div>
+        <div class="streak-days" id="banner-today-count">0 / 30 СЃР»РѕРІ</div>
       </div>
-      <div class="streak-hint" id="banner-hint">Повтори 30 слов до полуночи — продли серию!</div>
+      <div class="streak-hint" id="banner-hint">РџРѕРІС‚РѕСЂРё 30 СЃР»РѕРІ РґРѕ РїРѕР»СѓРЅРѕС‡Рё вЂ” РїСЂРѕРґР»Рё СЃРµСЂРёСЋ!</div>
       <div class="streak-bar-bg"><div class="streak-bar-fill" id="streak-bar-fill" style="width:0%"></div></div>
-      <div class="streak-bar-label"><span>0 слов</span><span>🎯 30 слов</span></div>
-      <div class="streak-done hidden" id="streak-done">🎉 Отлично! Серия продлена на ещё один день!</div>
+      <div class="streak-bar-label"><span>0 СЃР»РѕРІ</span><span>рџЋЇ 30 СЃР»РѕРІ</span></div>
+      <div class="streak-done hidden" id="streak-done">рџЋ‰ РћС‚Р»РёС‡РЅРѕ! РЎРµСЂРёСЏ РїСЂРѕРґР»РµРЅР° РЅР° РµС‰С‘ РѕРґРёРЅ РґРµРЅСЊ!</div>
       <div id="banner-rank"></div>
     </div>
     <div class="sc">
-      <div class="sc-title">Уроки</div>
+      <div class="sc-title">РЈСЂРѕРєРё</div>
       <div class="ctrl-row">
-        <button class="ctrl-btn" onclick="selAll(true)">✓ Выбрать все</button>
-        <button class="ctrl-btn" onclick="selAll(false)">✗ Снять все</button>
+        <button class="ctrl-btn" onclick="selAll(true)">вњ“ Р’С‹Р±СЂР°С‚СЊ РІСЃРµ</button>
+        <button class="ctrl-btn" onclick="selAll(false)">вњ— РЎРЅСЏС‚СЊ РІСЃРµ</button>
       </div>
-      <div class="lesson-grid" id="lesson-grid"><div style="grid-column:span 4;text-align:center;color:#aaa;font-size:13px;padding:10px;">Загрузка...</div></div>
+      <div class="lesson-grid" id="lesson-grid"><div style="grid-column:span 4;text-align:center;color:#aaa;font-size:13px;padding:10px;">Р—Р°РіСЂСѓР·РєР°...</div></div>
     </div>
     <div class="sc">
-      <div class="sc-title">Режим тренировки</div>
+      <div class="sc-title">Р РµР¶РёРј С‚СЂРµРЅРёСЂРѕРІРєРё</div>
       <div class="mode-grid" id="mode-btns">
-        <button class="mode-pill active" onclick="setMode('learn',this)">🌱 Учить новые слова</button>
-        <button class="mode-pill" onclick="setMode('type-ar',this)">✍️ Арабский ввод</button>
-        <button class="mode-pill" onclick="setMode('review',this)">🔄 Обычное повторение</button>
-        <button class="mode-pill" onclick="setMode('mix',this)">🔀 Микс</button>
-        <button class="mode-pill fast" onclick="setMode('fast',this)">⚡ Быстрое повторение — 7 сек на слово</button>
+        <button class="mode-pill active" onclick="setMode('learn',this)">рџЊ± РЈС‡РёС‚СЊ РЅРѕРІС‹Рµ СЃР»РѕРІР°</button>
+        <button class="mode-pill" onclick="setMode('type-ar',this)">вњЌпёЏ РђСЂР°Р±СЃРєРёР№ РІРІРѕРґ</button>
+        <button class="mode-pill" onclick="setMode('review',this)">рџ”„ РћР±С‹С‡РЅРѕРµ РїРѕРІС‚РѕСЂРµРЅРёРµ</button>
+        <button class="mode-pill" onclick="setMode('mix',this)">рџ”Ђ РњРёРєСЃ</button>
+        <button class="mode-pill fast" onclick="setMode('fast',this)">вљЎ Р‘С‹СЃС‚СЂРѕРµ РїРѕРІС‚РѕСЂРµРЅРёРµ вЂ” 7 СЃРµРє РЅР° СЃР»РѕРІРѕ</button>
       </div>
       <div class="answer-check-row">
-        <div class="answer-check-title">Проверка арабского ввода</div>
+        <div class="answer-check-title">РџСЂРѕРІРµСЂРєР° Р°СЂР°Р±СЃРєРѕРіРѕ РІРІРѕРґР°</div>
         <div class="answer-check-grid" id="answer-check-btns">
-          <button class="answer-check-pill active" type="button" data-check="learning" onclick="setAnswerCheck('learning')">Учебный</button>
-          <button class="answer-check-pill" type="button" data-check="strict" onclick="setAnswerCheck('strict')">Строгий</button>
+          <button class="answer-check-pill active" type="button" data-check="learning" onclick="setAnswerCheck('learning')">РЈС‡РµР±РЅС‹Р№</button>
+          <button class="answer-check-pill" type="button" data-check="strict" onclick="setAnswerCheck('strict')">РЎС‚СЂРѕРіРёР№</button>
         </div>
-        <div class="answer-check-note" id="answer-check-note">Учебный режим: огласовки можно пропускать</div>
+        <div class="answer-check-note" id="answer-check-note">РЈС‡РµР±РЅС‹Р№ СЂРµР¶РёРј: РѕРіР»Р°СЃРѕРІРєРё РјРѕР¶РЅРѕ РїСЂРѕРїСѓСЃРєР°С‚СЊ</div>
       </div>
     </div>
     <div id="cloud-status" style="font-size:12px;color:var(--gray);text-align:center;padding:4px 0;"></div>
-    <button class="btn-start green" id="btn-start" onclick="startQuiz(false)" disabled>▶ Начать тренировку</button>
-    <button class="btn-start gold" id="btn-fav" onclick="startQuiz(true)" disabled>⭐ Только трудные слова</button>
+    <button class="btn-start green" id="btn-start" onclick="startQuiz(false)" disabled>в–¶ РќР°С‡Р°С‚СЊ С‚СЂРµРЅРёСЂРѕРІРєСѓ</button>
+    <button class="btn-start gold" id="btn-fav" onclick="startQuiz(true)" disabled>в­ђ РўРѕР»СЊРєРѕ С‚СЂСѓРґРЅС‹Рµ СЃР»РѕРІР°</button>
   </div>
 
   <!-- TAB: DICT -->
   <div class="tab-content" id="tab-dict">
     <div class="sc">
-      <input class="search-input" id="dict-search" type="text" placeholder="Поиск на арабском или русском..." oninput="renderDict()">
-      <div class="dict-view-toggle" role="group" aria-label="Вид словаря">
-        <button class="dict-view-btn active" type="button" data-dict-view="list" onclick="setDictView('list')" title="Список" aria-label="Список">☷</button>
-        <button class="dict-view-btn" type="button" data-dict-view="table" onclick="setDictView('table')" title="Таблица" aria-label="Таблица">▦</button>
+      <input class="search-input" id="dict-search" type="text" placeholder="РџРѕРёСЃРє РЅР° Р°СЂР°Р±СЃРєРѕРј РёР»Рё СЂСѓСЃСЃРєРѕРј..." oninput="renderDict()">
+      <div class="dict-view-toggle" role="group" aria-label="Р’РёРґ СЃР»РѕРІР°СЂСЏ">
+        <button class="dict-view-btn active" type="button" data-dict-view="list" onclick="setDictView('list')" title="РЎРїРёСЃРѕРє" aria-label="РЎРїРёСЃРѕРє">в·</button>
+        <button class="dict-view-btn" type="button" data-dict-view="table" onclick="setDictView('table')" title="РўР°Р±Р»РёС†Р°" aria-label="РўР°Р±Р»РёС†Р°">в–¦</button>
       </div>
-      <div class="sc-title">Урок</div>
+      <div class="sc-title">РЈСЂРѕРє</div>
       <div class="lb-row-btns" id="dict-lesson-row">
-        <button class="lb-pill active" onclick="setDictLesson('all',this)">Все</button>
+        <button class="lb-pill active" onclick="setDictLesson('all',this)">Р’СЃРµ</button>
       </div>
     </div>
-    <div id="dict-content"><div class="lb-empty">Загрузка...</div></div>
+    <div id="dict-content"><div class="lb-empty">Р—Р°РіСЂСѓР·РєР°...</div></div>
   </div>
 
   <!-- TAB: BOOK -->
   <div class="tab-content" id="tab-book">
-    <div id="book-content"><div class="lb-empty">📘 Загрузите том, чтобы открыть книгу.</div></div>
+    <div id="book-content"><div class="lb-empty">рџ“ Р—Р°РіСЂСѓР·РёС‚Рµ С‚РѕРј, С‡С‚РѕР±С‹ РѕС‚РєСЂС‹С‚СЊ РєРЅРёРіСѓ.</div></div>
   </div>
 
   <!-- TAB: RULES -->
   <div class="tab-content" id="tab-rules">
     <div class="sc">
-      <input class="search-input" id="rules-search" type="text" placeholder="Поиск правила..." oninput="renderRules()">
+      <input class="search-input" id="rules-search" type="text" placeholder="РџРѕРёСЃРє РїСЂР°РІРёР»Р°..." oninput="renderRules()">
     </div>
-    <div id="rules-content"><div class="lb-empty">Загрузка...</div></div>
+    <div id="rules-content"><div class="lb-empty">Р—Р°РіСЂСѓР·РєР°...</div></div>
   </div>
 
   <!-- TAB: LEADERBOARD -->
   <div class="tab-content" id="tab-lb">
     <div class="sc">
-      <div class="sc-title">Тип рейтинга</div>
+      <div class="sc-title">РўРёРї СЂРµР№С‚РёРЅРіР°</div>
       <div class="lb-row-btns" id="lb-type-row">
-        <button class="lb-pill gold active" onclick="setLbFilter('type','score',this)">🌟 Очки</button>
-        <button class="lb-pill" onclick="setLbFilter('type','fast',this)">⚡ Быстрый режим</button>
-        <button class="lb-pill" onclick="setLbFilter('type','streak',this)">🔥 Серия дней</button>
+        <button class="lb-pill gold active" onclick="setLbFilter('type','score',this)">рџЊџ РћС‡РєРё</button>
+        <button class="lb-pill" onclick="setLbFilter('type','fast',this)">вљЎ Р‘С‹СЃС‚СЂС‹Р№ СЂРµР¶РёРј</button>
+        <button class="lb-pill" onclick="setLbFilter('type','streak',this)">рџ”Ґ РЎРµСЂРёСЏ РґРЅРµР№</button>
       </div>
       <div id="lb-time-section">
-        <div class="sc-title" style="margin-top:8px;">Период</div>
+        <div class="sc-title" style="margin-top:8px;">РџРµСЂРёРѕРґ</div>
         <div class="lb-row-btns" id="lb-period-row">
-          <button class="lb-pill active" onclick="setLbFilter('period','all',this)">Все время</button>
-          <button class="lb-pill" onclick="setLbFilter('period','day',this)">День</button>
-          <button class="lb-pill" onclick="setLbFilter('period','week',this)">Неделя</button>
-          <button class="lb-pill" onclick="setLbFilter('period','month',this)">Месяц</button>
+          <button class="lb-pill active" onclick="setLbFilter('period','all',this)">Р’СЃРµ РІСЂРµРјСЏ</button>
+          <button class="lb-pill" onclick="setLbFilter('period','day',this)">Р”РµРЅСЊ</button>
+          <button class="lb-pill" onclick="setLbFilter('period','week',this)">РќРµРґРµР»СЏ</button>
+          <button class="lb-pill" onclick="setLbFilter('period','month',this)">РњРµСЃСЏС†</button>
         </div>
       </div>
     </div>
-    <div id="lb-content"><div class="lb-empty">Загрузка...</div></div>
+    <div id="lb-content"><div class="lb-empty">Р—Р°РіСЂСѓР·РєР°...</div></div>
   </div>
 
   <!-- TAB: INSTRUCTION -->
   <div class="tab-content" id="tab-instr">
     <div class="instr-block" style="background:linear-gradient(135deg,var(--green-dark),var(--green));border-radius:16px;">
-      <div class="instr-mode-title" style="color:white;font-size:17px;">👋 С чего начать?</div>
+      <div class="instr-mode-title" style="color:white;font-size:17px;">рџ‘‹ РЎ С‡РµРіРѕ РЅР°С‡Р°С‚СЊ?</div>
       <div class="instr-text" style="color:rgba(255,255,255,0.92);line-height:1.9;">
-        <b style="color:white;">1.</b> Выбери Мединский курс или тренажёр глаголов<br>
-        <b style="color:white;">2.</b> Выбери том<br>
-        <b style="color:white;">3.</b> На экране тренировки выбери уроки (можно несколько)<br>
-        <b style="color:white;">4.</b> Выбери режим тренировки<br>
-        <b style="color:white;">5.</b> Нажми <b style="color:white;">«Начать тренировку»</b><br><br>
-        💡 Прокрути вниз чтобы узнать о каждом режиме подробнее
+        <b style="color:white;">1.</b> Р’С‹Р±РµСЂРё РњРµРґРёРЅСЃРєРёР№ РєСѓСЂСЃ РёР»Рё С‚СЂРµРЅР°Р¶С‘СЂ РіР»Р°РіРѕР»РѕРІ<br>
+        <b style="color:white;">2.</b> Р’С‹Р±РµСЂРё С‚РѕРј<br>
+        <b style="color:white;">3.</b> РќР° СЌРєСЂР°РЅРµ С‚СЂРµРЅРёСЂРѕРІРєРё РІС‹Р±РµСЂРё СѓСЂРѕРєРё (РјРѕР¶РЅРѕ РЅРµСЃРєРѕР»СЊРєРѕ)<br>
+        <b style="color:white;">4.</b> Р’С‹Р±РµСЂРё СЂРµР¶РёРј С‚СЂРµРЅРёСЂРѕРІРєРё<br>
+        <b style="color:white;">5.</b> РќР°Р¶РјРё <b style="color:white;">В«РќР°С‡Р°С‚СЊ С‚СЂРµРЅРёСЂРѕРІРєСѓВ»</b><br><br>
+        рџ’Ў РџСЂРѕРєСЂСѓС‚Рё РІРЅРёР· С‡С‚РѕР±С‹ СѓР·РЅР°С‚СЊ Рѕ РєР°Р¶РґРѕРј СЂРµР¶РёРјРµ РїРѕРґСЂРѕР±РЅРµРµ
       </div>
     </div>
     <div class="instr-block">
-      <div class="instr-mode-title">🌱 Учить новые слова</div>
+      <div class="instr-mode-title">рџЊ± РЈС‡РёС‚СЊ РЅРѕРІС‹Рµ СЃР»РѕРІР°</div>
       <div class="instr-text">
-        Сначала показывается карточка: арабское слово + перевод — запомни. Затем тест: выбери правильный перевод из 4 вариантов. Слова повторяются пока не ответишь правильно. <b>+5 очков</b> за правильный ответ.
+        РЎРЅР°С‡Р°Р»Р° РїРѕРєР°Р·С‹РІР°РµС‚СЃСЏ РєР°СЂС‚РѕС‡РєР°: Р°СЂР°Р±СЃРєРѕРµ СЃР»РѕРІРѕ + РїРµСЂРµРІРѕРґ вЂ” Р·Р°РїРѕРјРЅРё. Р—Р°С‚РµРј С‚РµСЃС‚: РІС‹Р±РµСЂРё РїСЂР°РІРёР»СЊРЅС‹Р№ РїРµСЂРµРІРѕРґ РёР· 4 РІР°СЂРёР°РЅС‚РѕРІ. РЎР»РѕРІР° РїРѕРІС‚РѕСЂСЏСЋС‚СЃСЏ РїРѕРєР° РЅРµ РѕС‚РІРµС‚РёС€СЊ РїСЂР°РІРёР»СЊРЅРѕ. <b>+5 РѕС‡РєРѕРІ</b> Р·Р° РїСЂР°РІРёР»СЊРЅС‹Р№ РѕС‚РІРµС‚.
       </div>
     </div>
     <div class="instr-block">
-      <div class="instr-mode-title">✍️ Арабский ввод</div>
+      <div class="instr-mode-title">вњЌпёЏ РђСЂР°Р±СЃРєРёР№ РІРІРѕРґ</div>
       <div class="instr-text">
-        Показывается русское слово — напиши арабский перевод вручную. <b>+20 очков</b> за правильный ответ. Есть кнопка <b>💡 Подсказка</b> — каждое нажатие открывает следующую букву слова, но <b>−5 очков</b> за каждое нажатие (1 нажатие = +15, 2 нажатия = +10 и т.д.). Лучший режим для запоминания написания и харакатов.
+        РџРѕРєР°Р·С‹РІР°РµС‚СЃСЏ СЂСѓСЃСЃРєРѕРµ СЃР»РѕРІРѕ вЂ” РЅР°РїРёС€Рё Р°СЂР°Р±СЃРєРёР№ РїРµСЂРµРІРѕРґ РІСЂСѓС‡РЅСѓСЋ. <b>+20 РѕС‡РєРѕРІ</b> Р·Р° РїСЂР°РІРёР»СЊРЅС‹Р№ РѕС‚РІРµС‚. Р•СЃС‚СЊ РєРЅРѕРїРєР° <b>рџ’Ў РџРѕРґСЃРєР°Р·РєР°</b> вЂ” РєР°Р¶РґРѕРµ РЅР°Р¶Р°С‚РёРµ РѕС‚РєСЂС‹РІР°РµС‚ СЃР»РµРґСѓСЋС‰СѓСЋ Р±СѓРєРІСѓ СЃР»РѕРІР°, РЅРѕ <b>в€’5 РѕС‡РєРѕРІ</b> Р·Р° РєР°Р¶РґРѕРµ РЅР°Р¶Р°С‚РёРµ (1 РЅР°Р¶Р°С‚РёРµ = +15, 2 РЅР°Р¶Р°С‚РёСЏ = +10 Рё С‚.Рґ.). Р›СѓС‡С€РёР№ СЂРµР¶РёРј РґР»СЏ Р·Р°РїРѕРјРёРЅР°РЅРёСЏ РЅР°РїРёСЃР°РЅРёСЏ Рё С…Р°СЂР°РєР°С‚РѕРІ.
       </div>
     </div>
     <div class="instr-block">
-      <div class="instr-mode-title">🔄 Обычное повторение</div>
+      <div class="instr-mode-title">рџ”„ РћР±С‹С‡РЅРѕРµ РїРѕРІС‚РѕСЂРµРЅРёРµ</div>
       <div class="instr-text">
-        Интервальное повторение (SRS). Система отслеживает каждое слово — чем лучше знаешь, тем реже появляется. Правильный ответ → уровень слова растёт → слово приходит позже. Ошибка → уровень падает → слово вернётся скорее. <b>+5 очков</b> за арабский→русский, <b>+10 очков</b> за русский→арабский.
+        РРЅС‚РµСЂРІР°Р»СЊРЅРѕРµ РїРѕРІС‚РѕСЂРµРЅРёРµ (SRS). РЎРёСЃС‚РµРјР° РѕС‚СЃР»РµР¶РёРІР°РµС‚ РєР°Р¶РґРѕРµ СЃР»РѕРІРѕ вЂ” С‡РµРј Р»СѓС‡С€Рµ Р·РЅР°РµС€СЊ, С‚РµРј СЂРµР¶Рµ РїРѕСЏРІР»СЏРµС‚СЃСЏ. РџСЂР°РІРёР»СЊРЅС‹Р№ РѕС‚РІРµС‚ в†’ СѓСЂРѕРІРµРЅСЊ СЃР»РѕРІР° СЂР°СЃС‚С‘С‚ в†’ СЃР»РѕРІРѕ РїСЂРёС…РѕРґРёС‚ РїРѕР·Р¶Рµ. РћС€РёР±РєР° в†’ СѓСЂРѕРІРµРЅСЊ РїР°РґР°РµС‚ в†’ СЃР»РѕРІРѕ РІРµСЂРЅС‘С‚СЃСЏ СЃРєРѕСЂРµРµ. <b>+5 РѕС‡РєРѕРІ</b> Р·Р° Р°СЂР°Р±СЃРєРёР№в†’СЂСѓСЃСЃРєРёР№, <b>+10 РѕС‡РєРѕРІ</b> Р·Р° СЂСѓСЃСЃРєРёР№в†’Р°СЂР°Р±СЃРєРёР№.
       </div>
     </div>
     <div class="instr-block">
-      <div class="instr-mode-title">🔀 Микс</div>
+      <div class="instr-mode-title">рџ”Ђ РњРёРєСЃ</div>
       <div class="instr-text">
-        Случайное чередование трёх форматов: арабский→русский (+5), русский→арабский (+10), арабский ввод (+20). Лучший режим для разносторонней тренировки и набора очков.
+        РЎР»СѓС‡Р°Р№РЅРѕРµ С‡РµСЂРµРґРѕРІР°РЅРёРµ С‚СЂС‘С… С„РѕСЂРјР°С‚РѕРІ: Р°СЂР°Р±СЃРєРёР№в†’СЂСѓСЃСЃРєРёР№ (+5), СЂСѓСЃСЃРєРёР№в†’Р°СЂР°Р±СЃРєРёР№ (+10), Р°СЂР°Р±СЃРєРёР№ РІРІРѕРґ (+20). Р›СѓС‡С€РёР№ СЂРµР¶РёРј РґР»СЏ СЂР°Р·РЅРѕСЃС‚РѕСЂРѕРЅРЅРµР№ С‚СЂРµРЅРёСЂРѕРІРєРё Рё РЅР°Р±РѕСЂР° РѕС‡РєРѕРІ.
       </div>
     </div>
     <div class="instr-block">
-      <div class="instr-mode-title">⚡ Быстрое повторение</div>
+      <div class="instr-mode-title">вљЎ Р‘С‹СЃС‚СЂРѕРµ РїРѕРІС‚РѕСЂРµРЅРёРµ</div>
       <div class="instr-text">
-        Показывается русское слово — выбери арабский перевод из 4 вариантов за <b>7 секунд</b>. Есть 3 жизни ❤️. Ошибка или время вышло — жизнь теряется, слово попадает в трудные. Сначала выбери режим, затем нажми «Начать тренировку». Рекорд сохраняется в рейтинге <b>«⚡ Быстрый режим»</b>.
+        РџРѕРєР°Р·С‹РІР°РµС‚СЃСЏ СЂСѓСЃСЃРєРѕРµ СЃР»РѕРІРѕ вЂ” РІС‹Р±РµСЂРё Р°СЂР°Р±СЃРєРёР№ РїРµСЂРµРІРѕРґ РёР· 4 РІР°СЂРёР°РЅС‚РѕРІ Р·Р° <b>7 СЃРµРєСѓРЅРґ</b>. Р•СЃС‚СЊ 3 Р¶РёР·РЅРё вќ¤пёЏ. РћС€РёР±РєР° РёР»Рё РІСЂРµРјСЏ РІС‹С€Р»Рѕ вЂ” Р¶РёР·РЅСЊ С‚РµСЂСЏРµС‚СЃСЏ, СЃР»РѕРІРѕ РїРѕРїР°РґР°РµС‚ РІ С‚СЂСѓРґРЅС‹Рµ. РЎРЅР°С‡Р°Р»Р° РІС‹Р±РµСЂРё СЂРµР¶РёРј, Р·Р°С‚РµРј РЅР°Р¶РјРё В«РќР°С‡Р°С‚СЊ С‚СЂРµРЅРёСЂРѕРІРєСѓВ». Р РµРєРѕСЂРґ СЃРѕС…СЂР°РЅСЏРµС‚СЃСЏ РІ СЂРµР№С‚РёРЅРіРµ <b>В«вљЎ Р‘С‹СЃС‚СЂС‹Р№ СЂРµР¶РёРјВ»</b>.
       </div>
     </div>
     <div class="instr-block">
-      <div class="instr-mode-title">⭐ Трудные слова</div>
+      <div class="instr-mode-title">в­ђ РўСЂСѓРґРЅС‹Рµ СЃР»РѕРІР°</div>
       <div class="instr-text">
-        Слова которые вызвали ошибку в быстром режиме автоматически попадают в трудные. Кнопка <b>«Только трудные слова»</b> запускает тренировку по ним в режиме «Учить новые слова» — сначала карточка, потом тест. Можно также добавлять слова вручную через звёздочку ⭐ во время тренировки.
+        РЎР»РѕРІР° РєРѕС‚РѕСЂС‹Рµ РІС‹Р·РІР°Р»Рё РѕС€РёР±РєСѓ РІ Р±С‹СЃС‚СЂРѕРј СЂРµР¶РёРјРµ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё РїРѕРїР°РґР°СЋС‚ РІ С‚СЂСѓРґРЅС‹Рµ. РљРЅРѕРїРєР° <b>В«РўРѕР»СЊРєРѕ С‚СЂСѓРґРЅС‹Рµ СЃР»РѕРІР°В»</b> Р·Р°РїСѓСЃРєР°РµС‚ С‚СЂРµРЅРёСЂРѕРІРєСѓ РїРѕ РЅРёРј РІ СЂРµР¶РёРјРµ В«РЈС‡РёС‚СЊ РЅРѕРІС‹Рµ СЃР»РѕРІР°В» вЂ” СЃРЅР°С‡Р°Р»Р° РєР°СЂС‚РѕС‡РєР°, РїРѕС‚РѕРј С‚РµСЃС‚. РњРѕР¶РЅРѕ С‚Р°РєР¶Рµ РґРѕР±Р°РІР»СЏС‚СЊ СЃР»РѕРІР° РІСЂСѓС‡РЅСѓСЋ С‡РµСЂРµР· Р·РІС‘Р·РґРѕС‡РєСѓ в­ђ РІРѕ РІСЂРµРјСЏ С‚СЂРµРЅРёСЂРѕРІРєРё.
       </div>
     </div>
     <div class="instr-block">
-      <div class="instr-mode-title">🏆 Рейтинги</div>
+      <div class="instr-mode-title">рџЏ† Р РµР№С‚РёРЅРіРё</div>
       <div class="instr-text">
-        Текущий рейтинг теперь выводится вверху в виде значка «🏆» и числа в скобках. Рейтинг обновляется при попадании очков в систему.
+        РўРµРєСѓС‰РёР№ СЂРµР№С‚РёРЅРі С‚РµРїРµСЂСЊ РІС‹РІРѕРґРёС‚СЃСЏ РІРІРµСЂС…Сѓ РІ РІРёРґРµ Р·РЅР°С‡РєР° В«рџЏ†В» Рё С‡РёСЃР»Р° РІ СЃРєРѕР±РєР°С…. Р РµР№С‚РёРЅРі РѕР±РЅРѕРІР»СЏРµС‚СЃСЏ РїСЂРё РїРѕРїР°РґР°РЅРёРё РѕС‡РєРѕРІ РІ СЃРёСЃС‚РµРјСѓ.
       </div>
     </div>
     <div class="instr-block">
-      <div class="instr-mode-title">📲 Установка приложения</div>
+      <div class="instr-mode-title">рџ“І РЈСЃС‚Р°РЅРѕРІРєР° РїСЂРёР»РѕР¶РµРЅРёСЏ</div>
       <div class="instr-text">
-        <b>Android:</b> нажмите кнопку <b>«Установить приложение»</b> на экране выбора тома. Приложение появится на рабочем столе как обычное.<br><br>
-        <b>iPhone / iPad (iOS):</b> автоматическая установка не поддерживается Apple. Сделайте вручную:<br>
-        1. Откройте сайт в <b>Safari</b> (именно Safari, не Chrome)<br>
-        2. Нажмите кнопку <b>«Поделиться»</b> (квадрат со стрелкой вверх) внизу экрана<br>
-        3. Выберите <b>«На экран "Домой"»</b><br>
-        4. Нажмите <b>«Добавить»</b><br><br>
-        Иконка приложения появится на рабочем столе 📱
+        <b>Android:</b> РЅР°Р¶РјРёС‚Рµ РєРЅРѕРїРєСѓ <b>В«РЈСЃС‚Р°РЅРѕРІРёС‚СЊ РїСЂРёР»РѕР¶РµРЅРёРµВ»</b> РЅР° СЌРєСЂР°РЅРµ РІС‹Р±РѕСЂР° С‚РѕРјР°. РџСЂРёР»РѕР¶РµРЅРёРµ РїРѕСЏРІРёС‚СЃСЏ РЅР° СЂР°Р±РѕС‡РµРј СЃС‚РѕР»Рµ РєР°Рє РѕР±С‹С‡РЅРѕРµ.<br><br>
+        <b>iPhone / iPad (iOS):</b> Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєР°СЏ СѓСЃС‚Р°РЅРѕРІРєР° РЅРµ РїРѕРґРґРµСЂР¶РёРІР°РµС‚СЃСЏ Apple. РЎРґРµР»Р°Р№С‚Рµ РІСЂСѓС‡РЅСѓСЋ:<br>
+        1. РћС‚РєСЂРѕР№С‚Рµ СЃР°Р№С‚ РІ <b>Safari</b> (РёРјРµРЅРЅРѕ Safari, РЅРµ Chrome)<br>
+        2. РќР°Р¶РјРёС‚Рµ РєРЅРѕРїРєСѓ <b>В«РџРѕРґРµР»РёС‚СЊСЃСЏВ»</b> (РєРІР°РґСЂР°С‚ СЃРѕ СЃС‚СЂРµР»РєРѕР№ РІРІРµСЂС…) РІРЅРёР·Сѓ СЌРєСЂР°РЅР°<br>
+        3. Р’С‹Р±РµСЂРёС‚Рµ <b>В«РќР° СЌРєСЂР°РЅ "Р”РѕРјРѕР№"В»</b><br>
+        4. РќР°Р¶РјРёС‚Рµ <b>В«Р”РѕР±Р°РІРёС‚СЊВ»</b><br><br>
+        РРєРѕРЅРєР° РїСЂРёР»РѕР¶РµРЅРёСЏ РїРѕСЏРІРёС‚СЃСЏ РЅР° СЂР°Р±РѕС‡РµРј СЃС‚РѕР»Рµ рџ“±
       </div>
     </div>
     <div class="instr-block">
-      <div class="instr-mode-title">📞 Связь и поддержка</div>
+      <div class="instr-mode-title">рџ“ћ РЎРІСЏР·СЊ Рё РїРѕРґРґРµСЂР¶РєР°</div>
       <div class="instr-text" style="margin-bottom:12px;">
-        По вопросам, предложениям и при неполадках — пишите напрямую:
+        РџРѕ РІРѕРїСЂРѕСЃР°Рј, РїСЂРµРґР»РѕР¶РµРЅРёСЏРј Рё РїСЂРё РЅРµРїРѕР»Р°РґРєР°С… вЂ” РїРёС€РёС‚Рµ РЅР°РїСЂСЏРјСѓСЋ:
       </div>
       <a class="instr-wa" href="https://wa.me/79634018877" target="_blank">
-        <div class="instr-wa-icon">💬</div>
+        <div class="instr-wa-icon">рџ’¬</div>
         <div class="instr-wa-text">
-          <div class="instr-wa-title">Написать в WhatsApp</div>
+          <div class="instr-wa-title">РќР°РїРёСЃР°С‚СЊ РІ WhatsApp</div>
           <div class="instr-wa-sub">+7 963 401 88 77</div>
         </div>
-        <div>›</div>
+        <div>вЂє</div>
       </a>
     </div>
   </div>
@@ -1442,7 +1481,7 @@ button:focus-visible{outline-color:rgba(164,95,67,.25)!important;}
   <!-- TAB: SETTINGS -->
   <div class="tab-content" id="tab-settings">
     <div class="sc">
-      <div class="sc-title">Слов в тренировке</div>
+      <div class="sc-title">РЎР»РѕРІ РІ С‚СЂРµРЅРёСЂРѕРІРєРµ</div>
       <div class="qty-grid" id="qty-normal">
         <button class="qty-pill" data-val="5" onclick="setQty('normal',5,this)">5</button>
         <button class="qty-pill" data-val="10" onclick="setQty('normal',10,this)">10</button>
@@ -1450,83 +1489,83 @@ button:focus-visible{outline-color:rgba(164,95,67,.25)!important;}
         <button class="qty-pill" data-val="20" onclick="setQty('normal',20,this)">20</button>
         <button class="qty-pill" data-val="30" onclick="setQty('normal',30,this)">30</button>
         <button class="qty-pill" data-val="50" onclick="setQty('normal',50,this)">50</button>
-        <button class="qty-pill" data-val="all" onclick="setQty('normal','all',this)" style="grid-column:span 2">Все</button>
+        <button class="qty-pill" data-val="all" onclick="setQty('normal','all',this)" style="grid-column:span 2">Р’СЃРµ</button>
       </div>
     </div>
     <div class="sc">
-      <div class="sc-title">Слов в быстром повторении</div>
+      <div class="sc-title">РЎР»РѕРІ РІ Р±С‹СЃС‚СЂРѕРј РїРѕРІС‚РѕСЂРµРЅРёРё</div>
       <div class="qty-grid" id="qty-fast">
         <button class="qty-pill active" data-val="50" onclick="setQty('fast',50,this)">50</button>
         <button class="qty-pill" data-val="100" onclick="setQty('fast',100,this)">100</button>
         <button class="qty-pill" data-val="200" onclick="setQty('fast',200,this)">200</button>
-        <button class="qty-pill" data-val="inf" onclick="setQty('fast','inf',this)">♾️</button>
+        <button class="qty-pill" data-val="inf" onclick="setQty('fast','inf',this)">в™ѕпёЏ</button>
       </div>
     </div>
     <div class="sc">
-      <div class="sc-title">Аккаунт</div>
-      <div style="font-size:14px;color:#555;margin-bottom:12px;">Вы вошли как: <b id="s-uname">—</b></div>
-      <button class="btn-start" style="background:var(--red);color:white;" onclick="doLogout()">Выйти из аккаунта</button>
+      <div class="sc-title">РђРєРєР°СѓРЅС‚</div>
+      <div style="font-size:14px;color:#555;margin-bottom:12px;">Р’С‹ РІРѕС€Р»Рё РєР°Рє: <b id="s-uname">вЂ”</b></div>
+      <button class="btn-start" style="background:var(--red);color:white;" onclick="doLogout()">Р’С‹Р№С‚Рё РёР· Р°РєРєР°СѓРЅС‚Р°</button>
     </div>
   </div>
 
   <!-- BOTTOM TABS -->
   <div class="app-tabs">
-    <button class="app-tab active" id="at-train" onclick="switchTab('train')"><span class="ti">📚</span>Тренировка</button>
-    <button class="app-tab" id="at-dict" onclick="switchTab('dict')"><span class="ti">📖</span>Словарь</button>
-    <button class="app-tab" id="at-book" onclick="switchTab('book')"><span class="ti">📘</span>Книга</button>
-    <button class="app-tab" id="at-rules" onclick="switchTab('rules')"><span class="ti">📋</span>Правила</button>
-    <button class="app-tab" id="at-lb" onclick="switchTab('lb')" style="display:none;"><span class="ti">🏆</span>Рейтинг</button>
+    <button class="app-tab active" id="at-train" onclick="switchTab('train')"><span class="ti">рџ“љ</span>РўСЂРµРЅРёСЂРѕРІРєР°</button>
+    <button class="app-tab" id="at-dict" onclick="switchTab('dict')"><span class="ti">рџ“–</span>РЎР»РѕРІР°СЂСЊ</button>
+    <button class="app-tab" id="at-book" onclick="switchTab('book')"><span class="ti">рџ“</span>РљРЅРёРіР°</button>
+    <button class="app-tab" id="at-rules" onclick="switchTab('rules')"><span class="ti">рџ“‹</span>РџСЂР°РІРёР»Р°</button>
+    <button class="app-tab" id="at-lb" onclick="switchTab('lb')" style="display:none;"><span class="ti">рџЏ†</span>Р РµР№С‚РёРЅРі</button>
     <button class="app-tab" id="at-instr" onclick="switchTab('instr')" style="display:none;"></button>
-    <button class="app-tab" id="at-settings" onclick="switchTab('settings')"><span class="ti">⚙️</span>Настройки</button>
+    <button class="app-tab" id="at-settings" onclick="switchTab('settings')"><span class="ti">вљ™пёЏ</span>РќР°СЃС‚СЂРѕР№РєРё</button>
   </div>
 </div>
 
 <!-- QUIZ -->
 <div class="screen" id="screen-quiz">
   <div class="quiz-top">
-    <div class="q-info"><div class="q-mode" id="q-mode">Тренировка</div><div class="q-prog" id="q-prog">1/10</div></div>
-    <button class="q-exit" onclick="confirmExit()">✕ Завершить</button>
+    <div class="q-info"><div class="q-mode" id="q-mode">РўСЂРµРЅРёСЂРѕРІРєР°</div><div class="q-prog" id="q-prog">1/10</div></div>
+    <button class="q-exit" onclick="confirmExit()">вњ• Р—Р°РІРµСЂС€РёС‚СЊ</button>
   </div>
   <div class="quiz-bar"><div class="quiz-bar-fill" id="q-bar" style="width:0%"></div></div>
   <div class="fast-stats hidden" id="fast-stats">
-    <div class="fs-cell"><div class="fs-lbl">Слов</div><div class="fs-val" id="fs-words">0</div></div>
-    <div class="fs-cell"><div class="fs-lbl">Жизни</div><div class="fs-val" id="fs-lives">❤️❤️❤️</div></div>
-    <div class="fs-cell"><div class="fs-lbl">Время</div><div class="fs-val" id="fs-timer">7</div></div>
+    <div class="fs-cell"><div class="fs-lbl">РЎР»РѕРІ</div><div class="fs-val" id="fs-words">0</div></div>
+    <div class="fs-cell"><div class="fs-lbl">Р–РёР·РЅРё</div><div class="fs-val" id="fs-lives">вќ¤пёЏвќ¤пёЏвќ¤пёЏ</div></div>
+    <div class="fs-cell"><div class="fs-lbl">Р’СЂРµРјСЏ</div><div class="fs-val" id="fs-timer">7</div></div>
   </div>
-  <div id="fast-leader" class="hidden" style="text-align:center;font-size:11px;color:#888;padding:3px 0;background:#f5f5f5;">🏆 <span id="fast-leader-text">—</span></div>
+  <div id="fast-leader" class="hidden" style="text-align:center;font-size:11px;color:#888;padding:3px 0;background:#f5f5f5;">рџЏ† <span id="fast-leader-text">вЂ”</span></div>
   <div class="quiz-body">
     <div class="word-card" id="word-card">
-      <button class="star-btn" id="star-btn" onclick="toggleStar()">☆</button>
+      <button class="star-btn" id="star-btn" onclick="toggleStar()">в†</button>
       <div id="word-display"></div>
     </div>
     <div class="opts hidden" id="opts"></div>
     <div class="hidden" id="type-area">
-      <input class="type-input" id="type-input" type="text" placeholder="اكتب بالعربية..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" dir="rtl">
-      <button class="btn-check" onclick="checkTyped()">Проверить ✓</button>
+      <input class="type-input" id="type-input" type="text" placeholder="Ш§ЩѓШЄШЁ ШЁШ§Щ„Ш№Ш±ШЁЩЉШ©..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" dir="rtl">
+      <button class="btn-check" onclick="checkTyped()">РџСЂРѕРІРµСЂРёС‚СЊ вњ“</button>
       <div class="hint-cost" id="hint-cost-label"></div>
-      <button class="btn-hint" id="btn-hint" onclick="showHint()">💡 Подсказка (−5 очков)</button>
+      <button class="btn-hint" id="btn-hint" onclick="showHint()">рџ’Ў РџРѕРґСЃРєР°Р·РєР° (в€’5 РѕС‡РєРѕРІ)</button>
     </div>
     <div class="feedback" id="feedback"></div>
     <div class="quiz-nav">
-      <button class="btn-nav hidden" id="btn-next" onclick="goNext()">Дальше →</button>
+      <button class="btn-nav hidden" id="btn-next" onclick="goNext()">Р”Р°Р»СЊС€Рµ в†’</button>
     </div>
-    <button class="btn-early" onclick="confirmExit()">🏠 Завершить досрочно</button>
+    <button class="btn-early" onclick="confirmExit()">рџЏ  Р—Р°РІРµСЂС€РёС‚СЊ РґРѕСЃСЂРѕС‡РЅРѕ</button>
   </div>
 </div>
 
 <!-- RESULTS -->
 <div class="screen" id="screen-results">
   <div class="res-hdr">
-    <h2 id="res-title">🎉 Урок завершён!</h2>
+    <h2 id="res-title">рџЋ‰ РЈСЂРѕРє Р·Р°РІРµСЂС€С‘РЅ!</h2>
     <div class="res-stats">
-      <div class="rs"><div class="rs-val" id="r-pts">0</div><div class="rs-lbl">Очков</div></div>
-      <div class="rs"><div class="rs-val" id="r-total">0</div><div class="rs-lbl">Слов</div></div>
-      <div class="rs"><div class="rs-val" id="r-correct">0</div><div class="rs-lbl">Правильно</div></div>
+      <div class="rs"><div class="rs-val" id="r-pts">0</div><div class="rs-lbl">РћС‡РєРѕРІ</div></div>
+      <div class="rs"><div class="rs-val" id="r-total">0</div><div class="rs-lbl">РЎР»РѕРІ</div></div>
+      <div class="rs"><div class="rs-val" id="r-correct">0</div><div class="rs-lbl">РџСЂР°РІРёР»СЊРЅРѕ</div></div>
     </div>
   </div>
   <div class="res-body">
-    <button class="btn-res" onclick="backToMenu()">🏠 В меню</button>
-    <button class="btn-res sec" onclick="restartQuiz()">🔄 Повторить</button>
+    <button class="btn-res" onclick="backToMenu()">рџЏ  Р’ РјРµРЅСЋ</button>
+    <button class="btn-res sec" onclick="restartQuiz()">рџ”„ РџРѕРІС‚РѕСЂРёС‚СЊ</button>
     <div class="word-list" id="res-word-list"></div>
   </div>
 </div>
