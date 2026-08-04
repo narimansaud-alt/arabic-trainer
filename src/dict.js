@@ -33,7 +33,12 @@ async function loadDict() {
   document.getElementById('cloud-status').textContent = 'Загрузка слов... ⏳';
   document.getElementById('btn-start').disabled = true;
   document.getElementById('btn-fav').disabled = true;
-  const { data, error } = await db.from('words').select('*').eq('course_name', App.volume);
+  const { data, error } = await db
+    .from('words')
+    .select('*')
+    .eq('course_name', App.volume)
+    .order('lesson_number', { ascending: true })
+    .order('id', { ascending: true });
   if (error || !data || !data.length) {
     document.getElementById('cloud-status').textContent = '⚠️ Слова не найдены';
     document.getElementById('dict-content').innerHTML = '<div class="lb-empty">Слова ещё не добавлены</div>';
@@ -115,8 +120,10 @@ function normalizeRussianDictForm(value) {
 function sharesRussianStem(first, second) {
   const firstText = normalizeRussianDictForm(first);
   const secondText = normalizeRussianDictForm(second);
-  if (firstText === 'это' && /^эти(?:\s|$)/u.test(secondText)) return true;
-  if (/^(этот|эта|тот|та)$/u.test(firstText) && /^(эти|те)(?:\s|$)/u.test(secondText)) return true;
+  const firstHead = firstText.split(' ')[0];
+  const secondHead = secondText.split(' ')[0];
+  if (firstHead === 'это' && secondHead === 'эти') return true;
+  if (/^(этот|эта|тот|та)$/u.test(firstHead) && /^(эти|те)$/u.test(secondHead)) return true;
   const firstTokens = dictBookTokens(first);
   const secondTokens = dictBookTokens(second);
   return firstTokens.some((a) => secondTokens.some((b) => a.slice(0, 3) === b.slice(0, 3)));
@@ -155,6 +162,28 @@ function isDictionaryPluralForm(arabic, singularRu, pluralRu) {
   return /[ٌٍُ]$/u.test(value) && russianPluralDirection(singularRu, pluralRu);
 }
 
+const DICTIONARY_FORM_PAIRS = new Set([
+  'هذا|هؤلاء',
+  'هذه|هؤلاء',
+  'ذلك|اولئك',
+  'تلك|اولئك',
+  'انا|نحن',
+  'انت|انتم',
+  'انتي|انتن',
+  'هو|هم',
+  'هي|هن',
+]);
+
+function isDictionaryPair(singular, plural) {
+  const key = normalizeArabicDictForm(singular.ar) + '|' + normalizeArabicDictForm(plural.ar);
+  if (DICTIONARY_FORM_PAIRS.has(key)) return true;
+  return (
+    isDictionarySingularForm(singular.ar) &&
+    isDictionaryPluralForm(plural.ar, singular.ru, plural.ru) &&
+    sharesRussianStem(singular.ru, plural.ru)
+  );
+}
+
 function makeDictBookRows(words) {
   const rows = [];
   for (let index = 0; index < words.length; index += 1) {
@@ -163,9 +192,7 @@ function makeDictBookRows(words) {
     if (
       plural &&
       singular.lesson === plural.lesson &&
-      isDictionarySingularForm(singular.ar) &&
-      isDictionaryPluralForm(plural.ar, singular.ru, plural.ru) &&
-      sharesRussianStem(singular.ru, plural.ru)
+      isDictionaryPair(singular, plural)
     ) {
       rows.push({ ru: singular.ru, singular: singular.ar, plural: plural.ar });
       index += 1;
