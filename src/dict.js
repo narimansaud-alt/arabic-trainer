@@ -102,17 +102,33 @@ function sharesRussianStem(first, second) {
   return firstTokens.some((a) => secondTokens.some((b) => a.slice(0, 3) === b.slice(0, 3)));
 }
 
+function russianPluralDirection(first, second) {
+  const firstTokens = dictBookTokens(first);
+  const secondTokens = dictBookTokens(second);
+  return firstTokens.some((a) =>
+    secondTokens.some((b) => {
+      if (a.slice(0, 3) !== b.slice(0, 3)) return false;
+      const aLast = a.slice(-1);
+      const bLast = b.slice(-1);
+      if (aLast === bLast) return false;
+      if (/[ьйбвгджзклмнпрстфхцчшщ]/u.test(aLast) && /[ыиаяе]/u.test(bLast)) return true;
+      if (aLast === 'а' && /[ыи]/u.test(bLast)) return true;
+      if (aLast === 'я' && bLast === 'и') return true;
+      if (aLast === 'е' && /[яи]/u.test(bLast)) return true;
+      return false;
+    })
+  );
+}
+
 function isDictionarySingularForm(arabic) {
   const value = String(arabic || '').trim();
   return !/[\s()،,]/u.test(value) && /(?:ٌ|ةٌ|ٌّ)$/u.test(value);
 }
 
-function isDictionaryPluralForm(arabic) {
-  const value = String(arabic || '').trim();
-  return (
-    !/[\s()،,]/u.test(value) &&
-    /(?:ات|ون|ين|اء|ان|ى|[ٌٍُ])$/u.test(value)
-  );
+function isDictionaryPluralForm(arabic, singularRu, pluralRu) {
+  const value = String(arabic || '').trim().split(/[\s(،,]/u)[0];
+  if (/(?:ات|ون|ين|اء|ان|ى)[ٌٍَُِ]?$/u.test(value)) return true;
+  return /[ٌٍُ]$/u.test(value) && russianPluralDirection(singularRu, pluralRu);
 }
 
 function makeDictBookRows(words) {
@@ -124,7 +140,7 @@ function makeDictBookRows(words) {
       plural &&
       singular.lesson === plural.lesson &&
       isDictionarySingularForm(singular.ar) &&
-      isDictionaryPluralForm(plural.ar) &&
+      isDictionaryPluralForm(plural.ar, singular.ru, plural.ru) &&
       sharesRussianStem(singular.ru, plural.ru)
     ) {
       rows.push({ ru: singular.ru, singular: singular.ar, plural: plural.ar });
