@@ -125,7 +125,21 @@ async function loadRulesAll() {
   const volume = findVolumeById(App.volume);
   if (!volume) return;
   const { data } = await db.from('rules').select('*').eq('course_name', App.volume).order('lesson_number');
-  if (data && data.length) Dict.rules = data.map((r) => ({ ...r, volLabel: volume.label }));
+  if (data && data.length) {
+    const ids = data.map((r) => r.id);
+    let sectionsByRule = {};
+    if (ids.length) {
+      const { data: sections } = await db.from('rule_sections').select('*').in('rule_id', ids).order('sort_order');
+      if (sections && sections.length) {
+        sectionsByRule = sections.reduce((acc, section) => {
+          if (!acc[section.rule_id]) acc[section.rule_id] = [];
+          acc[section.rule_id].push(section);
+          return acc;
+        }, {});
+      }
+    }
+    Dict.rules = data.map((r) => ({ ...r, sections: sectionsByRule[r.id] || [], volLabel: volume.label }));
+  }
   if (!Dict.rules.length) {
     document.getElementById('rules-content').innerHTML =
       '<div class="lb-empty">Правила ещё не добавлены.<br><small>Добавьте через Supabase → таблица rules</small></div>';
@@ -166,12 +180,24 @@ function stripRuleHtml(html) {
 
 function ruleBlockClass(blockHtml) {
   const plain = stripRuleHtml(blockHtml).toLowerCase();
+  if (/<table[\s\S]*?>/i.test(blockHtml)) return 'is-table';
   if (/и[‘'`ʼ’]?раб|إعراب|إِعْرَاب/.test(plain)) return 'is-irab';
   if (/важно|секрет|запомн|внимание/.test(plain)) return 'is-important';
   if (/пример|مثال/.test(plain)) return 'is-example';
   if (/логика|суть|как сказать|как читать/.test(plain)) return 'is-logic';
   if (/правило|новое правило|вспоминаем/.test(plain)) return 'is-rule';
   return '';
+}
+
+function ruleBlockLabel(cls) {
+  if (cls === 'is-rule') return 'Правило';
+  if (cls === 'is-example') return 'Пример';
+  if (cls === 'is-irab') return 'Разбор';
+  if (cls === 'is-important') return 'Важно';
+  if (cls === 'is-logic') return 'Логика';
+  if (cls === 'is-table') return 'Таблица';
+  if (cls === 'is-memorize') return 'Знать наизусть';
+  return 'Пояснение';
 }
 
 function formatRuleContent(html) {
@@ -190,7 +216,7 @@ function formatRuleContent(html) {
   const blocks = (parts.length ? parts : [safe]).map((part) => {
     const restored = part.replace(/%%RULE_TABLE_(\d+)%%/g, (_, i) => tables[Number(i)] || '');
     const cls = ruleBlockClass(restored);
-    return '<div class="rule-block ' + cls + '">' + restored + '</div>';
+    return '<div class="rule-block ' + cls + '"><div class="rule-block-label">' + ruleBlockLabel(cls) + '</div>' + restored + '</div>';
   });
   return '<div class="rule-flow">' + blocks.join('') + '</div>';
 }
@@ -252,16 +278,7 @@ function ruleAccent(rule, idx) {
   return accents[rule.rule_kind] ?? idx % 6;
 }
 
-function renderRules() {
-  const q = (document.getElementById('rules-search').value || '').trim().toLowerCase();
-  let rules = Dict.rules;
-  if (Settings.rulesLesson !== 'all') rules = rules.filter((r) => String(r.lesson_number) === Settings.rulesLesson);
-  if (q) rules = rules.filter((r) => r.title.toLowerCase().includes(q) || r.content.toLowerCase().includes(q));
-  const cont = document.getElementById('rules-content');
-  if (!rules.length) {
-    cont.innerHTML = '<div class="lb-empty">Ничего не найдено</div>';
-    return;
-  }
+function groupRulesByLesson(rules) {
   const grouped = {};
   rules.forEach((r) => {
     const k = r.lesson_number;
@@ -275,56 +292,266 @@ function renderRules() {
       return a.id - b.id;
     });
   });
-  const lessons = Object.keys(grouped).sort((a, b) => Number(a) - Number(b));
-  cont.innerHTML = lessons
-    .map((lesson) => {
-      const items = grouped[lesson];
-      const openCards = q || Settings.rulesLesson !== 'all';
+  return grouped;
+}
+
+function lessonSort(a, b) {
+  return isNaN(a) || isNaN(b) ? String(a).localeCompare(String(b)) : Number(a) - Number(b);
+}
+
+function rulePreview(rule) {
+  const firstTextSection = (rule.sections || []).find((s) => s.section_type !== 'table');
+  const raw =
+    rule.summary ||
+    (firstTextSection
+      ? stripRuleHtml(firstTextSection.content)
+      : /<table[\s\S]*?>/i.test(rule.content)
+      ? 'Сводная таблица с примерами по теме урока'
+      : stripRuleHtml(rule.content));
+  const preview = raw.slice(0, 170);
+  return preview + (preview.length >= 170 ? '...' : '');
+}
+
+function ruleSearchText(rule) {
+  return [rule.title, rule.summary, rule.content]
+    .concat((rule.sections || []).flatMap((s) => [s.title, s.content]))
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+}
+
+function ruleWordCountForLesson(lesson) {
+  return (Dict.byLesson[String(lesson)] || []).length;
+}
+
+function lessonTopics(items, limit = 3) {
+  return items
+    .slice(0, limit)
+    .map((r) => '<span class="rule-topic-chip">' + wrapArabic(esc(r.title)) + '</span>')
+    .join('');
+}
+
+function setRulePillActive(lesson) {
+  document.querySelectorAll('#rules-lesson-row .lb-pill').forEach((b) => {
+    const text = b.textContent.replace(/\s+/g, ' ').trim();
+    const isAll = lesson === 'all' && text === 'Все';
+    const isLesson = lesson !== 'all' && text === 'Ур. ' + lesson;
+    b.classList.toggle('active', isAll || isLesson);
+  });
+}
+
+function showRuleLesson(lesson) {
+  Settings.rulesLesson = String(lesson);
+  setRulePillActive(Settings.rulesLesson);
+  renderRules();
+}
+
+function showRulesIndex() {
+  Settings.rulesLesson = 'all';
+  setRulePillActive('all');
+  renderRules();
+}
+
+function practiceRuleLesson(lesson) {
+  document.querySelectorAll('#lesson-grid .lesson-pill').forEach((p) => p.classList.toggle('active', String(p.dataset.lesson) === String(lesson)));
+  switchTab('train');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderRuleCards(items, openCards) {
+  return items
+    .map((r, i) => {
+      const content = r.sections && r.sections.length ? formatRuleSections(r.sections) : formatRuleContent(r.content);
       return (
-        '<div class="rule-lesson-card"><div class="rule-lesson-header">' +
-        '<div class="rule-lesson-kicker">Урок ' +
-        lesson +
-        '</div><div class="rule-lesson-title">Что нужно запомнить</div><div class="rule-lesson-meta">' +
-        items.length +
-        ' ' +
-        (items.length === 1 ? 'правило' : items.length < 5 ? 'правила' : 'правил') +
-        '</div></div><div class="rule-topic-list">' +
-        items.map((r) => '<span class="rule-topic-chip">' + wrapArabic(esc(r.title)) + '</span>').join('') +
-        '</div><div class="rule-list">' +
-        items
-          .map((r, i) => {
-            const rawPreview = r.summary || (/<table[\s\S]*?>/i.test(r.content) ? 'Сводная таблица с примерами по теме урока' : stripRuleHtml(r.content));
-            const preview = rawPreview.slice(0, 170);
-            return (
-              '<div class="rule-card accent-' +
-              ruleAccent(r, i) +
-              (openCards ? ' open' : '') +
-              '"><button class="rule-card-head" type="button" aria-expanded="' +
-              (openCards ? 'true' : 'false') +
-              '" onclick="toggleRuleCard(this)"><span class="rule-index">' +
-              (i + 1) +
-              '</span><span class="rule-title-wrap"><span class="rule-title">' +
-              wrapArabic(esc(r.title)) +
-              '</span><span class="rule-preview">' +
-              wrapArabic(esc(preview + (preview.length >= 170 ? '...' : ''))) +
-              '</span></span><span class="rule-chevron">›</span></button><div class="rule-card-body"><div class="rule-content">' +
-              wrapArabic(formatRuleContent(r.content)) +
-              '</div></div></div>'
-            );
-          })
-          .join('') +
-        '</div>' +
-        '</div>'
+        '<div class="rule-card accent-' +
+        ruleAccent(r, i) +
+        (openCards ? ' open' : '') +
+        '"><button class="rule-card-head" type="button" aria-expanded="' +
+        (openCards ? 'true' : 'false') +
+        '" onclick="toggleRuleCard(this)"><span class="rule-index">' +
+        (i + 1) +
+        '</span><span class="rule-title-wrap"><span class="rule-title">' +
+        wrapArabic(esc(r.title)) +
+        '</span><span class="rule-preview">' +
+        wrapArabic(esc(rulePreview(r))) +
+        '</span></span><span class="rule-chevron">›</span></button><div class="rule-card-body"><div class="rule-content">' +
+        wrapArabic(content) +
+        '</div></div></div>'
       );
     })
     .join('');
+}
+
+function formatRuleSections(sections) {
+  const sorted = [...sections].sort((a, b) => {
+    const byOrder = Number(a.sort_order || 0) - Number(b.sort_order || 0);
+    if (byOrder !== 0) return byOrder;
+    return Number(a.id || 0) - Number(b.id || 0);
+  });
+  return (
+    '<div class="rule-flow">' +
+    sorted
+      .map((section) => {
+        const cls = 'is-' + (section.section_type || 'note');
+        const label = esc(section.title || ruleBlockLabel(cls));
+        return '<div class="rule-block ' + cls + '"><div class="rule-block-label">' + label + '</div>' + section.content + '</div>';
+      })
+      .join('') +
+    '</div>'
+  );
+}
+
+function renderRulesIndex(cont, grouped) {
+  const lessons = Object.keys(grouped).sort(lessonSort);
+  cont.innerHTML =
+    '<div class="rules-home-head"><div><div class="rules-home-kicker">Правила курса</div><div class="rules-home-title">Выбери урок</div><div class="rules-home-sub">Внутри урока правила, примеры, разборы и таблицы разложены отдельно.</div></div></div>' +
+    '<div class="rules-lesson-grid">' +
+    lessons
+      .map((lesson) => {
+        const items = grouped[lesson];
+        const tables = items.filter((r) => r.rule_kind === 'table' || /<table[\s\S]*?>/i.test(r.content)).length;
+        const words = ruleWordCountForLesson(lesson);
+        return (
+          '<button class="rules-lesson-tile" type="button" onclick="showRuleLesson(\'' +
+          esc(String(lesson)) +
+          '\')"><span class="rules-lesson-num">Урок ' +
+          esc(String(lesson)) +
+          '</span><span class="rules-lesson-name">' +
+          esc(items[0]?.title || 'Правила урока') +
+          '</span><span class="rules-lesson-stats">' +
+          items.length +
+          ' ' +
+          (items.length === 1 ? 'правило' : items.length < 5 ? 'правила' : 'правил') +
+          (tables ? ' · ' + tables + ' табл.' : '') +
+          (words ? ' · ' + words + ' слов' : '') +
+          '</span><span class="rules-lesson-topics">' +
+          lessonTopics(items, 2) +
+          '</span><span class="rules-lesson-open">Открыть урок ›</span></button>'
+        );
+      })
+      .join('') +
+    '</div>';
+}
+
+function renderRulesSearch(cont, grouped, query) {
+  const lessons = Object.keys(grouped).sort(lessonSort);
+  cont.innerHTML =
+    '<div class="rules-search-head"><button class="rules-back-btn" type="button" onclick="showRulesIndex()">← Все уроки</button><div><div class="rules-home-kicker">Поиск</div><div class="rules-home-title">Найдено в ' +
+    lessons.length +
+    ' ' +
+    (lessons.length === 1 ? 'уроке' : 'уроках') +
+    '</div></div></div>' +
+    lessons
+      .map((lesson) => {
+        const items = grouped[lesson];
+        return (
+          '<div class="rule-lesson-card"><div class="rule-lesson-header compact"><div><div class="rule-lesson-kicker">Урок ' +
+          esc(String(lesson)) +
+          '</div><div class="rule-lesson-title">' +
+          items.length +
+          ' совпад.</div></div><button class="rules-open-btn" type="button" onclick="showRuleLesson(\'' +
+          esc(String(lesson)) +
+          '\')">Открыть</button></div><div class="rule-list">' +
+          renderRuleCards(items, true) +
+          '</div></div>'
+        );
+      })
+      .join('');
+  highlightRuleMatches(cont, query);
+}
+
+function renderRuleLessonDetail(cont, lesson, items, query) {
+  const words = ruleWordCountForLesson(lesson);
+  cont.innerHTML =
+    '<div class="rule-detail-page"><div class="rule-detail-hero"><button class="rules-back-btn" type="button" onclick="showRulesIndex()">← Все уроки</button><div class="rule-lesson-kicker">Урок ' +
+    esc(String(lesson)) +
+    '</div><div class="rule-detail-title">Правила и пояснения</div><div class="rule-detail-sub">' +
+    items.length +
+    ' ' +
+    (items.length === 1 ? 'правило' : items.length < 5 ? 'правила' : 'правил') +
+    (words ? ' · ' + words + ' слов для тренировки' : '') +
+    '</div><div class="rule-detail-actions"><button type="button" onclick="practiceRuleLesson(\'' +
+    esc(String(lesson)) +
+    '\')">Практика слов</button><button type="button" onclick="openGrammarTable(\'pronouns\')">Местоимения</button><button type="button" onclick="openGrammarTable(\'verbs\')">Глаголы</button></div></div>' +
+    '<div class="rule-detail-outline"><div class="rule-block-label">Что внутри</div><div class="rule-topic-list inline">' +
+    lessonTopics(items, 10) +
+    '</div></div><div class="rule-list">' +
+    renderRuleCards(items, true) +
+    '</div></div>';
+  highlightRuleMatches(cont, query);
+}
+
+function renderRules() {
+  const q = (document.getElementById('rules-search').value || '').trim().toLowerCase();
+  let rules = Dict.rules;
+  if (Settings.rulesLesson !== 'all') rules = rules.filter((r) => String(r.lesson_number) === Settings.rulesLesson);
+  if (q) rules = rules.filter((r) => ruleSearchText(r).includes(q));
+  const cont = document.getElementById('rules-content');
+  if (!rules.length) {
+    cont.innerHTML = '<div class="lb-empty">Ничего не найдено</div>';
+    return;
+  }
+  const grouped = groupRulesByLesson(rules);
+  if (!q && Settings.rulesLesson === 'all') renderRulesIndex(cont, grouped);
+  else if (Settings.rulesLesson !== 'all') renderRuleLessonDetail(cont, Settings.rulesLesson, grouped[Settings.rulesLesson] || rules, q);
+  else renderRulesSearch(cont, grouped, q);
   cont.querySelectorAll('.rule-content table').forEach((t) => {
     const w = document.createElement('div');
     w.className = 'tbl-wrap';
     t.parentNode.insertBefore(w, t);
     w.appendChild(t);
   });
-  highlightRuleMatches(cont, q);
+}
+
+function openGrammarTable(type) {
+  const title = type === 'verbs' ? 'Глаголы по временам' : 'Местоимения';
+  const sub = type === 'verbs' ? 'الأَزْمِنَةُ وَالتَّصْرِيف' : 'الضَّمَائِر';
+  document.getElementById('verb-modal-title').textContent = title;
+  document.getElementById('verb-modal-sub').textContent = sub;
+  document.getElementById('verb-modal-body').innerHTML = type === 'verbs' ? renderVerbReferenceTable() : renderPronounReferenceTable();
+  document.getElementById('verb-modal-overlay').classList.remove('hidden');
+}
+
+function grammarRefTable(headers, rows) {
+  return (
+    '<div class="grammar-ref-wrap"><table class="grammar-ref-table"><thead><tr>' +
+    headers.map((h) => '<th>' + h + '</th>').join('') +
+    '</tr></thead><tbody>' +
+    rows.map((row) => '<tr>' + row.map((cell) => '<td>' + cell + '</td>').join('') + '</tr>').join('') +
+    '</tbody></table></div>'
+  );
+}
+
+function renderPronounReferenceTable() {
+  const rows = [
+    ['Я', '<span class="ar-text">أَنَا</span>', '<span class="ar-text">ـِي</span>', '<span class="ar-text">لِي / عِنْدِي</span>'],
+    ['Мы', '<span class="ar-text">نَحْنُ</span>', '<span class="ar-text">ـنَا</span>', '<span class="ar-text">لَنَا / عِنْدَنَا</span>'],
+    ['Ты (м.)', '<span class="ar-text">أَنْتَ</span>', '<span class="ar-text">ـكَ</span>', '<span class="ar-text">لَكَ / عِنْدَكَ</span>'],
+    ['Ты (ж.)', '<span class="ar-text">أَنْتِ</span>', '<span class="ar-text">ـكِ</span>', '<span class="ar-text">لَكِ / عِنْدَكِ</span>'],
+    ['Он', '<span class="ar-text">هُوَ</span>', '<span class="ar-text">ـهُ</span>', '<span class="ar-text">لَهُ / عِنْدَهُ</span>'],
+    ['Она', '<span class="ar-text">هِيَ</span>', '<span class="ar-text">ـهَا</span>', '<span class="ar-text">لَهَا / عِنْدَهَا</span>'],
+    ['Они (м.)', '<span class="ar-text">هُمْ</span>', '<span class="ar-text">ـهُمْ</span>', '<span class="ar-text">لَهُمْ / عِنْدَهُمْ</span>'],
+    ['Они (ж.)', '<span class="ar-text">هُنَّ</span>', '<span class="ar-text">ـهُنَّ</span>', '<span class="ar-text">لَهُنَّ / عِنْدَهُنَّ</span>'],
+  ];
+  return (
+    '<div class="grammar-ref-note">Быстрая таблица для повторения: отдельное местоимение, слитное местоимение и формы принадлежности.</div>' +
+    grammarRefTable(['Значение', 'Отдельно', 'Слитно', 'У / принадлежит'], rows)
+  );
+}
+
+function renderVerbReferenceTable() {
+  const rows = [
+    ['Прошедшее', '<span class="ar-text">فَعَلَ</span>', 'действие уже произошло', '<span class="ar-text">ذَهَبَ</span> — он пошел'],
+    ['Настоящее', '<span class="ar-text">يَفْعَلُ</span>', 'действие происходит сейчас или обычно', '<span class="ar-text">يَذْهَبُ</span> — он идет'],
+    ['Будущее близкое', '<span class="ar-text">سَيَفْعَلُ</span>', 'скоро / затем сделает', '<span class="ar-text">سَيَذْهَبُ</span> — он пойдет'],
+    ['Будущее общее', '<span class="ar-text">سَوْفَ يَفْعَلُ</span>', 'сделает в будущем', '<span class="ar-text">سَوْفَ يَذْهَبُ</span> — он пойдет'],
+    ['Повелительное', '<span class="ar-text">اِفْعَلْ</span>', 'приказ / просьба', '<span class="ar-text">اِذْهَبْ</span> — иди'],
+    ['Запрет', '<span class="ar-text">لَا تَفْعَلْ</span>', 'не делай', '<span class="ar-text">لَا تَذْهَبْ</span> — не иди'],
+  ];
+  return (
+    '<div class="grammar-ref-note">Шпаргалка по временам. Для полного спряжения открой раздел “Глаголы и спряжения” и введи арабский глагол.</div>' +
+    grammarRefTable(['Время / форма', 'Шаблон', 'Смысл', 'Пример'], rows)
+  );
 }
 
 // TABS

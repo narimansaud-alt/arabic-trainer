@@ -88,6 +88,7 @@ function openVerbResult(json) {
     alternatives: json.alternatives || [],
   };
   document.getElementById('verb-modal-title').textContent = json.verb;
+  document.getElementById('verb-modal-sub').textContent = 'تصريف الفعل';
   document.getElementById('verb-modal-body').innerHTML = renderConjugationTable(currentDrillVerb);
   document.getElementById('verb-modal-overlay').classList.remove('hidden');
 }

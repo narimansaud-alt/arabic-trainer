@@ -220,8 +220,33 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .dict-ar{font-family:'Times New Roman',serif;font-size:20px;direction:rtl;color:var(--green-dark);}
 .dict-ru{font-size:13px;color:#555;text-align:right;flex:1;}
 .rule-list{display:flex;flex-direction:column;gap:14px;}
+.rules-home-head{background:white;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow);border:1px solid #e6f0ea;}
+.rules-home-kicker{font-size:11px;font-weight:800;color:var(--green);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;}
+.rules-home-title{font-size:21px;font-weight:900;color:var(--green-dark);line-height:1.25;}
+.rules-home-sub{font-size:13px;color:#69776f;line-height:1.55;margin-top:6px;}
+.rules-lesson-grid{display:grid;grid-template-columns:1fr;gap:10px;}
+.rules-lesson-tile{width:100%;border:1px solid #dcebe2;background:white;border-radius:12px;padding:14px;text-align:left;box-shadow:var(--shadow);cursor:pointer;display:flex;flex-direction:column;gap:7px;color:inherit;}
+.rules-lesson-tile:active{transform:scale(.99);background:#f8fcfa;}
+.rules-lesson-num{font-size:11px;font-weight:900;color:var(--green);text-transform:uppercase;letter-spacing:.35px;}
+.rules-lesson-name{font-size:15px;font-weight:850;color:var(--green-dark);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.rules-lesson-stats{font-size:12px;color:#77837b;}
+.rules-lesson-topics{display:flex;gap:6px;overflow:hidden;min-height:28px;}
+.rules-lesson-open{font-size:12px;font-weight:800;color:var(--green);margin-top:2px;}
+.rules-search-head{display:flex;align-items:center;gap:10px;background:white;border-radius:12px;padding:12px;margin-bottom:12px;box-shadow:var(--shadow);border:1px solid #e6f0ea;}
+.rules-back-btn{border:1px solid #cfe5d8;background:#f7fbf8;color:var(--green-dark);border-radius:10px;padding:8px 10px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;}
+.rules-open-btn{border:1px solid #cfe5d8;background:white;color:var(--green);border-radius:10px;padding:8px 10px;font-size:12px;font-weight:800;cursor:pointer;}
+.rule-detail-page{display:flex;flex-direction:column;gap:12px;}
+.rule-detail-hero{background:linear-gradient(180deg,#ffffff,#f6fbf8);border:1px solid #dcebe2;border-radius:14px;padding:14px;box-shadow:var(--shadow);}
+.rule-detail-title{font-size:22px;font-weight:900;color:var(--green-dark);line-height:1.25;margin-top:8px;}
+.rule-detail-sub{font-size:13px;color:#69776f;margin-top:5px;}
+.rule-detail-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:12px;}
+.rule-detail-actions button{border:1px solid #cfe5d8;background:white;color:var(--green-dark);border-radius:10px;padding:9px 7px;font-size:12px;font-weight:800;cursor:pointer;}
+.rule-detail-actions button:first-child{background:var(--green);color:white;border-color:var(--green);}
+.rule-detail-outline{background:white;border:1px solid #e6f0ea;border-radius:12px;padding:12px;box-shadow:var(--shadow);}
+.rule-topic-list.inline{padding:0;border:0;margin-top:8px;flex-wrap:wrap;overflow:visible;}
 .rule-lesson-card{background:white;border-radius:12px;margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow);border:1px solid #e6f0ea;}
 .rule-lesson-header{padding:14px 14px 12px;background:#f7fbf8;border-bottom:1px solid #dcebe2;}
+.rule-lesson-header.compact{display:flex;align-items:center;justify-content:space-between;gap:10px;}
 .rule-lesson-kicker{font-size:11px;font-weight:800;color:var(--green);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;}
 .rule-lesson-title{font-size:18px;font-weight:800;color:var(--green-dark);line-height:1.35;}
 .rule-lesson-meta{font-size:12px;color:#6a7a70;margin-top:4px;}
@@ -248,18 +273,23 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .rule-content{font-size:15px;color:#39443e;line-height:1.9;overflow-x:auto;-webkit-overflow-scrolling:touch;}
 .rule-flow{display:flex;flex-direction:column;gap:10px;}
 .rule-block{background:#fbfdfc;border:1px solid #e5efe9;border-left:4px solid var(--rule-line);border-radius:10px;padding:12px;line-height:1.85;}
+.rule-block-label{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.35px;color:#718079;margin-bottom:5px;}
 .rule-block b:first-child{display:inline-block;color:var(--green-dark);font-size:14px;margin-bottom:3px;}
 .rule-block.is-rule{background:var(--rule-soft);border-color:var(--rule-line);border-left-color:var(--rule-accent);}
 .rule-block.is-example{background:#fffaf0;border-color:#fde6b4;border-left-color:#d97706;}
 .rule-block.is-irab{background:#f5f3ff;border-color:#ddd6fe;border-left-color:#7c3aed;}
 .rule-block.is-important{background:#fff1f2;border-color:#fecdd3;border-left-color:#be123c;}
 .rule-block.is-logic{background:#f0fdfa;border-color:#99f6e4;border-left-color:#0f766e;}
+.rule-block.is-table{background:#eff6ff;border-color:#c7d8ff;border-left-color:#2563eb;}
+.rule-block.is-memorize{background:#fffbeb;border-color:#fde68a;border-left-color:#ca8a04;}
 .rule-content b{color:var(--green-dark);}
 .rule-block.is-rule b:first-child{color:var(--rule-accent);}
 .rule-block.is-example b:first-child{color:#b45309;}
 .rule-block.is-irab b:first-child{color:#6d28d9;}
 .rule-block.is-important b:first-child{color:#be123c;}
 .rule-block.is-logic b:first-child{color:#0f766e;}
+.rule-block.is-table b:first-child{color:#1d4ed8;}
+.rule-block.is-memorize b:first-child{color:#a16207;}
 .rule-content i{color:#66756b;}
 .rule-content mark{background:#fff0a6;color:inherit;border-radius:4px;padding:0 2px;}
 .ar-text{font-family:'Times New Roman',serif;font-size:23px;line-height:2.1;direction:rtl;unicode-bidi:isolate;color:#111;word-break:normal;overflow-wrap:normal;}
@@ -272,7 +302,16 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .rule-content td{padding:10px 12px;border:1px solid var(--border);vertical-align:top;line-height:1.65;font-size:14px;min-width:120px;}
 .rule-content tr:nth-child(even) td{background:#f8fdf9;}
 .rule-content td:first-child{font-weight:700;color:var(--green-dark);}
+.grammar-ref-note{font-size:13px;color:#64736a;line-height:1.6;background:#f7fbf8;border:1px solid #e0eee6;border-radius:10px;padding:10px;margin-bottom:12px;}
+.grammar-ref-wrap{overflow-x:auto;border-radius:12px;border:1px solid #dcebe2;}
+.grammar-ref-table{width:100%;min-width:520px;border-collapse:collapse;background:white;font-size:14px;}
+.grammar-ref-table th{background:var(--green);color:white;padding:10px;border:1px solid var(--green-dark);font-weight:800;text-align:center;}
+.grammar-ref-table td{padding:10px;border:1px solid #e3ece6;vertical-align:middle;line-height:1.55;}
+.grammar-ref-table td:first-child{font-weight:800;color:var(--green-dark);}
+.grammar-ref-table .ar-text{font-size:24px;}
 @media(max-width:480px){
+  .rules-home-title,.rule-detail-title{font-size:20px;}
+  .rule-detail-actions{grid-template-columns:1fr;}
   .rule-lesson-card{border-radius:10px;margin-left:-2px;margin-right:-2px;}
   .rule-card-head{grid-template-columns:28px minmax(0,1fr) 20px;padding:13px 12px;gap:8px;}
   .rule-index{width:26px;height:26px;font-size:11px;}
@@ -411,7 +450,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
   <div class="verb-modal-box">
     <button class="verb-modal-close" onclick="closeVerbModal()">✕</button>
     <div class="verb-modal-title" id="verb-modal-title"></div>
-    <div class="verb-modal-sub">تصريف الفعل</div>
+    <div class="verb-modal-sub" id="verb-modal-sub">تصريف الفعل</div>
     <div id="verb-modal-body"></div>
   </div>
 </div>
