@@ -2,16 +2,16 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Alfazi — Арабский тренажер</title>
+<title>Мединский курс и глаголы</title>
 <meta name="theme-color" content="#ffffff">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="./manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Alfazi">
-<link rel="apple-touch-icon" sizes="180x180" href="./icon.png">
-<link rel="apple-touch-icon" sizes="152x152" href="./icon.png">
-<link rel="apple-touch-icon" sizes="120x120" href="./icon.png">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Мединский курс">
+<link rel="apple-touch-icon" sizes="180x180" href="./icon-v2.png">
+<link rel="apple-touch-icon" sizes="152x152" href="./icon-v2.png">
+<link rel="apple-touch-icon" sizes="120x120" href="./icon-v2.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <script>
 if('serviceWorker' in navigator){
@@ -644,11 +644,95 @@ body{background:#fff;color:#111;}
   #tab-train .mode-pill{min-height:46px;}
   #screen-quiz .w-ar{font-size:38px;}
 }
+
+/* 2026 white reading-first design system */
+.splash-box{color:var(--ink);}
+.splash-spinner{border-color:#e5e5e5;border-top-color:var(--copper);}
+:root{
+  --paper:#fff;--paper-warm:#fffdf9;--ink:#171717;--ink-soft:#404040;
+  --muted:#737373;--line:#e5e5e5;--line-strong:#cfcfcf;
+  --copper:#b85c22;--copper-soft:#fff4eb;--blue:#1d4ed8;
+  --blue-soft:#eff6ff;--danger:#be123c;--danger-soft:#fff1f2;
+  --green:#171717;--green-dark:#111;--green-light:#f5f5f5;
+  --bg:#fff;--border:#e5e5e5;--gray:#737373;--gold:#b85c22;--red:#be123c;
+  --shadow:0 10px 30px rgba(23,23,23,.055);--r:16px;
+}
+html{background:#fff;color-scheme:light;}
+body{background:radial-gradient(circle at 50% -15%,#fff8f1 0,#fff 32rem);color:var(--ink);}
+#screen-login,#screen-course,#screen-volume,#screen-verbs,#screen-app,#screen-quiz,#screen-results,#screen-loading{background:transparent!important;color:var(--ink);}
+.screen{background-color:#fff;}
+.login-box,.course-card,.vol-card,.sc,.lb-table,.chart-card,.instr-block,.word-card,.learn-intro-card,.word-list{background:#fff;border:1px solid var(--line);box-shadow:var(--shadow);}
+.login-box{border-radius:24px;box-shadow:0 24px 70px rgba(23,23,23,.10);}
+.login-logo img,.splash-box img{background:var(--paper-warm);border-radius:22px;border:1px solid #f0e6dc;box-shadow:none;}
+.login-logo h1,.cc-title,.vol-title,.instr-mode-title,.instr-text b{color:var(--ink);}
+.field-group label,.login-logo p,.cc-sub{color:var(--muted);}
+.field-group input,.search-input,.book-page-input{background:#fff;color:var(--ink);border:1px solid var(--line-strong);min-height:46px;}
+.field-group input:focus,.search-input:focus,.book-page-input:focus{border-color:var(--ink);box-shadow:0 0 0 3px rgba(23,23,23,.07);}
+.tab-row{background:#f5f5f5;border:1px solid var(--line);padding:4px;gap:4px;border-radius:12px;}
+.tab-btn{background:transparent;color:var(--muted);border-radius:9px;}
+.tab-btn.active{background:#fff;color:var(--ink);box-shadow:0 2px 8px rgba(23,23,23,.08);}
+.btn-primary,.btn-announcement,.btn-check,.btn-res,.btn-start.green{background:var(--ink);color:#fff;border:1px solid var(--ink);min-height:48px;border-radius:13px;}
+.btn-primary:active,.btn-announcement:active,.btn-check:active,.btn-res:active,.btn-start:active{transform:translateY(1px);}
+.course-header,.vol-header,.course-header .hello,.course-header h2,.vol-header h2,.vol-header p{color:var(--ink);}
+.course-card,.vol-card{border-radius:18px;box-shadow:0 8px 28px rgba(23,23,23,.07);}
+.course-card:active,.vol-card:active{transform:scale(.985);}
+.vol-num{background:var(--copper-soft);color:var(--copper);border:1px solid #f1c9ad;}
+.cc-arrow,.vol-arrow{color:var(--ink);}
+.btn-logout-c,.btn-back-vol{background:#fff;color:var(--ink);border:1px solid var(--line-strong);min-height:44px;border-radius:12px;}
+.topbar,.quiz-top,.res-hdr{background:rgba(255,255,255,.96)!important;color:var(--ink)!important;border-bottom:1px solid var(--line);box-shadow:none;backdrop-filter:blur(12px);}
+.btn-tb,.quiz-top .q-exit{background:#fff;color:var(--ink);border:1px solid var(--line-strong);min-height:40px;border-radius:11px;}
+.app-tabs{background:rgba(255,255,255,.97);border-top:1px solid var(--line);box-shadow:0 -8px 24px rgba(23,23,23,.045);backdrop-filter:blur(14px);}
+.app-tab{position:relative;color:var(--muted);min-height:62px;}
+.app-tab.active{color:var(--ink);font-weight:800;}
+.app-tab.active::before{content:'';position:absolute;top:0;width:26px;height:3px;border-radius:0 0 4px 4px;background:var(--copper);}
+.tab-content,#tab-train,#tab-rules{background:transparent;}
+.sc{border-radius:18px;box-shadow:0 6px 22px rgba(23,23,23,.045);}
+.sc-title{color:var(--ink);font-size:12px;letter-spacing:.08em;}
+.streak-banner{background:#fff;border:1px solid #f1c9ad;color:var(--ink);box-shadow:0 8px 26px rgba(184,92,34,.08);}
+.streak-fire,.streak-fire .streak-big-num,.streak-days,.streak-hint,.streak-bar-label span,.streak-done,#banner-rank{color:var(--ink);text-shadow:none;}
+.streak-days{background:var(--copper-soft);border:1px solid #f1c9ad;}
+.streak-bar-bg{background:#f1f1f1;}
+.streak-bar-fill{background:var(--copper);box-shadow:none;}
+.streak-done{background:var(--blue-soft);border:1px solid #bfdbfe;}
+.lesson-pill,.mode-pill,.qty-pill,.lb-pill,.ctrl-btn,.answer-check-pill,.book-nav-btn,.book-format-btn{background:#fff;color:var(--ink-soft);border:1px solid var(--line-strong);min-height:42px;box-shadow:none;}
+.lesson-pill.active,.mode-pill.active,.qty-pill.active,.lb-pill.active,.answer-check-pill.active{background:var(--ink);color:#fff;border-color:var(--ink);box-shadow:0 5px 14px rgba(23,23,23,.15);}
+.mode-pill.fast{background:var(--copper-soft);color:#9a3412;border-color:#f1c9ad;}
+.mode-pill.fast.active,.lb-pill.gold.active{background:var(--copper);color:#fff;border-color:var(--copper);}
+.btn-start.gold{background:#fff;color:var(--copper);border:1px solid var(--copper);}
+.btn-start.blue{background:var(--blue);}.btn-start.orange{background:var(--copper);}
+.book-format-current{background:var(--ink);color:#fff;}
+.book-format-choice,.book-page-shell{background:#fff;border-color:var(--line-strong);}
+.quiz-bar{background:#ededed;}.quiz-bar-fill{background:var(--copper);}
+.fast-stats{background:var(--ink);}
+.word-card,.learn-intro-card{border-radius:22px;box-shadow:0 12px 36px rgba(23,23,23,.06);}
+.star-btn{width:42px;height:42px;border-radius:50%;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;}
+.w-ar,.learn-intro-ar{color:var(--ink);}.w-ru,.learn-intro-ru{color:var(--ink-soft);}
+.opt{background:#fff;color:var(--ink);border:1px solid var(--line-strong);min-height:56px;border-radius:14px;box-shadow:0 3px 10px rgba(23,23,23,.025);}
+.opt:hover{border-color:#9a9a9a;}
+.opt.ok{background:var(--blue-soft)!important;border-color:#2563eb!important;color:var(--blue)!important;}
+.opt.err{background:var(--danger-soft)!important;border-color:var(--danger)!important;color:var(--danger)!important;}
+.type-input{background:#fff;color:var(--ink);border:1px solid var(--line-strong);min-height:58px;}
+.type-input:focus{border-color:var(--ink);box-shadow:0 0 0 3px rgba(23,23,23,.07);}
+.btn-hint{background:var(--copper-soft);color:#9a3412;border:1px solid #f1c9ad;min-height:44px;}
+.btn-nav,.btn-early,.btn-res.sec{background:#fff;color:var(--ink);border:1px solid var(--line-strong);min-height:44px;}
+.feedback.ok{color:var(--blue);}.feedback.err{color:var(--danger);}
+.learn-intro-hint,.wl-hdr{background:#f7f7f7;color:var(--ink-soft);}
+.instr-wa{background:#fff;color:var(--ink);border:1px solid var(--line-strong);}
+.announcement-overlay{background:rgba(23,23,23,.36);backdrop-filter:blur(6px);}
+.announcement-box{border:1px solid var(--line);box-shadow:0 22px 70px rgba(23,23,23,.16);}
+.announcement-title{color:var(--ink);}.login-msg.ok{color:var(--blue);}
+.quiz-top .q-info .q-mode,.book-meta,.rule-preview,.dict-ru{color:var(--muted);}
+@media(max-width:480px){
+  #screen-login{padding:18px;}.login-box{padding:26px 20px;border-radius:20px;}
+  .tab-content{padding:12px;}.topbar{padding-left:12px;padding-right:12px;}
+  .btn-tb{padding:7px 10px;}.lesson-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;}
+  .lesson-pill{min-height:40px;}.quiz-body{padding:12px;}.word-card{padding:28px 14px;}
+}
 </style>
 </head>
 <body>
 <!-- Баннер автообновления -->
-<div id="sw-update-banner" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999;background:#1a6b3c;color:#fff;padding:12px 20px;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.25);align-items:center;gap:12px;font-family:inherit;font-size:14px;max-width:90vw;">
+<div id="sw-update-banner" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999;background:#fff;color:#171717;border:1px solid #cfcfcf;padding:12px 20px;border-radius:12px;box-shadow:0 12px 36px rgba(23,23,23,0.16);align-items:center;gap:12px;font-family:inherit;font-size:14px;max-width:90vw;">
   <span>🔄 Доступно обновление</span>
   <button onclick="swUpdate()" style="background:#c9a227;color:#fff;border:none;padding:7px 16px;border-radius:8px;cursor:pointer;font-weight:bold;font-size:14px;">Обновить</button>
   <button onclick="this.parentElement.style.display='none'" style="background:transparent;color:#fff;border:none;font-size:18px;cursor:pointer;line-height:1;">✕</button>
@@ -677,9 +761,9 @@ body{background:#fff;color:#111;}
 <!-- SPLASH -->
 <div class="screen active" id="screen-loading">
   <div class="splash-box">
-    <img src="/icon.png" alt="Alfazi">
-    <h1>Alfazi</h1>
-    <p>Арабский тренажер</p>
+    <img src="/icon-v2.png" alt="Мединский курс и глаголы">
+    <h1>Мединский курс и глаголы</h1>
+    <p>Арабский язык: уроки, слова и спряжения</p>
     <div class="splash-spinner"></div>
   </div>
 </div>
@@ -688,9 +772,9 @@ body{background:#fff;color:#111;}
 <div class="screen" id="screen-login">
   <div class="login-box">
     <div class="login-logo">
-      <img src="/icon.png" alt="Alfazi">
-      <h1>Арабский тренажер</h1>
-      <p>Alfazi — учи арабский каждый день</p>
+      <img src="/icon-v2.png" alt="Мединский курс и глаголы">
+      <h1>Мединский курс и глаголы</h1>
+      <p>Учите арабский язык каждый день</p>
     </div>
     <div class="tab-row">
       <button class="tab-btn active" onclick="switchLoginTab('login')">Войти</button>

@@ -1,32 +1,32 @@
 {
-  "name": "Арабский тренажер",
-  "short_name": "Арабский",
-  "description": "Приложение для изучения арабских слов: Мединский курс и тренажёр глаголов.",
+  "name": "Мединский курс и глаголы",
+  "short_name": "Мединский курс",
+  "description": "Мединский курс арабского языка, тренировка слов и спряжение глаголов.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#1a6b3c",
-  "theme_color": "#1a6b3c",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "lang": "ru",
   "id": "https://bespoke-valkyrie-a58fff.netlify.app/",
   "categories": ["education"],
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "icon.png",
+      "src": "icon-v2-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon.png",
+      "src": "icon-v2.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon.png",
+      "src": "icon-v2.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

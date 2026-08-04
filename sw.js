@@ -2,7 +2,8 @@ const CACHE = 'arabic-v__BUILD_HASH__';
 const FILES = [
   './',
   './index.html',
-  './icon.png',
+  './icon-v2.png',
+  './icon-v2-192.png',
   './manifest.json',
   './src/api.js',
   './src/state.js',
