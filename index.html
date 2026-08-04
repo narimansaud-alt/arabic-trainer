@@ -2260,6 +2260,20 @@ body,.screen{background:var(--app-bg)!important;color:var(--ink)!important;}
 
 <!-- VERB DETAIL MODAL -->
 <style>
+/* Keep the last control on every tab above the fixed mobile navigation. */
+#screen-app {
+  padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+#screen-app .tab-content {
+  padding-bottom: calc(148px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+#screen-app .tab-content > :last-child {
+  scroll-margin-bottom: calc(148px + env(safe-area-inset-bottom, 0px));
+}
+</style>
+<style>
 /* Final Medina course polish: calm headings, readable rules, no sticky fast mode. */
 #screen-course .course-header,#screen-volume .vol-header{max-width:520px!important;text-align:center!important;background:rgba(255,255,255,.82)!important;border:1px solid #e1e8ef!important;border-radius:14px!important;padding:18px 16px!important;box-shadow:0 10px 28px rgba(30,55,77,.045)!important;}
 #screen-course .course-header .hello{font-family:'Noto Naskh Arabic',serif!important;font-size:24px!important;line-height:1.55!important;text-align:center!important;margin:0 0 10px!important;color:#38546d!important;}
