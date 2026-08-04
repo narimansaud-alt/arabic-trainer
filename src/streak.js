@@ -6,14 +6,8 @@
 // closes the "tampered client claims itself extra days" gap that
 // existed when `users` was directly writable from the browser.
 
-async function updateStreak(doIncrement) {
+async function updateStreak() {
   if (!App.username) {
-    updateUI();
-    return;
-  }
-  if (!doIncrement) {
-    // Local-only check: if the user skipped a day, show 0 until the
-    // server recomputes on their next 'update-streak' call.
     updateUI();
     return;
   }
