@@ -77,13 +77,6 @@ function setDictLesson(l, btn) {
   btn.classList.add('active');
   renderDict();
 }
-function setRulesLesson(l, btn) {
-  Settings.rulesLesson = l;
-  document.querySelectorAll('#rules-lesson-row .lb-pill').forEach((b) => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderRules();
-}
-
 function renderDict() {
   const q = (document.getElementById('dict-search').value || '').trim().toLowerCase();
   let words = Dict.allWords;
@@ -145,11 +138,6 @@ async function loadRulesAll() {
       '<div class="lb-empty">Правила ещё не добавлены.<br><small>Добавьте через Supabase → таблица rules</small></div>';
     return;
   }
-  const lessons = new Set(Dict.rules.map((r) => r.lesson_number));
-  buildLessonPills('rules-lesson-row', lessons, (l) => {
-    Settings.rulesLesson = l;
-    renderRules();
-  });
   renderRules();
 }
 
@@ -331,24 +319,13 @@ function lessonTopics(items, limit = 3) {
     .join('');
 }
 
-function setRulePillActive(lesson) {
-  document.querySelectorAll('#rules-lesson-row .lb-pill').forEach((b) => {
-    const text = b.textContent.replace(/\s+/g, ' ').trim();
-    const isAll = lesson === 'all' && text === 'Все';
-    const isLesson = lesson !== 'all' && text === 'Ур. ' + lesson;
-    b.classList.toggle('active', isAll || isLesson);
-  });
-}
-
 function showRuleLesson(lesson) {
   Settings.rulesLesson = String(lesson);
-  setRulePillActive(Settings.rulesLesson);
   renderRules();
 }
 
 function showRulesIndex() {
   Settings.rulesLesson = 'all';
-  setRulePillActive('all');
   renderRules();
 }
 
