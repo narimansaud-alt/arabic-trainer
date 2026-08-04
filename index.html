@@ -84,6 +84,79 @@ function swUpdate(){
 }
 
 </script>
+<script>
+function setAppUpdateStatus(message, isError) {
+  const status = document.getElementById('app-update-status');
+  if (!status) return;
+  status.textContent = message;
+  status.classList.toggle('is-error', Boolean(isError));
+}
+
+async function checkForAppUpdate() {
+  if (!('serviceWorker' in navigator)) {
+    setAppUpdateStatus('Проверка обновлений недоступна в этом браузере.', true);
+    return;
+  }
+  const button = document.getElementById('btn-check-app-update');
+  if (button) button.disabled = true;
+  setAppUpdateStatus('Проверяем наличие новой версии…');
+  try {
+    const registration = await navigator.serviceWorker.getRegistration();
+    if (!registration) {
+      setAppUpdateStatus('Сервис обновлений будет доступен после следующего запуска приложения.', true);
+      return;
+    }
+    await registration.update();
+    if (registration.waiting) {
+      setAppUpdateStatus('Новая версия найдена. Устанавливаем обновление…');
+      registration.waiting.postMessage('skipWaiting');
+      return;
+    }
+    if (registration.installing) {
+      setAppUpdateStatus('Новая версия загружается…');
+      return;
+    }
+    setAppUpdateStatus('Установлена последняя версия приложения.');
+  } catch (error) {
+    setAppUpdateStatus('Не удалось проверить обновление. Проверьте подключение к интернету.', true);
+    window.__earlyAppErrors = window.__earlyAppErrors || [];
+    window.__earlyAppErrors.push({ error, meta: { source: 'service-worker', action: 'manual-update-check' } });
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+let pullRefreshStartY = null;
+let pullRefreshScroller = null;
+
+function findPullRefreshScroller(node) {
+  let current = node instanceof Element ? node : null;
+  while (current && current !== document.body) {
+    const style = window.getComputedStyle(current);
+    if (/(auto|scroll)/.test(style.overflowY) && current.scrollHeight > current.clientHeight + 1) return current;
+    current = current.parentElement;
+  }
+  return document.scrollingElement;
+}
+
+document.addEventListener('touchstart', (event) => {
+  if (event.touches.length !== 1) return;
+  pullRefreshStartY = event.touches[0].clientY;
+  pullRefreshScroller = findPullRefreshScroller(event.target);
+}, { passive: true });
+
+document.addEventListener('touchmove', (event) => {
+  if (event.touches.length !== 1 || pullRefreshStartY == null) return;
+  const pullingDown = event.touches[0].clientY - pullRefreshStartY > 8;
+  const atTop = !pullRefreshScroller || pullRefreshScroller.scrollTop <= 0;
+  if (pullingDown && atTop) event.preventDefault();
+}, { passive: false });
+
+document.addEventListener('touchend', () => {
+  pullRefreshStartY = null;
+  pullRefreshScroller = null;
+}, { passive: true });
+</script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
 :root{
@@ -92,6 +165,7 @@ function swUpdate(){
   --bg:#f0f4f0;--border:#d4e6d9;--shadow:0 2px 10px rgba(0,0,0,0.06);--r:12px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;overscroll-behavior-y:none;}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222;min-height:100vh;overscroll-behavior-y:none;}
 .screen{display:none;min-height:100vh;flex-direction:column;}
 .screen.active{display:flex;}
@@ -2687,6 +2761,11 @@ body,.screen{background:var(--app-bg)!important;color:var(--ink)!important;}
       <div class="sc-title">Аккаунт</div>
       <div style="font-size:14px;color:#555;margin-bottom:12px;">Вы вошли как: <b id="s-uname">—</b></div>
       <button class="btn-start" style="background:var(--red);color:white;" onclick="doLogout()">Выйти из аккаунта</button>
+    </div>
+    <div class="sc">
+      <div class="sc-title">Обновление приложения</div>
+      <div id="app-update-status" style="font-size:14px;color:var(--muted);line-height:1.5;margin-bottom:12px;">Автоматическое обновление включено.</div>
+      <button class="btn-start" id="btn-check-app-update" type="button" onclick="checkForAppUpdate()">Проверить обновление</button>
     </div>
   </div>
 

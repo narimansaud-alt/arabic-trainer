@@ -7,6 +7,7 @@
 // existed when `users` was directly writable from the browser.
 
 async function updateStreak() {
+  const restoredDailyProgress = restoreDailyProgressSnapshot();
   if (!App.username) {
     updateUI();
     return;
@@ -22,9 +23,51 @@ async function updateStreak() {
     ErrorLog.capture(e, { source: 'streak', action: 'update-streak' });
   }
   updateUI();
+  if (restoredDailyProgress) {
+    updateStreakBanner();
+    void syncDailyProgress();
+  }
 }
 
 let __dailyIncrementQueue = Promise.resolve();
+const DAILY_PROGRESS_CACHE_KEY = 'arabic_daily_progress_v1';
+
+function saveDailyProgressSnapshot() {
+  try {
+    localStorage.setItem(DAILY_PROGRESS_CACHE_KEY, JSON.stringify({
+      date: appDateKey(),
+      words: Math.max(0, Math.min(30, Number(App.dailyWords) || 0))
+    }));
+  } catch (_) {
+    // The server remains the source of truth when local storage is unavailable.
+  }
+}
+
+function restoreDailyProgressSnapshot() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(DAILY_PROGRESS_CACHE_KEY) || 'null');
+    if (!saved || saved.date !== appDateKey()) return false;
+    const words = Math.max(0, Math.min(30, Number(saved.words) || 0));
+    if (words <= App.dailyWords) return false;
+    App.dailyWords = words;
+    App.lastCountDate = saved.date;
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function syncDailyProgress() {
+  const target = Math.max(0, Math.min(30, Number(App.dailyWords) || 0));
+  const today = appDateKey();
+  __dailyIncrementQueue = __dailyIncrementQueue
+    .then(async () => {
+      await Api.call('update-daily-count', { daily_words: target }, { timeoutMs: 4000, keepalive: true });
+      if (target >= 30) await updateStreak();
+    })
+    .catch((e) => ErrorLog.capture(e, { source: 'streak', action: 'sync-daily-count', target, today }));
+  return __dailyIncrementQueue;
+}
 
 function addDailyWord() {
   const today = appDateKey();
@@ -34,17 +77,9 @@ function addDailyWord() {
   }
   if (App.dailyWords >= 30) return __dailyIncrementQueue;
   App.dailyWords = Math.min((Number.isFinite(App.dailyWords) ? App.dailyWords : 0) + 1, 30);
+  saveDailyProgressSnapshot();
   updateStreakBanner();
-  __dailyIncrementQueue = __dailyIncrementQueue
-    .then(async () => {
-      const result = await Api.call('increment-daily-count', {}, { timeoutMs: 3000 });
-      App.dailyWords = Number(result.daily_words) || 0;
-      App.lastCountDate = today;
-      if (result.reached_goal) await updateStreak(true);
-      updateStreakBanner();
-    })
-    .catch((e) => ErrorLog.capture(e, { source: 'streak', action: 'increment-daily-count' }));
-  return __dailyIncrementQueue;
+  return syncDailyProgress();
 }
 
 let __midnightResetTimerId = 0;
@@ -54,6 +89,7 @@ function checkMidnightReset() {
   if (App.lastCountDate && App.lastCountDate !== today) {
     App.dailyWords = 0;
     App.lastCountDate = today;
+    saveDailyProgressSnapshot();
     updateStreakBanner();
   }
   if (__midnightResetTimerId) {
