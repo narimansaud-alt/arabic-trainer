@@ -352,12 +352,6 @@ function showRulesIndex() {
   renderRules();
 }
 
-function practiceRuleLesson(lesson) {
-  document.querySelectorAll('#lesson-grid .lesson-pill').forEach((p) => p.classList.toggle('active', String(p.dataset.lesson) === String(lesson)));
-  switchTab('train');
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
 function renderRuleCards(items, openCards) {
   return items
     .map((r, i) => {
@@ -469,10 +463,8 @@ function renderRuleLessonDetail(cont, lesson, items, query) {
     items.length +
     ' ' +
     (items.length === 1 ? 'правило' : items.length < 5 ? 'правила' : 'правил') +
-    (words ? ' · ' + words + ' слов для тренировки' : '') +
-    '</div><div class="rule-detail-actions"><button type="button" onclick="practiceRuleLesson(\'' +
-    esc(String(lesson)) +
-    '\')">Практика слов</button><button type="button" onclick="openGrammarTable(\'pronouns\')">Местоимения</button><button type="button" onclick="openGrammarTable(\'verbs\')">Глаголы</button></div></div>' +
+    (words ? ' · ' + words + ' слов в уроке' : '') +
+    '</div><div class="rule-detail-actions"><button type="button" onclick="openGrammarTable(\'pronouns\')">Местоимения</button><button type="button" onclick="openGrammarTable(\'verbs\')">Глаголы</button></div></div>' +
     '<div class="rule-detail-outline"><div class="rule-block-label">Что внутри</div><div class="rule-topic-list inline">' +
     lessonTopics(items, 10) +
     '</div></div><div class="rule-list">' +
