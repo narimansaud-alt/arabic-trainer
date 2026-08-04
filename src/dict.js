@@ -153,7 +153,18 @@ function togglePw(id, btn) {
 }
 
 function wrapArabic(text) {
-  return String(text || '').replace(/[\u0600-\u06FF]+/gu, (m) => '<span class="ar-text">' + m + '</span>');
+  const groups = [];
+  const protectedText = String(text || '').replace(
+    /(\(\s*)([\u0600-\u06FF]+(?:\s+[\u0600-\u06FF]+)*)(\s*\))/gu,
+    (_, opening, phrase, closing) => {
+      const token = '@@ARABIC_GROUP_' + groups.length + '@@';
+      groups.push('<span class="ar-inline" dir="rtl">' + opening + phrase + closing + '</span>');
+      return token;
+    }
+  );
+  return protectedText
+    .replace(/[\u0600-\u06FF]+/gu, (m) => '<span class="ar-text" dir="rtl">' + m + '</span>')
+    .replace(/@@ARABIC_GROUP_(\d+)@@/g, (_, index) => groups[Number(index)] || '');
 }
 function stripRuleHtml(html) {
   const div = document.createElement('div');
