@@ -1,10 +1,10 @@
-const CACHE = 'arabic-v__BUILD_HASH__';
+const CACHE = 'arabic-v-5-20260804';
 const FILES = [
   './',
   './index.html',
   './medina-premium-icon-512.png',
   './medina-premium-icon-192.png',
-  './manifest.json?v=4',
+  './manifest.json?v=5',
   './src/api.js',
   './src/state.js',
   './src/helpers.js',
@@ -21,6 +21,15 @@ const FILES = [
   './books/ar_01_Lessons_in_Arabic_Language.pdf',
 ];
 
+const SHOULD_NETWORK_FIRST = [
+  './manifest.json',
+  './manifest.json?v=5',
+  './medina-premium-icon-512.png',
+  './medina-premium-icon-512.png?v=5',
+  './medina-premium-icon-192.png',
+  './medina-premium-icon-192.png?v=5'
+];
+
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));
   self.skipWaiting();
@@ -35,6 +44,18 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  const normalized = new URL(e.request.url).pathname.replace(self.location.origin, '').replace(/^\//, './');
+  const requested = normalizeRequestUrl(normalized);
+  if (SHOULD_NETWORK_FIRST.includes(requested)) {
+    e.respondWith(
+      fetch(e.request).then(response => {
+        const copy = response.clone();
+        caches.open(CACHE).then(c => c.put(e.request, copy));
+        return response;
+      }).catch(() => caches.match(e.request))
+    );
+    return;
+  }
   if (e.request.mode === 'navigate') {
     e.respondWith(
       fetch(e.request).then(response => {
@@ -49,6 +70,10 @@ self.addEventListener('fetch', e => {
     caches.match(e.request).then(r => r || fetch(e.request))
   );
 });
+
+function normalizeRequestUrl(pathname) {
+  return pathname === '/manifest.json' ? './manifest.json' : pathname;
+}
 
 // Сообщаем странице что есть новая версия
 self.addEventListener('message', e => {
