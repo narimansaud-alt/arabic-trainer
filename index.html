@@ -2260,6 +2260,23 @@ body,.screen{background:var(--app-bg)!important;color:var(--ink)!important;}
 
 <!-- VERB DETAIL MODAL -->
 <style>
+/* Compact, calm course navigation for the Medina course. */
+#screen-course,#screen-volume{background:linear-gradient(145deg,#f8fafc 0%,#eef3f8 55%,#f7f9fb 100%)!important;padding:calc(28px + env(safe-area-inset-top,0)) 16px 34px!important;color:#172b3d!important;}
+#screen-course .course-header,#screen-volume .vol-header{width:100%;max-width:520px;margin:0 auto 24px!important;padding:0 8px!important;text-align:left!important;color:#172b3d!important;}
+#screen-course .course-header .hello{font-family:'Noto Naskh Arabic',serif!important;font-size:21px!important;line-height:1.55!important;color:#45627d!important;opacity:1!important;direction:rtl;letter-spacing:0!important;margin:0 0 6px!important;}
+#screen-course .course-header h2,#screen-volume .vol-header h2{font-size:30px!important;letter-spacing:-.045em!important;line-height:1.1!important;margin:0!important;color:#172b3d!important;}
+#screen-course .course-header h2:after{content:'Выберите направление обучения';display:block;margin-top:8px;font-size:13px;font-weight:500;letter-spacing:0;color:#718196;}
+#screen-volume .vol-header p{font-size:14px!important;opacity:1!important;color:#718196!important;margin:8px 0 0!important;}
+#screen-course .course-cards,#screen-volume .vol-cards{max-width:520px!important;gap:12px!important;}
+#screen-course .course-card{min-height:126px!important;border:1px solid #e1e8ef!important;border-radius:14px!important;background:rgba(255,255,255,.92)!important;box-shadow:0 10px 28px rgba(30,55,77,.06)!important;display:flex!important;align-items:center!important;overflow:hidden!important;}
+#screen-course .cc-cover{display:none!important;}#screen-course .cc-cover-placeholder{width:78px!important;height:78px!important;margin-left:16px!important;border:1px solid #d9e3ec!important;border-radius:12px!important;background:#f1f5f9!important;color:#31536f!important;font-size:32px!important;flex:none;}
+#screen-course .cc-body-row{flex:1!important;padding:18px 16px!important;min-width:0;}#screen-course .cc-title{font-family:'Manrope',sans-serif!important;font-size:17px!important;color:#172b3d!important;}.cc-sub{font-size:13px!important;color:#718196!important;line-height:1.45!important;margin-top:5px!important;}.cc-arrow{color:#31536f!important;font-size:25px!important;font-weight:400!important;}
+#screen-volume .vol-card{min-height:88px!important;padding:14px 16px!important;border:1px solid #e1e8ef!important;border-radius:14px!important;background:rgba(255,255,255,.92)!important;box-shadow:0 10px 28px rgba(30,55,77,.06)!important;gap:14px!important;}.vol-num{width:58px!important;height:58px!important;border:1px solid #d9e3ec!important;border-radius:11px!important;background:#f1f5f9!important;color:#31536f!important;font-size:14px!important;}.vol-title{font-family:'Manrope',sans-serif!important;font-size:17px!important;color:#172b3d!important;}.vol-arrow{color:#31536f!important;font-size:23px!important;font-weight:400!important;}
+#screen-course .btn-logout-c,#screen-volume .btn-back-vol{background:rgba(255,255,255,.75)!important;color:#31536f!important;border:1px solid #d8e2ea!important;border-radius:9px!important;box-shadow:0 6px 18px rgba(30,55,77,.05)!important;font-weight:700!important;}
+#screen-app .topbar{background:rgba(255,255,255,.88)!important;color:#243a4e!important;border-bottom:1px solid #dde6ed!important;box-shadow:0 4px 18px rgba(25,47,68,.04)!important;gap:8px;}.tb-left,.tb-right{display:flex;align-items:center;gap:7px;}.tb-user,#screen-app .btn-tb{display:inline-flex!important;align-items:center!important;gap:6px!important;min-height:34px!important;padding:7px 10px!important;background:#f6f8fa!important;color:#31536f!important;border:1px solid #dce5ec!important;border-radius:8px!important;font-family:'Manrope',sans-serif!important;font-size:12px!important;font-weight:700!important;box-shadow:none!important;}.tb-user .ui-icon,#screen-app .btn-tb .ui-icon{width:15px!important;height:15px!important;}.tb-user:hover,#screen-app .btn-tb:hover{background:#eaf0f5!important;}.tb-right .btn-tb:last-child{background:#315d79!important;color:#fff!important;border-color:#315d79!important;}
+@media (max-width:420px){#screen-course .course-header h2,#screen-volume .vol-header h2{font-size:27px!important;}.tb-user,#screen-app .btn-tb{padding:7px 8px!important;font-size:11px!important;}.tb-right .btn-tb:first-child{font-size:0!important;min-width:34px!important;justify-content:center!important;}.tb-right .btn-tb:first-child .ui-icon{margin:0!important;}}
+</style>
+<style>
 /* Separate Arabic dictionary workspace; Medina dictionary remains unchanged. */
 #screen-verbs{padding:calc(24px + env(safe-area-inset-top,0)) 16px 24px!important;align-items:stretch!important;background:linear-gradient(160deg,#f6f8fc 0%,#eef3fb 100%)!important;}
 .arabic-dict-shell{width:min(100%,720px);margin:0 auto;}.arabic-dict-head{display:flex;align-items:center;gap:14px;margin:4px 0 20px;}.arabic-dict-head h2{margin:0;color:#14283d;font-size:26px;letter-spacing:-.04em;}.arabic-dict-head p{margin:4px 0 0;color:#718196;font-size:13px;}.arabic-dict-back{width:46px;height:46px;display:grid;place-items:center;flex:none;border:1px solid #e1e7f0;border-radius:50%;background:rgba(255,255,255,.82);color:#17324d;font-size:26px;cursor:pointer;box-shadow:0 8px 24px rgba(31,59,89,.07);}
@@ -2361,13 +2378,13 @@ body,.screen{background:var(--app-bg)!important;color:var(--ink)!important;}
 
   <div class="vol-cards" id="vol-cards"></div>
   <button id="btn-install-pwa" class="btn-back-vol" style="display:none;background:rgba(255,255,255,0.25);margin-bottom:8px;" onclick="installPWA()"><span class="ui-icon"><svg><use href="#ui-icon-download"></use></svg></span>Установить приложение</button>
-  <button class="btn-back-vol" onclick="showScreen('screen-course')">← Назад к курсам</button>
+  <button class="btn-back-vol" onclick="appNavigateBack('screen-course')">← Назад к курсам</button>
 </div>
 
 <!-- VERB CONJUGATION (standalone) -->
 <div class="screen" id="screen-verbs">
   <div class="arabic-dict-shell">
-    <div class="arabic-dict-head"><button class="arabic-dict-back" type="button" aria-label="Назад к курсам" onclick="showScreen('screen-course')">‹</button><div><h2>Арабский словарь</h2><p>Фусха: полный разбор и спряжение глаголов</p></div></div>
+    <div class="arabic-dict-head"><button class="arabic-dict-back" type="button" aria-label="Назад к курсам" onclick="appNavigateBack('screen-course')">‹</button><div><h2>Арабский словарь</h2><p>Фусха: полный разбор и спряжение глаголов</p></div></div>
   <div class="arabic-dict-search">
     <label for="verb-input">Поиск глагола</label>
     <input class="type-input" id="verb-input" type="text" placeholder="كَتَبَ" dir="rtl" autocomplete="off">
@@ -2381,7 +2398,7 @@ body,.screen{background:var(--app-bg)!important;color:var(--ink)!important;}
     <div class="feedback" id="verb-input-feedback"></div>
   </div>
   <section class="arabic-dict-learning" aria-label="Справочник по породам"><h3>الأوزان — породы глагола</h3><p>Формула объясняет строение глагола; для I породы гласная настоящего времени уточняется словарём.</p><div class="verb-reference-grid" id="verb-reference-grid"></div></section>
-  <button class="btn-back-vol" onclick="showScreen('screen-course')">Назад к курсам</button>
+  <button class="btn-back-vol" onclick="appNavigateBack('screen-course')">Назад к курсам</button>
   </div>
 </div>
 
@@ -2392,8 +2409,8 @@ body,.screen{background:var(--app-bg)!important;color:var(--ink)!important;}
       <span class="tb-user" id="app-rank" onclick="switchTab('lb')" style="cursor:pointer;"><span class="ui-icon"><svg><use href="#ui-icon-trophy"></use></svg></span>Рейтинг</span>
     </div>
     <div class="tb-right">
-      <button class="btn-tb" aria-label="Справка" onclick="switchTab('instr')"><span class="ui-icon"><svg><use href="#ui-icon-help"></use></svg></span></button>
-      <button class="btn-tb" onclick="goToCourse()">≡ Курсы</button>
+      <button class="btn-tb" aria-label="Инструкция" onclick="switchTab('instr')"><span class="ui-icon"><svg><use href="#ui-icon-help"></use></svg></span><span>Инструкция</span></button>
+      <button class="btn-tb" onclick="goToCourse()"><span>Курсы</span></button>
     </div>
   </div>
 

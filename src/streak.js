@@ -169,6 +169,8 @@ async function loadStreakRank() {
 async function updateUI() {
   const rankEl = document.getElementById('app-rank');
   if (!rankEl || !App.username) return;
+  rankEl.innerHTML = '<span class="ui-icon"><svg><use href="#ui-icon-trophy"></use></svg></span><span>Рейтинг</span>';
+  return;
   try {
     const data = await loadLeaderboardCacheBy('total_score');
     if (!data || !data.length) {

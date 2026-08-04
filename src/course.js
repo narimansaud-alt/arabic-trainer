@@ -3,7 +3,7 @@
 function goToCourse() {
   const courseHello = document.getElementById('course-hello');
   if (courseHello) {
-    courseHello.textContent = 'Добро пожаловать, ' + App.username + '!';
+    courseHello.textContent = 'السَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللَّهِ وَبَرَكَاتُهُ';
   }
   updateStreakBanner();
   showScreen('screen-course');

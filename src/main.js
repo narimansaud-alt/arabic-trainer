@@ -253,6 +253,48 @@ window.addEventListener('popstate', (e) => {
   }
 });
 
+// Keep Android/system Back inside the PWA. Every screen transition gets a
+// history entry; on the root screen we restore a guard entry instead of exit.
+let appScreenHistoryReady = false;
+let appScreenHistoryRestoring = false;
+const APP_NAVIGATION_SCREENS = new Set(['screen-course', 'screen-volume', 'screen-app', 'screen-verbs', 'screen-quiz', 'screen-results']);
+
+function setupAppScreenHistory() {
+  if (appScreenHistoryReady || typeof window.showScreen !== 'function') return;
+  appScreenHistoryReady = true;
+  const baseShowScreen = window.showScreen;
+  window.appNavigateBack = function appNavigateBack(fallbackScreen) {
+    if (history.state?.appNavigation && !history.state.root) {
+      history.back();
+      return;
+    }
+    appScreenHistoryRestoring = true;
+    try { baseShowScreen(fallbackScreen); } finally { appScreenHistoryRestoring = false; }
+  };
+  window.showScreen = function trackedShowScreen(screenId) {
+    const previousScreen = document.querySelector('.screen.active')?.id || '';
+    const result = baseShowScreen.apply(this, arguments);
+    if (!APP_NAVIGATION_SCREENS.has(screenId) || appScreenHistoryRestoring || previousScreen === screenId) return result;
+    const state = { appNavigation: true, screen: screenId };
+    if (!history.state?.appNavigation) {
+      history.replaceState({ ...state, root: true }, '');
+      history.pushState({ ...state, guard: true }, '');
+    } else {
+      history.pushState(state, '');
+    }
+    return result;
+  };
+  window.addEventListener('popstate', (event) => {
+    const state = event.state;
+    if (!state?.appNavigation || !APP_NAVIGATION_SCREENS.has(state.screen)) return;
+    appScreenHistoryRestoring = true;
+    try { baseShowScreen(state.screen); } finally { appScreenHistoryRestoring = false; }
+    if (state.root) history.pushState({ appNavigation: true, screen: state.screen, guard: true }, '');
+  });
+}
+
+window.addEventListener('load', setupAppScreenHistory);
+
 // INIT
 window.addEventListener('load', async () => {
   loadQty();
