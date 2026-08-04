@@ -507,9 +507,9 @@ function ruleWordCountForLesson(lesson) {
   return (Dict.byLesson[String(lesson)] || []).length;
 }
 
-function lessonTopics(items, limit = 3) {
+function lessonTopics(items, limit = items.length) {
   return items
-    .slice(0, limit)
+    .slice(0, limit || items.length)
     .map((r) => '<span class="rule-topic-chip">' + wrapArabic(esc(r.title)) + '</span>')
     .join('');
 }
@@ -634,6 +634,9 @@ function renderBookTab() {
     '<div class="sc-title">📘 ' +
     esc(book.title || volume.label) +
     '</div>' +
+    '<div class="book-format-choice"><span class="book-format-label">Формат чтения:</span><span class="book-format-current">Читать в приложении</span><a class="book-format-btn" href="' +
+    esc(book.url) +
+    '" target="_blank" rel="noopener">Открыть отдельно ↗</a></div>' +
     '<div class="book-reader-toolbar">' +
     '<button class="book-nav-btn" type="button" onclick="nextBookPage(-1)">← Предыдущая</button>' +
     '<input class="book-page-input" id="book-page-input" type="number" min="1" value="' +
