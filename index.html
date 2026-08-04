@@ -6,9 +6,7 @@
 <meta name="theme-color" content="#ffffff">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="./manifest.json?v=6">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="./assets/fonts/local-fonts.css?v=7" rel="stylesheet">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Мединский курс и глаголы">
@@ -2138,6 +2136,32 @@ body,.screen{background:var(--app-bg)!important;color:var(--ink)!important;}
 .book-reader-fullscreen .book-nav-btn{min-height:42px!important;padding:9px 12px!important;}
 .book-reader-title{font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .book-reader-page{font-size:12px;color:var(--muted);white-space:nowrap;}
+.book-reader-stage{overflow:auto!important;overscroll-behavior:contain;}
+.book-reader-stage.is-zoomed{align-items:flex-start;justify-content:flex-start;touch-action:pan-x pan-y;}
+.book-reader-stage.is-zoomed .book-page-image{max-width:none!important;max-height:none!important;height:auto!important;object-fit:initial!important;flex:0 0 auto;}
+.book-reader-foot{flex-wrap:wrap;}
+.book-reader-controls{display:flex;align-items:center;justify-content:center;gap:7px;}
+.book-zoom-controls{display:flex;align-items:center;justify-content:center;gap:5px;padding-left:10px;margin-left:4px;border-left:1px solid var(--border);}
+.book-zoom-value{min-width:58px!important;font-variant-numeric:tabular-nums;}
+.streak-calendar-mark{position:relative;display:inline-block;width:28px;height:28px;flex:0 0 28px;border:2px solid #496a80;border-radius:7px;background:#f8fbfc;box-shadow:inset 0 5px 0 #e5edf1;}
+.streak-calendar-mark::before{content:'';position:absolute;left:3px;right:3px;top:7px;border-top:2px solid #496a80;}
+.streak-calendar-mark::after{content:'';position:absolute;width:7px;height:7px;left:8px;top:13px;border-radius:2px;background:#496a80;}
+.app-tabs{background:rgba(255,255,255,.82)!important;backdrop-filter:blur(18px) saturate(120%);-webkit-backdrop-filter:blur(18px) saturate(120%);}
+.app-tab{position:relative;background:transparent!important;border:0!important;box-shadow:none!important;}
+.app-tab.active{background:transparent!important;color:#28485d!important;box-shadow:none!important;}
+.app-tab.active::after{content:'';position:absolute;left:28%;right:28%;bottom:3px;height:2px;border-radius:2px;background:#496a80;}
+.book-volume-card,.book-action-card,.rules-lesson-card{background:rgba(255,255,255,.68)!important;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-color:rgba(145,160,170,.42)!important;box-shadow:0 10px 28px rgba(25,43,54,.045)!important;}
+.book-format-btn,.book-nav-btn,.rules-back-btn,.rules-open-btn,.rule-detail-actions button{background:rgba(255,255,255,.58)!important;border-color:rgba(130,148,160,.55)!important;box-shadow:none!important;}
+:root{--unified-accent:#496a80;--unified-accent-deep:#365469;--unified-soft:#edf2f5;--unified-line:#cbd6dc;}
+.lesson-pill,.mode-pill,.qty-pill,.lb-pill,.ctrl-btn,.answer-check-pill,.dict-view-btn,.book-nav-btn,.book-format-btn,.rules-back-btn,.rules-open-btn,.rule-detail-actions button,.btn-res.sec,.btn-nav,.btn-early{background:rgba(255,255,255,.62)!important;color:var(--unified-accent-deep)!important;border-color:var(--unified-line)!important;box-shadow:none!important;}
+.lesson-pill.active,.mode-pill.active,.qty-pill.active,.lb-pill.active,.answer-check-pill.active,.dict-view-btn.active,.book-nav-btn.active,.book-format-btn.active{background:var(--unified-soft)!important;color:var(--unified-accent-deep)!important;border-color:#96aab6!important;box-shadow:inset 0 0 0 1px #96aab6!important;}
+.btn-primary,.btn-start,.btn-check,.btn-res:not(.sec),.call-to-action,.accent-btn,.fast-submit{background:var(--unified-accent)!important;color:#fff!important;border-color:var(--unified-accent)!important;box-shadow:none!important;}
+.btn-primary:hover,.btn-start:hover,.btn-check:hover,.btn-res:not(.sec):hover,.call-to-action:hover,.accent-btn:hover,.fast-submit:hover{background:var(--unified-accent-deep)!important;border-color:var(--unified-accent-deep)!important;}
+.mode-pill.fast,.mode-pill.fast.active,.lb-pill.gold,.lb-pill.gold.active,.btn-start.gold,.btn-start.blue,.btn-start.orange{background:var(--unified-soft)!important;color:var(--unified-accent-deep)!important;border-color:#96aab6!important;}
+.book-choice-icon,.rules-lesson-num,.rule-detail-actions button{background:var(--unified-soft)!important;color:var(--unified-accent-deep)!important;}
+#tab-book .book-nav-btn,#tab-book .book-format-btn,#tab-rules .rules-back-btn,#tab-rules .rules-open-btn,#tab-rules .rule-detail-actions button{background:rgba(255,255,255,.62)!important;color:var(--unified-accent-deep)!important;border-color:var(--unified-line)!important;}
+.sc-title,.rules-home-kicker,.rule-lesson-kicker,.dict-section-hdr{color:var(--unified-accent-deep)!important;}
+.dict-section-hdr{background:var(--unified-soft)!important;}
 @media(max-width:600px){
   .tab-content{padding:14px 12px 96px!important;}
   .quiz-body,.res-body{padding-left:14px!important;padding-right:14px!important;}
@@ -2343,7 +2367,7 @@ body,.screen{background:var(--app-bg)!important;color:var(--ink)!important;}
     <div class="streak-banner" id="streak-banner">
       <div class="streak-top">
         <div class="streak-fire" id="banner-fire">
-          <span class="streak-big-num"><span class="ui-icon"><svg><use href="#ui-icon-calendar"></use></svg></span><span id="banner-days">0</span></span>
+          <span class="streak-big-num"><span class="streak-calendar-mark" aria-hidden="true"></span><span id="banner-days">0</span></span>
           Ты занимаешься уже <span id="banner-days-label">0 дней</span> подряд!
         </div>
         <div class="streak-days" id="banner-today-count">0 / 30 слов</div>

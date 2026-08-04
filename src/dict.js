@@ -1,4 +1,4 @@
-// dict.js вЂ” dictionary & rules tabs, plus the lesson-pill selector used
+// dict.js — dictionary & rules tabs, plus the lesson-pill selector used
 // on the training screen. All reads here are public reference data
 // (words, rules) via the anon client.
 
@@ -7,7 +7,7 @@ function buildLessonPills(rowId, lessons, onSelect) {
   row.innerHTML = '';
   const allBtn = document.createElement('button');
   allBtn.className = 'lb-pill active';
-  allBtn.textContent = 'Р’СЃРµ';
+  allBtn.textContent = 'Все';
   allBtn.onclick = () => {
     row.querySelectorAll('.lb-pill').forEach((b) => b.classList.remove('active'));
     allBtn.classList.add('active');
@@ -19,7 +19,7 @@ function buildLessonPills(rowId, lessons, onSelect) {
     .forEach((l) => {
       const btn = document.createElement('button');
       btn.className = 'lb-pill';
-      btn.textContent = 'РЈСЂ. ' + l;
+      btn.textContent = 'Ур. ' + l;
       btn.onclick = () => {
         row.querySelectorAll('.lb-pill').forEach((b) => b.classList.remove('active'));
         btn.classList.add('active');
@@ -132,7 +132,7 @@ function setDictView(view) {
 function dictBookTokens(value) {
   return String(value || '')
     .toLowerCase()
-    .replace(/С‘/g, 'Рµ')
+    .replace(/ё/g, 'е')
     .split(/[\s,;:()/]+/u)
     .filter((token) => token.length >= 3);
 }
@@ -140,8 +140,8 @@ function dictBookTokens(value) {
 function normalizeArabicDictForm(value) {
   return String(value || '')
     .normalize('NFC')
-    .replace(/[\u064B-\u065F\u0670ЩЂ]/gu, '')
-    .replace(/[\s(),ШЊ]+/gu, '')
+    .replace(/[\u064B-\u065F\u0670ـ]/gu, '')
+    .replace(/[\s(),،]+/gu, '')
     .trim();
 }
 
@@ -158,8 +158,8 @@ function sharesRussianStem(first, second) {
   const secondText = normalizeRussianDictForm(second);
   const firstHead = firstText.split(' ')[0];
   const secondHead = secondText.split(' ')[0];
-  if (firstHead === 'СЌС‚Рѕ' && secondHead === 'СЌС‚Рё') return true;
-  if (/^(СЌС‚РѕС‚|СЌС‚Р°|С‚РѕС‚|С‚Р°)$/u.test(firstHead) && /^(СЌС‚Рё|С‚Рµ)$/u.test(secondHead)) return true;
+  if (firstHead === 'это' && secondHead === 'эти') return true;
+  if (/^(этот|эта|тот|та)$/u.test(firstHead) && /^(эти|те)$/u.test(secondHead)) return true;
   const firstTokens = dictBookTokens(first);
   const secondTokens = dictBookTokens(second);
   return firstTokens.some((a) => secondTokens.some((b) => a.slice(0, 3) === b.slice(0, 3)));
@@ -174,10 +174,10 @@ function russianPluralDirection(first, second) {
       const aLast = a.slice(-1);
       const bLast = b.slice(-1);
       if (aLast === bLast) return false;
-      if (/[СЊР№Р±РІРіРґР¶Р·РєР»РјРЅРїСЂСЃС‚С„С…С†С‡С€С‰]/u.test(aLast) && /[С‹РёР°СЏРµ]/u.test(bLast)) return true;
-      if (aLast === 'Р°' && /[С‹Рё]/u.test(bLast)) return true;
-      if (aLast === 'СЏ' && bLast === 'Рё') return true;
-      if (aLast === 'Рµ' && /[СЏРё]/u.test(bLast)) return true;
+      if (/[ьйбвгджзклмнпрстфхцчшщ]/u.test(aLast) && /[ыиаяе]/u.test(bLast)) return true;
+      if (aLast === 'а' && /[ыи]/u.test(bLast)) return true;
+      if (aLast === 'я' && bLast === 'и') return true;
+      if (aLast === 'е' && /[яи]/u.test(bLast)) return true;
       return false;
     })
   );
@@ -185,29 +185,29 @@ function russianPluralDirection(first, second) {
 
 function isDictionarySingularForm(arabic) {
   const normalized = normalizeArabicDictForm(arabic);
-  if (['Щ‡Ш°Ш§', 'Щ‡Ш°Щ‡', 'Ш°Щ„Щѓ', 'ШЄЩ„Щѓ'].includes(normalized)) return true;
+  if (['هذا', 'هذه', 'ذلك', 'تلك'].includes(normalized)) return true;
   const value = String(arabic || '').trim();
-  return !/[\s()ШЊ,]/u.test(value) && /(?:ЩЊ|Ш©ЩЊ|Щ‘ЩЊ)$/u.test(value);
+  return !/[\s()،,]/u.test(value) && /(?:ٌ|ةٌ|ٌّ)$/u.test(value);
 }
 
 function isDictionaryPluralForm(arabic, singularRu, pluralRu) {
   const normalized = normalizeArabicDictForm(arabic);
-  if (['Щ‡Ш¤Щ„Ш§ШЎ', 'ШЈЩ€Щ„Ш¦Щѓ', 'Щ‡Ш°Ш§Щ†', 'Щ‡Ш§ШЄШ§Щ†'].includes(normalized)) return true;
-  const value = String(arabic || '').trim().split(/[\s(ШЊ,]/u)[0];
-  if (/(?:Ш§ШЄ|Щ€Щ†|ЩЉЩ†|Ш§ШЎ|Ш§Щ†|Щ‰)[ЩЋЩЏЩђЩЊЩЌ]?$/u.test(value)) return true;
-  return /[ЩЏЩЊЩЌ]$/u.test(value) && russianPluralDirection(singularRu, pluralRu);
+  if (['هؤلاء', 'أولئك', 'هذان', 'هاتان'].includes(normalized)) return true;
+  const value = String(arabic || '').trim().split(/[\s(،,]/u)[0];
+  if (/(?:ات|ون|ين|اء|ان|ى)[ٌٍَُِ]?$/u.test(value)) return true;
+  return /[ٌٍُ]$/u.test(value) && russianPluralDirection(singularRu, pluralRu);
 }
 
 const DICTIONARY_FORM_PAIRS = new Set([
-  'Щ‡Ш°Ш§|Щ‡Ш¤Щ„Ш§ШЎ',
-  'Щ‡Ш°Щ‡|Щ‡Ш¤Щ„Ш§ШЎ',
-  'Ш°Щ„Щѓ|Ш§Щ€Щ„Ш¦Щѓ',
-  'ШЄЩ„Щѓ|Ш§Щ€Щ„Ш¦Щѓ',
-  'Ш§Щ†Ш§|Щ†Ш­Щ†',
-  'Ш§Щ†ШЄ|Ш§Щ†ШЄЩ…',
-  'Ш§Щ†ШЄЩЉ|Ш§Щ†ШЄЩ†',
-  'Щ‡Щ€|Щ‡Щ…',
-  'Щ‡ЩЉ|Щ‡Щ†',
+  'هذا|هؤلاء',
+  'هذه|هؤلاء',
+  'ذلك|اولئك',
+  'تلك|اولئك',
+  'انا|نحن',
+  'انت|انتم',
+  'انتي|انتن',
+  'هو|هم',
+  'هي|هن',
 ]);
 
 function isDictionaryPair(singular, plural) {
@@ -243,15 +243,15 @@ function renderDictBook(words, lesson) {
   const rows = makeDictBookRows(words);
   return (
     '<div class="dict-book">' +
-    (lesson === null ? '' : '<div class="dict-book-title">РЈСЂРѕРє ' + esc(String(lesson)) + '</div>') +
-    '<table class="dict-book-table"><thead><tr><th>РџРµСЂРµРІРѕРґ</th><th>РњРЅРѕР¶РµСЃС‚РІРµРЅРЅРѕРµ С‡РёСЃР»Рѕ</th><th>Р•РґРёРЅСЃС‚РІРµРЅРЅРѕРµ С‡РёСЃР»Рѕ</th></tr></thead><tbody>' +
+    (lesson === null ? '' : '<div class="dict-book-title">Урок ' + esc(String(lesson)) + '</div>') +
+    '<table class="dict-book-table"><thead><tr><th>Перевод</th><th>Множественное число</th><th>Единственное число</th></tr></thead><tbody>' +
     rows
       .map(
         (w) =>
           '<tr><td>' +
           esc(w.ru) +
           '</td><td class="dict-book-ar dict-book-plural" dir="rtl">' +
-          (w.plural ? esc(w.plural) : '<span class="dict-book-dash">вЂ”</span>') +
+          (w.plural ? esc(w.plural) : '<span class="dict-book-dash">—</span>') +
           '</td><td class="dict-book-ar" dir="rtl">' +
           esc(w.singular) +
           '</td></tr>'
@@ -271,7 +271,7 @@ function renderDict() {
   if (q) words = words.filter((w) => w.ar.includes(q) || w.ru.toLowerCase().includes(q));
   const cont = document.getElementById('dict-content');
   if (!words.length) {
-    cont.innerHTML = '<div class="lb-empty">РќРёС‡РµРіРѕ РЅРµ РЅР°Р№РґРµРЅРѕ</div>';
+    cont.innerHTML = '<div class="lb-empty">Ничего не найдено</div>';
     return;
   }
   if (Settings.dictView === 'table') {
@@ -383,8 +383,8 @@ function wrapArabic(text) {
   return protectedText
     .replace(/[\u0600-\u06FF]+(?:\s+[\u0600-\u06FF]+)*/gu, (phrase) => {
       const isShortTerm =
-        phrase.length <= 34 && phrase.trim().split(/\s+/).length <= 4 && !/[ШЊШ›Шџ.!]/.test(phrase);
-      const isSentence = phrase.trim().split(/\s+/).length > 4 || /[ШЊШ›Шџ.!]/.test(phrase);
+        phrase.length <= 34 && phrase.trim().split(/\s+/).length <= 4 && !/[،؛؟.!]/.test(phrase);
+      const isSentence = phrase.trim().split(/\s+/).length > 4 || /[،؛؟.!]/.test(phrase);
       const className = isSentence ? 'ar-sentence' : isShortTerm ? 'ar-term' : 'ar-text';
       return '<span class="' + className + '" dir="rtl">' + phrase + '</span>';
     })
@@ -408,23 +408,23 @@ function stripRuleHtml(html) {
 function ruleBlockClass(blockHtml) {
   const plain = stripRuleHtml(blockHtml).toLowerCase();
   if (/<table[\s\S]*?>/i.test(blockHtml)) return 'is-table';
-  if (/Рё[вЂ'`КјвЂ™]?СЂР°Р±|ШҐШ№Ш±Ш§ШЁ|ШҐЩђШ№Щ’Ш±ЩЋШ§ШЁ/.test(plain)) return 'is-irab';
-  if (/РІР°Р¶РЅРѕ|СЃРµРєСЂРµС‚|Р·Р°РїРѕРјРЅ|РІРЅРёРјР°РЅРёРµ/.test(plain)) return 'is-important';
-  if (/РїСЂРёРјРµСЂ|Щ…Ш«Ш§Щ„/.test(plain)) return 'is-example';
-  if (/Р»РѕРіРёРєР°|СЃСѓС‚СЊ|РєР°Рє СЃРєР°Р·Р°С‚СЊ|РєР°Рє С‡РёС‚Р°С‚СЊ/.test(plain)) return 'is-logic';
-  if (/РїСЂР°РІРёР»Рѕ|РЅРѕРІРѕРµ РїСЂР°РІРёР»Рѕ|РІСЃРїРѕРјРёРЅР°РµРј/.test(plain)) return 'is-rule';
+  if (/и[‘'`ʼ’]?раб|إعراب|إِعْرَاب/.test(plain)) return 'is-irab';
+  if (/важно|секрет|запомн|внимание/.test(plain)) return 'is-important';
+  if (/пример|مثال/.test(plain)) return 'is-example';
+  if (/логика|суть|как сказать|как читать/.test(plain)) return 'is-logic';
+  if (/правило|новое правило|вспоминаем/.test(plain)) return 'is-rule';
   return '';
 }
 
 function ruleBlockLabel(cls) {
-  if (cls === 'is-rule') return 'РџСЂР°РІРёР»Рѕ';
-  if (cls === 'is-example') return 'РџСЂРёРјРµСЂ';
-  if (cls === 'is-irab') return 'Р Р°Р·Р±РѕСЂ';
-  if (cls === 'is-important') return 'Р’Р°Р¶РЅРѕ';
-  if (cls === 'is-logic') return 'Р›РѕРіРёРєР°';
-  if (cls === 'is-table') return 'РўР°Р±Р»РёС†Р°';
-  if (cls === 'is-memorize') return 'Р—РЅР°С‚СЊ РЅР°РёР·СѓСЃС‚СЊ';
-  return 'РџРѕСЏСЃРЅРµРЅРёРµ';
+  if (cls === 'is-rule') return 'Правило';
+  if (cls === 'is-example') return 'Пример';
+  if (cls === 'is-irab') return 'Разбор';
+  if (cls === 'is-important') return 'Важно';
+  if (cls === 'is-logic') return 'Логика';
+  if (cls === 'is-table') return 'Таблица';
+  if (cls === 'is-memorize') return 'Знать наизусть';
+  return 'Пояснение';
 }
 
 function renderRuleSubpanel(rawHtml, index, forcedClass) {
@@ -453,7 +453,7 @@ function formatRuleContent(html) {
     tables.push(m);
     return '%%RULE_TABLE_' + idx + '%%';
   });
-  safe = safe.replace(/<br\s*\/?>\s*(Рё[вЂ'`КјвЂ™]?СЂР°Р±\s*:)/gi, '<br><br>$1');
+  safe = safe.replace(/<br\s*\/?>\s*(и[‘'`ʼ’]?раб\s*:)/gi, '<br><br>$1');
   const parts = safe
     .split(/(?:<br\s*\/?>\s*){2,}/i)
     .map((part) => part.trim())
@@ -557,7 +557,7 @@ function toggleRuleSubpanel(btn) {
 function ruleSortValue(rule) {
   const n = Number(rule.sort_order);
   if (Number.isFinite(n) && n > 0) return n;
-  return rule.title.startsWith('РўР°Р±Р»РёС†Р°') ? 10000 + Number(rule.id || 0) : Number(rule.id || 0);
+  return rule.title.startsWith('Таблица') ? 10000 + Number(rule.id || 0) : Number(rule.id || 0);
 }
 
 function ruleAccent(rule, idx) {
@@ -600,7 +600,7 @@ function rulePreview(rule) {
     (firstTextSection
       ? stripRuleHtml(firstTextSection.content)
       : /<table[\s\S]*?>/i.test(rule.content)
-      ? 'РЎРІРѕРґРЅР°СЏ С‚Р°Р±Р»РёС†Р° СЃ РїСЂРёРјРµСЂР°РјРё РїРѕ С‚РµРјРµ СѓСЂРѕРєР°'
+      ? 'Сводная таблица с примерами по теме урока'
       : stripRuleHtml(rule.content));
   const preview = raw.slice(0, 170);
   return preview + (preview.length >= 170 ? '...' : '');
@@ -741,6 +741,7 @@ function setBookPage(volumeId, page) {
 let currentBookVolumeId = null;
 let bookSwipeStartX = null;
 let bookKeyHandler = null;
+let currentBookZoom = 1;
 
 function renderBookTab() {
   const cont = document.getElementById('book-content');
@@ -785,7 +786,7 @@ function showBookFormats(volumeId) {
     esc(volume.id) +
     '\')"><span class="book-choice-icon">' +
     uiIcon('book') +
-    '</span><span class="book-choice-copy"><span class="book-choice-title">Читать в приложении</span><span class="book-choice-sub">Полный экран, свайпы и сохранение страницы</span></span><span aria-hidden="true">›</span></button>' +
+    '</span><span class="book-choice-copy"><span class="book-choice-title">Читать в приложении</span><span class="book-choice-sub">Полный экран, масштаб, свайпы и сохранение страницы</span></span><span aria-hidden="true">›</span></button>' +
     '<a class="book-action-card" href="' +
     esc(book.url) +
     '" target="_blank" rel="noopener"><span class="book-choice-icon">' +
@@ -814,9 +815,13 @@ function openBookInApp(volumeId) {
     esc(book.title || volume.label) +
     '</div><div class="book-reader-page" id="book-page-status"></div></div>' +
     '<div class="book-reader-stage" id="book-reader-stage"><img class="book-page-image" id="book-page-image" alt="Страница книги" loading="eager"></div>' +
-    '<div class="book-reader-foot"><button class="book-nav-btn" id="book-prev-btn" type="button" onclick="nextBookPage(-1)">←</button>' +
+    '<div class="book-reader-foot"><div class="book-reader-controls"><button class="book-nav-btn" id="book-prev-btn" type="button" onclick="nextBookPage(-1)">←</button>' +
     '<input class="book-page-input" id="book-page-input" type="number" min="1" onchange="applyBookPageFromInput()" aria-label="Номер страницы">' +
-    '<button class="book-nav-btn" id="book-next-btn" type="button" onclick="nextBookPage(1)">→</button></div></div>';
+    '<button class="book-nav-btn" id="book-next-btn" type="button" onclick="nextBookPage(1)">→</button></div>' +
+    '<div class="book-zoom-controls"><button class="book-nav-btn" type="button" onclick="setBookZoom(currentBookZoom - 0.25)" aria-label="Уменьшить страницу">−</button>' +
+    '<button class="book-nav-btn book-zoom-value" id="book-zoom-value" type="button" onclick="setBookZoom(1)" aria-label="Сбросить масштаб">100%</button>' +
+    '<button class="book-nav-btn" type="button" onclick="setBookZoom(currentBookZoom + 0.25)" aria-label="Увеличить страницу">+</button></div></div></div>';
+  setBookZoom(1);
   setBookPage(volume.id, currentBookPage);
   bindBookReaderGestures();
   const reader = document.getElementById('book-reader-fullscreen');
@@ -836,6 +841,20 @@ function applyBookPageFromInput() {
   setBookPage(currentBookVolumeId, input.value);
 }
 
+function setBookZoom(value) {
+  const stage = document.getElementById('book-reader-stage');
+  const image = document.getElementById('book-page-image');
+  const label = document.getElementById('book-zoom-value');
+  currentBookZoom = Math.min(3, Math.max(1, Math.round(Number(value || 1) * 4) / 4));
+  if (stage) stage.classList.toggle('is-zoomed', currentBookZoom > 1);
+  if (image) image.style.width = currentBookZoom > 1 ? currentBookZoom * 100 + '%' : '';
+  if (label) label.textContent = Math.round(currentBookZoom * 100) + '%';
+  if (stage && currentBookZoom === 1) {
+    stage.scrollLeft = 0;
+    stage.scrollTop = 0;
+  }
+}
+
 function bindBookReaderGestures() {
   const stage = document.getElementById('book-reader-stage');
   if (!stage) return;
@@ -846,9 +865,16 @@ function bindBookReaderGestures() {
     if (bookSwipeStartX == null) return;
     const delta = event.clientX - bookSwipeStartX;
     bookSwipeStartX = null;
+    if (currentBookZoom > 1) return;
     if (Math.abs(delta) < 45) return;
     nextBookPage(delta < 0 ? 1 : -1);
   });
+  stage.addEventListener('dblclick', () => setBookZoom(currentBookZoom > 1 ? 1 : 2));
+  stage.addEventListener('wheel', (event) => {
+    if (!event.ctrlKey) return;
+    event.preventDefault();
+    setBookZoom(currentBookZoom + (event.deltaY < 0 ? 0.25 : -0.25));
+  }, { passive: false });
   bookKeyHandler = (event) => {
     if (event.key === 'ArrowRight') nextBookPage(1);
     if (event.key === 'ArrowLeft') nextBookPage(-1);
@@ -860,6 +886,7 @@ function bindBookReaderGestures() {
 function closeBookReader() {
   if (bookKeyHandler) document.removeEventListener('keydown', bookKeyHandler);
   bookKeyHandler = null;
+  currentBookZoom = 1;
   if (document.fullscreenElement && document.exitFullscreen) {
     document.exitFullscreen().catch((e) => ErrorLog.capture(e, { source: 'book', action: 'exit-fullscreen' }));
   }
@@ -951,7 +978,7 @@ function formatRuleSections(sections) {
 function renderRulesIndex(cont, grouped) {
   const lessons = Object.keys(grouped).sort(lessonSort);
   cont.innerHTML =
-    '<div class="rules-home-head"><div><div class="rules-home-kicker">РџСЂР°РІРёР»Р° РєСѓСЂСЃР°</div><div class="rules-home-title">РЈСЂРѕРєРё</div><div class="rules-home-sub">РџСЂР°РІРёР»Р°, РїСЂРёРјРµСЂС‹, СЂР°Р·Р±РѕСЂС‹ Рё С‚Р°Р±Р»РёС†С‹.</div></div></div>' +
+    '<div class="rules-home-head"><div><div class="rules-home-kicker">Правила курса</div><div class="rules-home-title">Уроки</div><div class="rules-home-sub">Правила, примеры, разборы и таблицы.</div></div></div>' +
     '<div class="rules-lesson-grid">' +
     lessons
       .map((lesson) => {
@@ -961,19 +988,19 @@ function renderRulesIndex(cont, grouped) {
         return (
           '<button class="rules-lesson-tile" type="button" onclick="showRuleLesson(\'' +
           esc(String(lesson)) +
-          '\')"><span class="rules-lesson-num">РЈСЂРѕРє ' +
+          '\')"><span class="rules-lesson-num">Урок ' +
           esc(String(lesson)) +
-          '</span><span class="rules-lesson-label">Р§С‚Рѕ РІРЅСѓС‚СЂРё</span><span class="rules-lesson-name">' +
-          esc(items[0]?.title || 'РџСЂР°РІРёР»Р° СѓСЂРѕРєР°') +
+          '</span><span class="rules-lesson-label">Что внутри</span><span class="rules-lesson-name">' +
+          esc(items[0]?.title || 'Правила урока') +
           '</span><span class="rules-lesson-stats">' +
           items.length +
           ' ' +
-          (items.length === 1 ? 'РїСЂР°РІРёР»Рѕ' : items.length < 5 ? 'РїСЂР°РІРёР»Р°' : 'РїСЂР°РІРёР»') +
-          (tables ? ' В· ' + tables + ' С‚Р°Р±Р».' : '') +
-          (words ? ' В· ' + words + ' СЃР»РѕРІ' : '') +
-          '</span><span class="rules-lesson-full-outline" aria-label="Р’СЃРµ РїСЂР°РІРёР»Р° СѓСЂРѕРєР°">' +
+          (items.length === 1 ? 'правило' : items.length < 5 ? 'правила' : 'правил') +
+          (tables ? ' · ' + tables + ' табл.' : '') +
+          (words ? ' · ' + words + ' слов' : '') +
+          '</span><span class="rules-lesson-full-outline" aria-label="Все правила урока">' +
           lessonPreviewList(items) +
-          '</span><span class="rules-lesson-open">РћС‚РєСЂС‹С‚СЊ СѓСЂРѕРє вЂє</span></button>'
+          '</span><span class="rules-lesson-open">Открыть урок ›</span></button>'
         );
       })
       .join('') +
@@ -983,22 +1010,22 @@ function renderRulesIndex(cont, grouped) {
 function renderRulesSearch(cont, grouped, query) {
   const lessons = Object.keys(grouped).sort(lessonSort);
   cont.innerHTML =
-    '<div class="rules-search-head"><button class="rules-back-btn" type="button" onclick="showRulesIndex()">в†ђ Р’СЃРµ СѓСЂРѕРєРё</button><div><div class="rules-home-kicker">РџРѕРёСЃРє</div><div class="rules-home-title">РќР°Р№РґРµРЅРѕ РІ ' +
+    '<div class="rules-search-head"><button class="rules-back-btn" type="button" onclick="showRulesIndex()">← Все уроки</button><div><div class="rules-home-kicker">Поиск</div><div class="rules-home-title">Найдено в ' +
     lessons.length +
     ' ' +
-    (lessons.length === 1 ? 'СѓСЂРѕРєРµ' : 'СѓСЂРѕРєР°С…') +
+    (lessons.length === 1 ? 'уроке' : 'уроках') +
     '</div></div></div>' +
     lessons
       .map((lesson) => {
         const items = grouped[lesson];
         return (
-          '<div class="rule-lesson-card"><div class="rule-lesson-header compact"><div><div class="rule-lesson-kicker">РЈСЂРѕРє ' +
+          '<div class="rule-lesson-card"><div class="rule-lesson-header compact"><div><div class="rule-lesson-kicker">Урок ' +
           esc(String(lesson)) +
           '</div><div class="rule-lesson-title">' +
           items.length +
-          ' СЃРѕРІРїР°Рґ.</div></div><button class="rules-open-btn" type="button" onclick="showRuleLesson(\'' +
+          ' совпад.</div></div><button class="rules-open-btn" type="button" onclick="showRuleLesson(\'' +
           esc(String(lesson)) +
-          '\')">РћС‚РєСЂС‹С‚СЊ</button></div><div class="rule-list">' +
+          '\')">Открыть</button></div><div class="rule-list">' +
           renderRuleCards(items, false) +
           '</div></div>'
         );
@@ -1010,17 +1037,17 @@ function renderRulesSearch(cont, grouped, query) {
 function renderRuleLessonDetail(cont, lesson, items, query) {
   const words = ruleWordCountForLesson(lesson);
   cont.innerHTML =
-    '<div class="rule-detail-page"><div class="rule-detail-hero"><button class="rules-back-btn" type="button" onclick="goBackFromRuleLesson()">в†ђ Р’СЃРµ СѓСЂРѕРєРё</button><div class="rule-lesson-kicker">РЈСЂРѕРє ' +
+    '<div class="rule-detail-page"><div class="rule-detail-hero"><button class="rules-back-btn" type="button" onclick="goBackFromRuleLesson()">← Все уроки</button><div class="rule-lesson-kicker">Урок ' +
     esc(String(lesson)) +
     '</div><div class="rule-detail-title">' +
-    wrapArabic(esc(items[0]?.title || 'РџСЂР°РІРёР»Р° СѓСЂРѕРєР°')) +
+    wrapArabic(esc(items[0]?.title || 'Правила урока')) +
     '</div><div class="rule-detail-sub">' +
     items.length +
     ' ' +
-    (items.length === 1 ? 'РїСЂР°РІРёР»Рѕ' : items.length < 5 ? 'РїСЂР°РІРёР»Р°' : 'РїСЂР°РІРёР»') +
-    (words ? ' В· ' + words + ' СЃР»РѕРІ РІ СѓСЂРѕРєРµ' : '') +
-    '</div><div class="rule-detail-actions"><button type="button" onclick="openGrammarTable(\'pronouns\')">РњРµСЃС‚РѕРёРјРµРЅРёСЏ</button><button type="button" onclick="openGrammarTable(\'verbs\')">Р“Р»Р°РіРѕР»С‹</button></div></div>' +
-    '<div class="rule-detail-outline"><div class="rule-outline-title">Р§С‚Рѕ РІРЅСѓС‚СЂРё</div><div class="rule-outline-sub">РљР°СЂС‚Р° РїСЂР°РІРёР» СѓСЂРѕРєР°.</div><div class="rule-outline-list">' +
+    (items.length === 1 ? 'правило' : items.length < 5 ? 'правила' : 'правил') +
+    (words ? ' · ' + words + ' слов в уроке' : '') +
+    '</div><div class="rule-detail-actions"><button type="button" onclick="openGrammarTable(\'pronouns\')">Местоимения</button><button type="button" onclick="openGrammarTable(\'verbs\')">Глаголы</button></div></div>' +
+    '<div class="rule-detail-outline"><div class="rule-outline-title">Что внутри</div><div class="rule-outline-sub">Карта правил урока.</div><div class="rule-outline-list">' +
     lessonOutline(items) +
     '</div></div><div class="rule-list">' +
     renderRuleCards(items, false) +
@@ -1088,33 +1115,33 @@ function grammarRefTable(headers, rows) {
 
 function renderPronounReferenceTable() {
   const rows = [
-    ['РЇ', '<span class="ar-text">ШЈЩЋЩ†ЩЋШ§</span>', '<span class="ar-text">ЩЂЩђЩЉ</span>', '<span class="ar-text">Щ„ЩђЩЉ / Ш№ЩђЩ†Щ’ШЇЩђЩЉ</span>'],
-    ['РњС‹', '<span class="ar-text">Щ†ЩЋШ­Щ’Щ†ЩЏ</span>', '<span class="ar-text">ЩЂЩ†ЩЋШ§</span>', '<span class="ar-text">Щ„ЩЋЩ†ЩЋШ§ / Ш№ЩђЩ†Щ’ШЇЩЋЩ†ЩЋШ§</span>'],
-    ['РўС‹ (Рј.)', '<span class="ar-text">ШЈЩЋЩ†Щ’ШЄЩЋ</span>', '<span class="ar-text">ЩЂЩѓЩЋ</span>', '<span class="ar-text">Щ„ЩЋЩѓЩЋ / Ш№ЩђЩ†Щ’ШЇЩЋЩѓЩЋ</span>'],
-    ['РўС‹ (Р¶.)', '<span class="ar-text">ШЈЩЋЩ†Щ’ШЄЩђ</span>', '<span class="ar-text">ЩЂЩѓЩђ</span>', '<span class="ar-text">Щ„ЩЋЩѓЩђ / Ш№ЩђЩ†Щ’ШЇЩЋЩѓЩђ</span>'],
-    ['РћРЅ', '<span class="ar-text">Щ‡ЩЏЩ€ЩЋ</span>', '<span class="ar-text">ЩЂЩ‡ЩЏ</span>', '<span class="ar-text">Щ„ЩЋЩ‡ЩЏ / Ш№ЩђЩ†Щ’ШЇЩЋЩ‡ЩЏ</span>'],
-    ['РћРЅР°', '<span class="ar-text">Щ‡ЩђЩЉЩЋ</span>', '<span class="ar-text">ЩЂЩ‡ЩЋШ§</span>', '<span class="ar-text">Щ„ЩЋЩ‡ЩЋШ§ / Ш№ЩђЩ†Щ’ШЇЩЋЩ‡ЩЋШ§</span>'],
-    ['РћРЅРё (Рј.)', '<span class="ar-text">Щ‡ЩЏЩ…Щ’</span>', '<span class="ar-text">ЩЂЩ‡ЩЏЩ…Щ’</span>', '<span class="ar-text">Щ„ЩЋЩ‡ЩЏЩ…Щ’ / Ш№ЩђЩ†Щ’ШЇЩЋЩ‡ЩЏЩ…Щ’</span>'],
-    ['РћРЅРё (Р¶.)', '<span class="ar-text">Щ‡ЩЏЩ†Щ‘ЩЋ</span>', '<span class="ar-text">ЩЂЩ‡ЩЏЩ†Щ‘ЩЋ</span>', '<span class="ar-text">Щ„ЩЋЩ‡ЩЏЩ†Щ‘ЩЋ / Ш№ЩђЩ†Щ’ШЇЩЋЩ‡ЩЏЩ†Щ‘ЩЋ</span>'],
+    ['Я', '<span class="ar-text">أَنَا</span>', '<span class="ar-text">ـِي</span>', '<span class="ar-text">لِي / عِنْدِي</span>'],
+    ['Мы', '<span class="ar-text">نَحْنُ</span>', '<span class="ar-text">ـنَا</span>', '<span class="ar-text">لَنَا / عِنْدَنَا</span>'],
+    ['Ты (м.)', '<span class="ar-text">أَنْتَ</span>', '<span class="ar-text">ـكَ</span>', '<span class="ar-text">لَكَ / عِنْدَكَ</span>'],
+    ['Ты (ж.)', '<span class="ar-text">أَنْتِ</span>', '<span class="ar-text">ـكِ</span>', '<span class="ar-text">لَكِ / عِنْدَكِ</span>'],
+    ['Он', '<span class="ar-text">هُوَ</span>', '<span class="ar-text">ـهُ</span>', '<span class="ar-text">لَهُ / عِنْدَهُ</span>'],
+    ['Она', '<span class="ar-text">هِيَ</span>', '<span class="ar-text">ـهَا</span>', '<span class="ar-text">لَهَا / عِنْدَهَا</span>'],
+    ['Они (м.)', '<span class="ar-text">هُمْ</span>', '<span class="ar-text">ـهُمْ</span>', '<span class="ar-text">لَهُمْ / عِنْدَهُمْ</span>'],
+    ['Они (ж.)', '<span class="ar-text">هُنَّ</span>', '<span class="ar-text">ـهُنَّ</span>', '<span class="ar-text">لَهُنَّ / عِنْدَهُنَّ</span>'],
   ];
   return (
-    '<div class="grammar-ref-note">Р‘С‹СЃС‚СЂР°СЏ С‚Р°Р±Р»РёС†Р° РґР»СЏ РїРѕРІС‚РѕСЂРµРЅРёСЏ: РѕС‚РґРµР»СЊРЅРѕРµ РјРµСЃС‚РѕРёРјРµРЅРёРµ, СЃР»РёС‚РЅРѕРµ РјРµСЃС‚РѕРёРјРµРЅРёРµ Рё С„РѕСЂРјС‹ РїСЂРёРЅР°РґР»РµР¶РЅРѕСЃС‚Рё.</div>' +
-    grammarRefTable(['Р—РЅР°С‡РµРЅРёРµ', 'РћС‚РґРµР»СЊРЅРѕ', 'РЎР»РёС‚РЅРѕ', 'РЈ / РїСЂРёРЅР°РґР»РµР¶РёС‚'], rows)
+    '<div class="grammar-ref-note">Быстрая таблица для повторения: отдельное местоимение, слитное местоимение и формы принадлежности.</div>' +
+    grammarRefTable(['Значение', 'Отдельно', 'Слитно', 'У / принадлежит'], rows)
   );
 }
 
 function renderVerbReferenceTable() {
   const rows = [
-    ['РџСЂРѕС€РµРґС€РµРµ', '<span class="ar-text">ЩЃЩЋШ№ЩЋЩ„ЩЋ</span>', 'РґРµР№СЃС‚РІРёРµ СѓР¶Рµ РїСЂРѕРёР·РѕС€Р»Рѕ', '<span class="ar-text">Ш°ЩЋЩ‡ЩЋШЁЩЋ</span> вЂ” РѕРЅ РїРѕС€РµР»'],
-    ['РќР°СЃС‚РѕСЏС‰РµРµ', '<span class="ar-text">ЩЉЩЋЩЃЩ’Ш№ЩЋЩ„ЩЏ</span>', 'РґРµР№СЃС‚РІРёРµ РїСЂРѕРёСЃС…РѕРґРёС‚ СЃРµР№С‡Р°СЃ РёР»Рё РѕР±С‹С‡РЅРѕ', '<span class="ar-text">ЩЉЩЋШ°Щ’Щ‡ЩЋШЁЩЏ</span> вЂ” РѕРЅ РёРґРµС‚'],
-    ['Р‘СѓРґСѓС‰РµРµ Р±Р»РёР·РєРѕРµ', '<span class="ar-text">ШіЩЋЩЉЩЋЩЃЩ’Ш№ЩЋЩ„ЩЏ</span>', 'СЃРєРѕСЂРѕ / Р·Р°С‚РµРј СЃРґРµР»Р°РµС‚', '<span class="ar-text">ШіЩЋЩЉЩЋШ°Щ’Щ‡ЩЋШЁЩЏ</span> вЂ” РѕРЅ РїРѕР№РґРµС‚'],
-    ['Р‘СѓРґСѓС‰РµРµ РѕР±С‰РµРµ', '<span class="ar-text">ШіЩЋЩ€Щ’ЩЃЩЋ ЩЉЩЋЩЃЩ’Ш№ЩЋЩ„ЩЏ</span>', 'СЃРґРµР»Р°РµС‚ РІ Р±СѓРґСѓС‰РµРј', '<span class="ar-text">ШіЩЋЩ€Щ’ЩЃЩЋ ЩЉЩЋШ°Щ’Щ‡ЩЋШЁЩЏ</span> вЂ” РѕРЅ РїРѕР№РґРµС‚'],
-    ['РџРѕРІРµР»РёС‚РµР»СЊРЅРѕРµ', '<span class="ar-text">Ш§ЩђЩЃЩ’Ш№ЩЋЩ„Щ’</span>', 'РїСЂРёРєР°Р· / РїСЂРѕСЃСЊР±Р°', '<span class="ar-text">Ш§ЩђШ°Щ’Щ‡ЩЋШЁЩ’</span> вЂ” РёРґРё'],
-    ['Р—Р°РїСЂРµС‚', '<span class="ar-text">Щ„ЩЋШ§ ШЄЩЋЩЃЩ’Ш№ЩЋЩ„Щ’</span>', 'РЅРµ РґРµР»Р°Р№', '<span class="ar-text">Щ„ЩЋШ§ ШЄЩЋШ°Щ’Щ‡ЩЋШЁЩ’</span> вЂ” РЅРµ РёРґРё'],
+    ['Прошедшее', '<span class="ar-text">فَعَلَ</span>', 'действие уже произошло', '<span class="ar-text">ذَهَبَ</span> — он пошел'],
+    ['Настоящее', '<span class="ar-text">يَفْعَلُ</span>', 'действие происходит сейчас или обычно', '<span class="ar-text">يَذْهَبُ</span> — он идет'],
+    ['Будущее близкое', '<span class="ar-text">سَيَفْعَلُ</span>', 'скоро / затем сделает', '<span class="ar-text">سَيَذْهَبُ</span> — он пойдет'],
+    ['Будущее общее', '<span class="ar-text">سَوْفَ يَفْعَلُ</span>', 'сделает в будущем', '<span class="ar-text">سَوْفَ يَذْهَبُ</span> — он пойдет'],
+    ['Повелительное', '<span class="ar-text">اِفْعَلْ</span>', 'приказ / просьба', '<span class="ar-text">اِذْهَبْ</span> — иди'],
+    ['Запрет', '<span class="ar-text">لَا تَفْعَلْ</span>', 'не делай', '<span class="ar-text">لَا تَذْهَبْ</span> — не иди'],
   ];
   return (
-    '<div class="grammar-ref-note">РЁРїР°СЂРіР°Р»РєР° РїРѕ РІСЂРµРјРµРЅР°Рј. Р”Р»СЏ РїРѕР»РЅРѕРіРѕ СЃРїСЂСЏР¶РµРЅРёСЏ РѕС‚РєСЂРѕР№ СЂР°Р·РґРµР» вЂњР“Р»Р°РіРѕР»С‹ Рё СЃРїСЂСЏР¶РµРЅРёСЏвЂќ Рё РІРІРµРґРё Р°СЂР°Р±СЃРєРёР№ РіР»Р°РіРѕР».</div>' +
-    grammarRefTable(['Р’СЂРµРјСЏ / С„РѕСЂРјР°', 'РЁР°Р±Р»РѕРЅ', 'РЎРјС‹СЃР»', 'РџСЂРёРјРµСЂ'], rows)
+    '<div class="grammar-ref-note">Шпаргалка по временам. Для полного спряжения открой раздел “Глаголы и спряжения” и введи арабский глагол.</div>' +
+    grammarRefTable(['Время / форма', 'Шаблон', 'Смысл', 'Пример'], rows)
   );
 }
 
