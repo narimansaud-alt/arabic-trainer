@@ -181,7 +181,11 @@ function renderConjugationTable(v) {
   return html;
 }
 
-function closeVerbModal() {
+function closeVerbModal(fromHistory = false) {
+  if (!fromHistory && history.state && history.state.app === 'arabic-trainer' && history.state.appModal) {
+    history.back();
+    return;
+  }
   document.getElementById('verb-modal-overlay').classList.add('hidden');
   currentDrillVerb = null;
 }

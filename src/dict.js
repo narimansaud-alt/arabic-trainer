@@ -319,14 +319,46 @@ function lessonTopics(items, limit = 3) {
     .join('');
 }
 
-function showRuleLesson(lesson) {
-  Settings.rulesLesson = String(lesson);
-  renderRules();
+function lessonOutline(items) {
+  return items
+    .map(
+      (r, i) =>
+        '<button class="rule-outline-row accent-' +
+        ruleAccent(r, i) +
+        '" type="button" onclick="document.getElementById(\'rule-card-' +
+        esc(String(r.id)) +
+        '\')?.scrollIntoView({behavior:\'smooth\',block:\'start\'})"><span>' +
+        (i + 1) +
+        '</span><b>' +
+        wrapArabic(esc(r.title)) +
+        '</b></button>'
+    )
+    .join('');
 }
 
-function showRulesIndex() {
+function pushAppHistoryState(state) {
+  if (!window.history || !history.pushState) return;
+  history.pushState({ app: 'arabic-trainer', ...state }, '', window.location.href);
+}
+
+function showRuleLesson(lesson, pushHistory = true) {
+  Settings.rulesLesson = String(lesson);
+  renderRules();
+  if (pushHistory) pushAppHistoryState({ appView: 'rule-lesson', lesson: String(lesson) });
+}
+
+function showRulesIndex(pushHistory = false) {
   Settings.rulesLesson = 'all';
   renderRules();
+  if (pushHistory) pushAppHistoryState({ appView: 'rules-index' });
+}
+
+function goBackFromRuleLesson() {
+  if (history.state && history.state.app === 'arabic-trainer' && history.state.appView === 'rule-lesson') {
+    history.back();
+    return;
+  }
+  showRulesIndex(false);
 }
 
 function renderRuleCards(items, openCards) {
@@ -337,6 +369,8 @@ function renderRuleCards(items, openCards) {
         '<div class="rule-card accent-' +
         ruleAccent(r, i) +
         (openCards ? ' open' : '') +
+        '" id="rule-card-' +
+        esc(String(r.id)) +
         '"><button class="rule-card-head" type="button" aria-expanded="' +
         (openCards ? 'true' : 'false') +
         '" onclick="toggleRuleCard(this)"><span class="rule-index">' +
@@ -375,7 +409,7 @@ function formatRuleSections(sections) {
 function renderRulesIndex(cont, grouped) {
   const lessons = Object.keys(grouped).sort(lessonSort);
   cont.innerHTML =
-    '<div class="rules-home-head"><div><div class="rules-home-kicker">Правила курса</div><div class="rules-home-title">Выбери урок</div><div class="rules-home-sub">Внутри урока правила, примеры, разборы и таблицы разложены отдельно.</div></div></div>' +
+    '<div class="rules-home-head"><div><div class="rules-home-kicker">Правила курса</div><div class="rules-home-title">Уроки</div><div class="rules-home-sub">Правила, примеры, разборы и таблицы.</div></div></div>' +
     '<div class="rules-lesson-grid">' +
     lessons
       .map((lesson) => {
@@ -434,7 +468,7 @@ function renderRulesSearch(cont, grouped, query) {
 function renderRuleLessonDetail(cont, lesson, items, query) {
   const words = ruleWordCountForLesson(lesson);
   cont.innerHTML =
-    '<div class="rule-detail-page"><div class="rule-detail-hero"><button class="rules-back-btn" type="button" onclick="showRulesIndex()">← Все уроки</button><div class="rule-lesson-kicker">Урок ' +
+    '<div class="rule-detail-page"><div class="rule-detail-hero"><button class="rules-back-btn" type="button" onclick="goBackFromRuleLesson()">← Все уроки</button><div class="rule-lesson-kicker">Урок ' +
     esc(String(lesson)) +
     '</div><div class="rule-detail-title">Правила и пояснения</div><div class="rule-detail-sub">' +
     items.length +
@@ -442,8 +476,8 @@ function renderRuleLessonDetail(cont, lesson, items, query) {
     (items.length === 1 ? 'правило' : items.length < 5 ? 'правила' : 'правил') +
     (words ? ' · ' + words + ' слов в уроке' : '') +
     '</div><div class="rule-detail-actions"><button type="button" onclick="openGrammarTable(\'pronouns\')">Местоимения</button><button type="button" onclick="openGrammarTable(\'verbs\')">Глаголы</button></div></div>' +
-    '<div class="rule-detail-outline"><div class="rule-block-label">Что внутри</div><div class="rule-topic-list inline">' +
-    lessonTopics(items, 10) +
+    '<div class="rule-detail-outline"><div class="rule-outline-title">Темы урока</div><div class="rule-outline-sub">Карта правил урока.</div><div class="rule-outline-list">' +
+    lessonOutline(items) +
     '</div></div><div class="rule-list">' +
     renderRuleCards(items, true) +
     '</div></div>';
@@ -472,13 +506,14 @@ function renderRules() {
   });
 }
 
-function openGrammarTable(type) {
+function openGrammarTable(type, pushHistory = true) {
   const title = type === 'verbs' ? 'Глаголы по временам' : 'Местоимения';
   const sub = type === 'verbs' ? 'الأَزْمِنَةُ وَالتَّصْرِيف' : 'الضَّمَائِر';
   document.getElementById('verb-modal-title').textContent = title;
   document.getElementById('verb-modal-sub').textContent = sub;
   document.getElementById('verb-modal-body').innerHTML = type === 'verbs' ? renderVerbReferenceTable() : renderPronounReferenceTable();
   document.getElementById('verb-modal-overlay').classList.remove('hidden');
+  if (pushHistory) pushAppHistoryState({ appModal: 'grammar-table', table: type, appView: 'rule-lesson', lesson: Settings.rulesLesson });
 }
 
 function grammarRefTable(headers, rows) {

@@ -91,6 +91,39 @@ document.addEventListener('keypress', (e) => {
   }
 });
 
+window.addEventListener('popstate', (e) => {
+  const state = e.state || {};
+  const modal = document.getElementById('verb-modal-overlay');
+  const modalOpen = modal && !modal.classList.contains('hidden');
+
+  if (modalOpen && state.appModal !== 'grammar-table') {
+    closeVerbModal(true);
+  }
+
+  if (state.app === 'arabic-trainer' && state.appModal === 'grammar-table') {
+    openGrammarTable(state.table || 'pronouns', false);
+    return;
+  }
+
+  if (state.app === 'arabic-trainer' && state.appView === 'rule-lesson') {
+    if (document.querySelector('.screen.active')?.id !== 'screen-app') showScreen('screen-app');
+    switchTab('rules');
+    showRuleLesson(state.lesson, false);
+    return;
+  }
+
+  if (state.app === 'arabic-trainer' && state.appView === 'rules-index') {
+    if (document.querySelector('.screen.active')?.id !== 'screen-app') showScreen('screen-app');
+    switchTab('rules');
+    showRulesIndex(false);
+    return;
+  }
+
+  if (document.querySelector('.tab-content.active')?.id === 'tab-rules' && Settings.rulesLesson !== 'all') {
+    showRulesIndex(false);
+  }
+});
+
 // INIT
 window.addEventListener('load', async () => {
   loadQty();
