@@ -2143,12 +2143,13 @@ body,.screen{background:var(--app-bg)!important;color:var(--ink)!important;}
 .book-reader-controls{display:flex;align-items:center;justify-content:center;gap:7px;}
 .book-zoom-controls{display:flex;align-items:center;justify-content:center;gap:5px;padding-left:10px;margin-left:4px;border-left:1px solid var(--border);}
 .book-zoom-value{min-width:58px!important;font-variant-numeric:tabular-nums;}
-.streak-calendar-mark{position:relative;display:inline-block;width:28px;height:28px;flex:0 0 28px;border:2px solid #496a80;border-radius:7px;background:#f8fbfc;box-shadow:inset 0 5px 0 #e5edf1;}
-.streak-calendar-mark::before{content:'';position:absolute;left:3px;right:3px;top:7px;border-top:2px solid #496a80;}
-.streak-calendar-mark::after{content:'';position:absolute;width:7px;height:7px;left:8px;top:13px;border-radius:2px;background:#496a80;}
-.app-tabs{background:rgba(255,255,255,.82)!important;backdrop-filter:blur(18px) saturate(120%);-webkit-backdrop-filter:blur(18px) saturate(120%);}
+.streak-calendar-mark{display:inline-flex;width:42px;height:42px;flex:0 0 42px;align-items:center;justify-content:center;border:1px solid #bdccd4;border-radius:8px;background:#edf3f6;color:#496a80;box-shadow:none;}
+.streak-calendar-mark::before,.streak-calendar-mark::after{display:none!important;}
+.streak-calendar-mark svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.app-tabs{background:rgba(247,250,251,.28)!important;backdrop-filter:blur(22px) saturate(125%);-webkit-backdrop-filter:blur(22px) saturate(125%);border-top-color:rgba(158,174,183,.28)!important;box-shadow:none!important;}
 .app-tab{position:relative;background:transparent!important;border:0!important;box-shadow:none!important;}
-.app-tab.active{background:transparent!important;color:#28485d!important;box-shadow:none!important;}
+.app-tabs .app-tab.active{background:transparent!important;color:#28485d!important;box-shadow:none!important;}
+.app-tab::before{display:none!important;content:none!important;}
 .app-tab.active::after{content:'';position:absolute;left:28%;right:28%;bottom:3px;height:2px;border-radius:2px;background:#496a80;}
 .book-volume-card,.book-action-card,.rules-lesson-card{background:rgba(255,255,255,.68)!important;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-color:rgba(145,160,170,.42)!important;box-shadow:0 10px 28px rgba(25,43,54,.045)!important;}
 .book-format-btn,.book-nav-btn,.rules-back-btn,.rules-open-btn,.rule-detail-actions button{background:rgba(255,255,255,.58)!important;border-color:rgba(130,148,160,.55)!important;box-shadow:none!important;}
@@ -2162,6 +2163,11 @@ body,.screen{background:var(--app-bg)!important;color:var(--ink)!important;}
 #tab-book .book-nav-btn,#tab-book .book-format-btn,#tab-rules .rules-back-btn,#tab-rules .rules-open-btn,#tab-rules .rule-detail-actions button{background:rgba(255,255,255,.62)!important;color:var(--unified-accent-deep)!important;border-color:var(--unified-line)!important;}
 .sc-title,.rules-home-kicker,.rule-lesson-kicker,.dict-section-hdr{color:var(--unified-accent-deep)!important;}
 .dict-section-hdr{background:var(--unified-soft)!important;}
+.rules-lesson-tile{grid-template-areas:'number label' 'number stats' 'outline outline'!important;grid-template-columns:58px minmax(0,1fr)!important;row-gap:5px!important;padding:16px!important;background:rgba(255,255,255,.62)!important;border-color:rgba(145,160,170,.42)!important;box-shadow:0 8px 24px rgba(25,43,54,.04)!important;}
+.rules-lesson-full-outline{grid-area:outline!important;grid-column:1/-1!important;margin-top:9px!important;padding-top:11px!important;border-top:1px solid rgba(145,160,170,.24);gap:8px!important;}
+.rules-lesson-preview-row{grid-template-columns:24px minmax(0,1fr)!important;gap:9px!important;align-items:start!important;}
+.rules-preview-title{font-family:'Manrope','Noto Naskh Arabic',sans-serif!important;font-size:13px!important;font-weight:600!important;line-height:1.55!important;color:#283942!important;unicode-bidi:plaintext;overflow-wrap:anywhere;}
+.rules-lesson-open,.rules-lesson-name{display:none!important;}
 @media(max-width:600px){
   .tab-content{padding:14px 12px 96px!important;}
   .quiz-body,.res-body{padding-left:14px!important;padding-right:14px!important;}
@@ -2367,7 +2373,7 @@ body,.screen{background:var(--app-bg)!important;color:var(--ink)!important;}
     <div class="streak-banner" id="streak-banner">
       <div class="streak-top">
         <div class="streak-fire" id="banner-fire">
-          <span class="streak-big-num"><span class="streak-calendar-mark" aria-hidden="true"></span><span id="banner-days">0</span></span>
+          <span class="streak-big-num"><span class="streak-calendar-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M7 3v4M17 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"></path></svg></span><span id="banner-days">0</span></span>
           Ты занимаешься уже <span id="banner-days-label">0 дней</span> подряд!
         </div>
         <div class="streak-days" id="banner-today-count">0 / 30 слов</div>

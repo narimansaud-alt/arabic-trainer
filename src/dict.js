@@ -633,8 +633,8 @@ function lessonPreviewList(items) {
         ruleAccent(r, i) +
         '"><span class="rules-lesson-preview-num">' +
         (i + 1) +
-        '</span><b>' +
-        wrapArabic(esc(r.title)) +
+        '</span><b class="rules-preview-title" dir="auto">' +
+        esc(r.title) +
         '</b></span>'
     )
     .join('');
@@ -990,9 +990,7 @@ function renderRulesIndex(cont, grouped) {
           esc(String(lesson)) +
           '\')"><span class="rules-lesson-num">Урок ' +
           esc(String(lesson)) +
-          '</span><span class="rules-lesson-label">Что внутри</span><span class="rules-lesson-name">' +
-          esc(items[0]?.title || 'Правила урока') +
-          '</span><span class="rules-lesson-stats">' +
+          '</span><span class="rules-lesson-label">Что внутри</span><span class="rules-lesson-stats">' +
           items.length +
           ' ' +
           (items.length === 1 ? 'правило' : items.length < 5 ? 'правила' : 'правил') +

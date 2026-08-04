@@ -178,7 +178,8 @@ async function updateUI() {
     const rank = data.findIndex((user) => user.nickname === App.username) + 1;
     const row = data.find((user) => user.nickname === App.username);
     const score = Math.max(App.totalScore || 0, row?.total_score || 0);
-    rankEl.textContent = 'Рейтинг: ' + (rank > 0 ? '#' + rank : '—') + ' · ' + score + ' баллов';
+    const place = rank > 0 ? (rank === 1 ? '1-е' : rank === 2 ? '2-е' : rank === 3 ? '3-е' : rank + '-е') + ' место' : '—';
+    rankEl.textContent = 'Рейтинг: ' + place + ' · ' + score + ' баллов';
   } catch (e) {
     rankEl.textContent = 'Рейтинг: — · ' + (App.totalScore || 0) + ' баллов';
     ErrorLog.capture(e, { source: 'streak', action: 'update-rank-ui' });
