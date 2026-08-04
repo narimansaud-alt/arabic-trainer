@@ -88,18 +88,69 @@ function setDictView(view) {
   renderDict();
 }
 
+function dictBookTokens(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/ё/g, 'е')
+    .split(/[\s,;:()/]+/u)
+    .filter((token) => token.length >= 3);
+}
+
+function sharesRussianStem(first, second) {
+  const firstTokens = dictBookTokens(first);
+  const secondTokens = dictBookTokens(second);
+  return firstTokens.some((a) => secondTokens.some((b) => a.slice(0, 3) === b.slice(0, 3)));
+}
+
+function isDictionarySingularForm(arabic) {
+  const value = String(arabic || '').trim();
+  return !/[\s()،,]/u.test(value) && /(?:ٌ|ةٌ|ٌّ)$/u.test(value);
+}
+
+function isDictionaryPluralForm(arabic) {
+  const value = String(arabic || '').trim();
+  return (
+    !/[\s()،,]/u.test(value) &&
+    /(?:ات|ون|ين|اء|ان|ى|[ٌٍُ])$/u.test(value)
+  );
+}
+
+function makeDictBookRows(words) {
+  const rows = [];
+  for (let index = 0; index < words.length; index += 1) {
+    const singular = words[index];
+    const plural = words[index + 1];
+    if (
+      plural &&
+      singular.lesson === plural.lesson &&
+      isDictionarySingularForm(singular.ar) &&
+      isDictionaryPluralForm(plural.ar) &&
+      sharesRussianStem(singular.ru, plural.ru)
+    ) {
+      rows.push({ ru: singular.ru, singular: singular.ar, plural: plural.ar });
+      index += 1;
+      continue;
+    }
+    rows.push({ ru: singular.ru, singular: singular.ar, plural: '' });
+  }
+  return rows;
+}
+
 function renderDictBook(words, lesson) {
+  const rows = makeDictBookRows(words);
   return (
     '<div class="dict-book">' +
     (lesson === null ? '' : '<div class="dict-book-title">Урок ' + esc(String(lesson)) + '</div>') +
-    '<table class="dict-book-table"><thead><tr><th>Перевод</th><th>Арабское слово</th></tr></thead><tbody>' +
-    words
+    '<table class="dict-book-table"><thead><tr><th>Перевод</th><th>Множественное число</th><th>Единственное число</th></tr></thead><tbody>' +
+    rows
       .map(
         (w) =>
           '<tr><td>' +
           esc(w.ru) +
+          '</td><td class="dict-book-ar dict-book-plural" dir="rtl">' +
+          (w.plural ? esc(w.plural) : '<span class="dict-book-dash">—</span>') +
           '</td><td class="dict-book-ar" dir="rtl">' +
-          esc(w.ar) +
+          esc(w.singular) +
           '</td></tr>'
       )
       .join('') +

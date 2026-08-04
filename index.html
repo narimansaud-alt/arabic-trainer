@@ -227,12 +227,15 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .dict-book{border:1px solid #dce5df;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 1px 7px rgba(20,70,45,.04);margin-bottom:12px;}
 .dict-book-title{padding:10px 12px;background:#f0f4f1;color:#355145;font-size:12px;font-weight:800;}
 .dict-book-table{width:100%;border-collapse:collapse;table-layout:fixed;}
-.dict-book-table th{background:#e4e9e5;color:#46554c;padding:9px 10px;font-size:11px;font-weight:800;text-align:left;border-bottom:1px solid #cfd8d1;}
-.dict-book-table th:last-child{text-align:right;}
-.dict-book-table td{padding:9px 10px;border-bottom:1px dotted #b8c6bc;font-size:13px;color:#3d4842;vertical-align:middle;overflow-wrap:anywhere;}
+.dict-book-table th{background:#dfe5e0;color:#46554c;padding:9px 8px;font-size:10px;font-weight:800;text-align:center;border-bottom:1px solid #c4cec6;}
+.dict-book-table th:first-child{width:34%;text-align:left;}
+.dict-book-table th:nth-child(2),.dict-book-table th:nth-child(3){width:33%;}
+.dict-book-table td{padding:9px 8px;border-bottom:1px dotted #aebdb2;font-size:13px;color:#3d4842;vertical-align:middle;overflow-wrap:anywhere;}
 .dict-book-table tr:nth-child(even) td{background:#f8faf8;}
 .dict-book-table tr:last-child td{border-bottom:0;}
-.dict-book-table .dict-book-ar{font-family:'Times New Roman',serif;font-size:23px;line-height:1.35;direction:rtl;text-align:right;color:#1b3e2a;}
+.dict-book-table .dict-book-ar{font-family:'Times New Roman',serif;font-size:22px;line-height:1.35;direction:rtl;text-align:right;color:#1b3e2a;overflow-wrap:normal;word-break:normal;}
+.dict-book-table .dict-book-plural{color:#5a6871;}
+.dict-book-dash{font-family:'Segoe UI',system-ui,sans-serif;color:#a5b1aa;font-size:16px;}
 .rule-list{display:flex;flex-direction:column;gap:14px;}
 .rules-home-head{background:white;border-radius:10px;padding:18px 16px;margin-bottom:12px;box-shadow:0 1px 10px rgba(20,70,45,.06);border:1px solid #edf2ef;}
 .rules-home-kicker{font-size:11px;font-weight:800;color:var(--green);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;}
