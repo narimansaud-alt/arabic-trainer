@@ -997,7 +997,10 @@ function goBackFromRuleLesson() {
 function renderRuleCards(items, openCards) {
   return items
     .map((r, i) => {
-      const content = r.sections && r.sections.length ? formatRuleSections(r.sections) : formatRuleContent(r.content);
+      const hasFilledSections = r.sections && r.sections.some((section) =>
+        String(section.content || '').replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, '').trim()
+      );
+      const content = hasFilledSections ? formatRuleSections(r.sections) : formatRuleContent(r.content);
       return (
         '<div class="rule-card accent-' +
         ruleAccent(r, i) +
@@ -1021,7 +1024,9 @@ function renderRuleCards(items, openCards) {
 }
 
 function formatRuleSections(sections) {
-  const sorted = [...sections].sort((a, b) => {
+  const sorted = sections
+    .filter((section) => String(section.content || '').replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, '').trim())
+    .sort((a, b) => {
     const byOrder = Number(a.sort_order || 0) - Number(b.sort_order || 0);
     if (byOrder !== 0) return byOrder;
     return Number(a.id || 0) - Number(b.id || 0);
