@@ -2912,7 +2912,7 @@ button,input,select,textarea{max-width:100%;min-width:0;}
     <div class="sc">
       <div class="sc-title">Аккаунт</div>
       <div style="font-size:14px;color:#555;margin-bottom:12px;">Вы вошли как: <b id="s-uname">—</b></div>
-      <button class="btn-start" style="background:var(--red);color:white;" onclick="doLogout()">Выйти из аккаунта</button>
+      <button class="btn-start settings-logout-btn" onclick="doLogout()">Выйти из аккаунта</button>
     </div>
     <div class="sc">
       <div class="sc-title">Обновление приложения</div>
@@ -3030,7 +3030,16 @@ body{height:100dvh!important;touch-action:pan-y;}
   max-height:none!important;
   overflow:visible!important;
   touch-action:pan-y!important;
-  padding-bottom:max(calc(50dvh + env(safe-area-inset-bottom,0px)),260px)!important;
+  padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))!important;
+}
+#screen-app .tab-content.active::after{
+  content:'';
+  display:block;
+  width:100%;
+  height:max(50dvh,260px);
+  min-height:260px;
+  pointer-events:none;
+  visibility:hidden;
 }
 .verb-modal-overlay{
   overscroll-behavior:contain!important;
@@ -3157,7 +3166,7 @@ body{height:100dvh!important;touch-action:pan-y;}
 }
 #tab-dict .dict-view-btn .ui-icon{width:18px;height:18px;}
 #tab-settings .sc{border-color:#d7e1e7!important;box-shadow:0 6px 22px rgba(20,31,40,.045)!important;}
-#tab-settings .btn-start,
+button[onclick="doLogout()"],
 #tab-settings #btn-check-app-update{
   min-height:46px!important;
   border:1px solid #3f6178!important;
@@ -3166,7 +3175,7 @@ body{height:100dvh!important;touch-action:pan-y;}
   color:#fff!important;
   box-shadow:none!important;
 }
-#tab-settings .btn-start:hover,
+button[onclick="doLogout()"]:hover,
 #tab-settings #btn-check-app-update:hover{
   border-color:#314b5d!important;
   background:#314b5d!important;
