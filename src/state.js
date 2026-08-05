@@ -119,7 +119,7 @@ const VOLUMES = {
       label: 'Том 4',
       sub: 'Уроки 1-17',
       book: {
-        url: './books/ar_04_Lessons_in_Arabic_Language.pdf',
+        url: 'https://www.fatwa-online.com/wp-content/uploads/madeenah-lessons-in-arabic-language-book-4.pdf',
         title: 'Мединский курс (Том 4)',
         pageCount: 161,
         pagePattern: './books/tom4-pages/page-{page}.jpg',
