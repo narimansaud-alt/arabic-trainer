@@ -1,0 +1,19 @@
+# Only the client application and its runtime assets belong in Cloudflare.
+/.git/
+/.github/
+/.claude/
+/.codex-remote-attachments/
+/.local/
+/.npm-cache/
+/.wrangler/
+/backups/
+/docs/
+/node_modules/
+/scripts/
+/services/
+/supabase/
+/tmp/
+/AGENTS.md
+/.gitignore
+/build.sh
+/wrangler.jsonc

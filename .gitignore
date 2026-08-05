@@ -22,3 +22,9 @@ backups/
 
 # machine-local project knowledge and credentials
 .local/
+
+# generated caches and local assistant attachments
+.npm-cache/
+.codex-remote-attachments/
+.claude/
+tmp/
