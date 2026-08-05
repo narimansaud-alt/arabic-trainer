@@ -2663,7 +2663,8 @@ button,input,select,textarea{max-width:100%;min-width:0;}
 
   <div class="vol-cards" id="vol-cards"></div>
   <button id="btn-install-pwa" class="btn-back-vol" style="display:none;background:rgba(255,255,255,0.25);margin-bottom:8px;" onclick="installPWA()"><span class="ui-icon"><svg><use href="#ui-icon-download"></use></svg></span>Установить приложение</button>
-  <button class="btn-back-vol" onclick="appNavigateBack('screen-course')">← Назад к курсам</button>
+  <button class="btn-back-vol" style="margin-top:12px;" onclick="openCourseSettings()"><span class="ui-icon"><svg><use href="#ui-icon-settings"></use></svg></span>Настройки</button>
+  <button class="btn-back-vol" onclick="doLogout()">Выйти из аккаунта</button>
 </div>
 
 <!-- MAIN APP -->
@@ -2674,7 +2675,7 @@ button,input,select,textarea{max-width:100%;min-width:0;}
     </div>
     <div class="tb-right">
       <button class="btn-tb" aria-label="Инструкция" onclick="switchTab('instr')"><span class="ui-icon"><svg><use href="#ui-icon-help"></use></svg></span><span>Инструкция</span></button>
-      <button class="btn-tb" onclick="goToCourse()"><span>Курсы</span></button>
+      <button class="btn-tb" onclick="goToCourse()"><span>Тома</span></button>
     </div>
   </div>
 
@@ -3002,6 +3003,9 @@ html,body{height:auto!important;min-height:100%;overflow-y:auto!important;touch-
 .btn-start.gold,.btn-start.blue,.btn-start.orange,.mode-pill.fast,.mode-pill.fast.active,.lb-pill.gold,.lb-pill.gold.active,.btn-hint{background:#edf3f6!important;border-color:#9dafba!important;color:#2f4d61!important;box-shadow:none!important;}
 .streak-banner,.streak-days{border-color:#d7e1e7!important;box-shadow:0 8px 28px rgba(20,31,40,.05)!important;}
 #tab-book .book-nav-btn,#tab-book .book-format-btn,#tab-rules .rules-back-btn,#tab-rules .rules-open-btn,#tab-rules .rule-detail-actions button,#tab-settings .qty-pill.active{background:#edf3f6!important;border-color:#cbd8e0!important;color:#2f4d61!important;}
+.rule-detail-actions.cheat-sheets{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+.grammar-ref-section-title{margin:18px 0 8px;color:#20384d;font:800 15px/1.4 'Manrope','Segoe UI',sans-serif;}
+.grammar-ref-section-title:first-of-type{margin-top:12px;}
 @media(max-width:480px){.rules-home-title-row{align-items:flex-start;}.rules-verb-badge{font-size:11px;padding:7px 9px;}.rules-verb-badge-ar{font-size:16px;}}
 </style>
 <link rel="stylesheet" href="src/verb-rules.css">

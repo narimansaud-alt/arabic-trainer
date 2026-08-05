@@ -1,12 +1,8 @@
 // course.js вЂ” course & volume selection screens.
 
 function goToCourse() {
-  const courseHello = document.getElementById('course-hello');
-  if (courseHello) {
-    courseHello.textContent = 'السَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللَّهِ وَبَرَكَاتُهُ';
-  }
   updateStreakBanner();
-  showScreen('screen-course');
+  showVolumeScreen('Мединский курс', 'med');
 }
 
 let currentCourseKey = 'med';

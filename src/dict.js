@@ -1151,7 +1151,7 @@ function renderRuleLessonDetail(cont, lesson, items, query) {
     ' ' +
     (items.length === 1 ? 'правило' : items.length < 5 ? 'правила' : 'правил') +
     (words ? ' · ' + words + ' слов в уроке' : '') +
-    '</div><div class="rule-detail-actions"><button type="button" onclick="openGrammarTable(\'pronouns\')">Местоимения</button><button type="button" onclick="showVerbRules()">Правила глаголов</button><button type="button" onclick="copyRuleLesson(this)">Копировать</button><button type="button" onclick="downloadRuleLesson()">Скачать</button></div></div>' +
+    '</div><div class="rule-detail-actions cheat-sheets"><button type="button" onclick="openGrammarTable(\'pronouns\')">Местоимения</button><button type="button" onclick="openGrammarTable(\'verbs\')">Глаголы</button></div></div>' +
     '<div class="rule-detail-outline"><div class="rule-outline-title">Содержание урока</div><div class="rule-outline-sub">Все правила урока. Нажмите на пункт, чтобы перейти к пояснению.</div><div class="rule-outline-list">' +
     lessonOutline(items) +
     '</div></div><div class="rule-list">' +
@@ -1236,12 +1236,9 @@ function renderRules() {
 }
 
 function openGrammarTable(type, pushHistory = true) {
-  if (type === 'verbs') {
-    showVerbRules(pushHistory);
-    return;
-  }
-  const title = 'Местоимения';
-  const sub = 'Кратко о личных местоимениях';
+  const isVerbCheatSheet = type === 'verbs';
+  const title = isVerbCheatSheet ? 'Шпаргалка по глаголам' : 'Местоимения';
+  const sub = isVerbCheatSheet ? 'Прошедшее, настоящее, будущее и запрет' : 'Отдельные и слитные личные местоимения';
   const titleEl = document.getElementById('verb-modal-title');
   const subEl = document.getElementById('verb-modal-sub');
   const bodyEl = document.getElementById('verb-modal-body');
@@ -1251,7 +1248,9 @@ function openGrammarTable(type, pushHistory = true) {
 
   titleEl.textContent = title;
   subEl.textContent = sub;
-  bodyEl.innerHTML = renderPronounReferenceTable();
+  bodyEl.innerHTML = isVerbCheatSheet && typeof window.renderVerbCheatSheet === 'function'
+    ? window.renderVerbCheatSheet()
+    : renderPronounReferenceTable();
   overlay.classList.remove('hidden');
   if (pushHistory) pushAppHistoryState({ appModal: 'grammar-table', table: type, appView: 'rule-lesson', lesson: Settings.rulesLesson });
 }
@@ -1267,19 +1266,32 @@ function grammarRefTable(headers, rows) {
 }
 
 function renderPronounReferenceTable() {
-  const rows = [
-    ['Я', '<span class="ar-text">أَنَا</span>', '<span class="ar-text">ـِي</span>', '<span class="ar-text">لِي / عِنْدِي</span>'],
-    ['Мы', '<span class="ar-text">نَحْنُ</span>', '<span class="ar-text">ـنَا</span>', '<span class="ar-text">لَنَا / عِنْدَنَا</span>'],
-    ['Ты (м.)', '<span class="ar-text">أَنْتَ</span>', '<span class="ar-text">ـكَ</span>', '<span class="ar-text">لَكَ / عِنْدَكَ</span>'],
-    ['Ты (ж.)', '<span class="ar-text">أَنْتِ</span>', '<span class="ar-text">ـكِ</span>', '<span class="ar-text">لَكِ / عِنْدَكِ</span>'],
-    ['Он', '<span class="ar-text">هُوَ</span>', '<span class="ar-text">ـهُ</span>', '<span class="ar-text">لَهُ / عِنْدَهُ</span>'],
-    ['Она', '<span class="ar-text">هِيَ</span>', '<span class="ar-text">ـهَا</span>', '<span class="ar-text">لَهَا / عِنْدَهَا</span>'],
-    ['Они (м.)', '<span class="ar-text">هُمْ</span>', '<span class="ar-text">ـهُمْ</span>', '<span class="ar-text">لَهُمْ / عِنْدَهُمْ</span>'],
-    ['Они (ж.)', '<span class="ar-text">هُنَّ</span>', '<span class="ar-text">ـهُنَّ</span>', '<span class="ar-text">لَهُنَّ / عِنْدَهُنَّ</span>'],
+  const thirdPerson = [
+    ['Он', '<span class="ar-text">هُوَ</span>', '<span class="ar-text">ـهُ</span>', '<span class="ar-text">كِتَابُهُ</span>'],
+    ['Они двое (м.)', '<span class="ar-text">هُمَا</span>', '<span class="ar-text">ـهُمَا</span>', '<span class="ar-text">كِتَابُهُمَا</span>'],
+    ['Они (м.)', '<span class="ar-text">هُمْ</span>', '<span class="ar-text">ـهُمْ</span>', '<span class="ar-text">كِتَابُهُمْ</span>'],
+    ['Она', '<span class="ar-text">هِيَ</span>', '<span class="ar-text">ـهَا</span>', '<span class="ar-text">كِتَابُهَا</span>'],
+    ['Они двое (ж.)', '<span class="ar-text">هُمَا</span>', '<span class="ar-text">ـهُمَا</span>', '<span class="ar-text">كِتَابُهُمَا</span>'],
+    ['Они (ж.)', '<span class="ar-text">هُنَّ</span>', '<span class="ar-text">ـهُنَّ</span>', '<span class="ar-text">كِتَابُهُنَّ</span>'],
   ];
+  const secondPerson = [
+    ['Ты (м.)', '<span class="ar-text">أَنْتَ</span>', '<span class="ar-text">ـكَ</span>', '<span class="ar-text">كِتَابُكَ</span>'],
+    ['Вы двое (м.)', '<span class="ar-text">أَنْتُمَا</span>', '<span class="ar-text">ـكُمَا</span>', '<span class="ar-text">كِتَابُكُمَا</span>'],
+    ['Вы (м.)', '<span class="ar-text">أَنْتُمْ</span>', '<span class="ar-text">ـكُمْ</span>', '<span class="ar-text">كِتَابُكُمْ</span>'],
+    ['Ты (ж.)', '<span class="ar-text">أَنْتِ</span>', '<span class="ar-text">ـكِ</span>', '<span class="ar-text">كِتَابُكِ</span>'],
+    ['Вы двое (ж.)', '<span class="ar-text">أَنْتُمَا</span>', '<span class="ar-text">ـكُمَا</span>', '<span class="ar-text">كِتَابُكُمَا</span>'],
+    ['Вы (ж.)', '<span class="ar-text">أَنْتُنَّ</span>', '<span class="ar-text">ـكُنَّ</span>', '<span class="ar-text">كِتَابُكُنَّ</span>'],
+  ];
+  const firstPerson = [
+    ['Я', '<span class="ar-text">أَنَا</span>', '<span class="ar-text">ـِي / ـنِي</span>', '<span class="ar-text">كِتَابِي / رَآنِي</span>'],
+    ['Мы', '<span class="ar-text">نَحْنُ</span>', '<span class="ar-text">ـنَا</span>', '<span class="ar-text">كِتَابُنَا</span>'],
+  ];
+  const headers = ['Значение', 'Отдельно', 'Слитно', 'Пример'];
   return (
-    '<div class="grammar-ref-note">Быстрая таблица для повторения: отдельное местоимение, слитное местоимение и формы принадлежности.</div>' +
-    grammarRefTable(['Значение', 'Отдельно', 'Слитно', 'У / принадлежит'], rows)
+    '<div class="grammar-ref-note">Отдельное местоимение пишется самостоятельным словом. Слитное присоединяется к существительному, предлогу или глаголу. Мужские и женские формы показаны раздельно.</div>' +
+    '<h3 class="grammar-ref-section-title">3-е лицо — الغَائِبُ</h3>' + grammarRefTable(headers, thirdPerson) +
+    '<h3 class="grammar-ref-section-title">2-е лицо — المُخَاطَبُ</h3>' + grammarRefTable(headers, secondPerson) +
+    '<h3 class="grammar-ref-section-title">1-е лицо — المُتَكَلِّمُ</h3>' + grammarRefTable(headers, firstPerson)
   );
 }
 

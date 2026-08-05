@@ -139,58 +139,7 @@ async function bootstrapApp() {
     if (typeof syncDailyProgress === 'function') void syncDailyProgress();
   }
 
-  let restored = false;
-  try {
-    restored = await withTimeout(restoreProgress({ skipPrompt: true }), 1500, 'restore-progress');
-  } catch (e) {
-    restored = false;
-    ErrorLog.capture(e, { source: 'app-bootstrap', phase: 'restore-progress' });
-  }
-
-  if (restored) {
-    return;
-  }
-
-  let lastScreen = null,
-    lastVolume = null,
-    lastTab = null;
-  try {
-    lastScreen = localStorage.getItem('arabic_last_screen');
-    lastVolume = localStorage.getItem('arabic_last_volume');
-    lastTab = localStorage.getItem('arabic_last_tab');
-  } catch (e) {
-    lastScreen = null;
-    lastVolume = null;
-    lastTab = null;
-  }
-  if (lastScreen === 'screen-app' && lastVolume) {
-    if (!findVolumeById(lastVolume)) {
-      try {
-        localStorage.removeItem('arabic_last_volume');
-      } catch (e) {
-        /* non-fatal */
-      }
-      goToCourse();
-      return;
-    }
-    App.volume = lastVolume;
-    currentCourseKey = getCourseKeyByVolume(lastVolume) || currentCourseKey;
-    document.getElementById('s-uname').textContent = App.username;
-    updateUI();
-    try {
-      await Promise.all([
-        withTimeout(loadDict(), 6000, 'load-dict'),
-        withTimeout(loadRulesAll(), 6000, 'load-rules'),
-        withTimeout(updateStreak(false), 2000, 'update-streak'),
-      ]);
-    } catch (e) {
-      ErrorLog.capture(e, { source: 'app-bootstrap', phase: 'data-hydration' });
-    }
-    showScreen('screen-app');
-    switchTab(lastTab && document.getElementById('tab-' + lastTab) ? lastTab : 'train');
-  } else {
-    goToCourse();
-  }
+  goToCourse();
 }
 
 // KEYBOARD
@@ -278,7 +227,7 @@ function restoreNestedAppHistory(state) {
 // history entry; on the root screen we restore a guard entry instead of exit.
 let appScreenHistoryReady = false;
 let appScreenHistoryRestoring = false;
-const APP_NAVIGATION_SCREENS = new Set(['screen-course', 'screen-volume', 'screen-app', 'screen-quiz', 'screen-results']);
+const APP_NAVIGATION_SCREENS = new Set(['screen-volume', 'screen-app', 'screen-quiz', 'screen-results']);
 
 function setupAppScreenHistory() {
   if (appScreenHistoryReady || typeof window.showScreen !== 'function') return;

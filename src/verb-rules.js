@@ -174,6 +174,27 @@
     cont.innerHTML = '<div class="rule-detail-page vr-page"><div class="vr-topic-head"><button class="rules-back-btn" type="button" onclick="goBackFromVerbRuleTopic()">← Правила глаголов</button><div class="rules-home-kicker">Правила глаголов</div><h2>' + topic[1] + '</h2><div class="vr-hero-ar" lang="ar" dir="rtl">' + topic[2] + '</div><p>' + topic[3] + '</p></div><div class="vr-content">' + topicContent(topic[0]) + '</div></div>';
   }
 
+  window.renderVerbCheatSheet = function () {
+    var headers = ['Лицо', 'Перевод', 'Форма'];
+    var prohibition = [
+      ['أَنْتَ', 'Ты (м.)', 'لَا تَكْتُبْ'],
+      ['أَنْتُمَا', 'Вы двое', 'لَا تَكْتُبَا'],
+      ['أَنْتُمْ', 'Вы (м.)', 'لَا تَكْتُبُوا'],
+      ['أَنْتِ', 'Ты (ж.)', 'لَا تَكْتُبِي'],
+      ['أَنْتُنَّ', 'Вы (ж.)', 'لَا تَكْتُبْنَ'],
+    ];
+    var rows = function (index, prefix) {
+      return persons.map(function (row) {
+        return [ar(row[0]), row[1], ar((prefix || '') + row[index])];
+      });
+    };
+    return note('Как пользоваться шпаргалкой', 'Все формы даны на правильном глаголе كَتَبَ — писать. Будущее образуется частицей سَوْفَ перед настоящим. Запрет существует только для второго лица и строится с لَا النَّاهِيَةُ.', ar('كَتَبَ · يَكْتُبُ · سَوْفَ يَكْتُبُ · لَا تَكْتُبْ')) +
+      '<h3 class="grammar-ref-section-title">Прошедшее — الْمَاضِي</h3>' + table(headers, rows(2, '')) +
+      '<h3 class="grammar-ref-section-title">Настоящее — الْمُضَارِعُ</h3>' + table(headers, rows(3, '')) +
+      '<h3 class="grammar-ref-section-title">Будущее — الْمُسْتَقْبَلُ</h3>' + table(headers, rows(3, 'سَوْفَ ')) +
+      '<h3 class="grammar-ref-section-title">Запрет — النَّهْيُ</h3>' + table(headers, prohibition.map(function (row) { return [ar(row[0]), row[1], ar(row[2])]; }));
+  };
+
   window.renderVerbRules = function (cont) {
     if (!cont) return;
     if (currentTopic) renderTopic(cont, currentTopic);
