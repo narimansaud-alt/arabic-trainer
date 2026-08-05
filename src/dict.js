@@ -220,6 +220,37 @@ function isDictionaryPair(singular, plural) {
   );
 }
 
+function dictionaryPairStem(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/ё/gu, 'е')
+    .replace(/\([^)]*\)/gu, ' ')
+    .replace(/[^а-я\s-]/gu, ' ')
+    .split(/[\s-]+/u)
+    .filter((word) => word.length >= 4)
+    .map((word) => word.replace(/(?:иями|ями|ами|ого|ему|ому|ыми|ими|ией|иям|иях|ение|ения|ений|ать|ять|еть|ить|ться|ся|ов|ев|ей|ам|ям|ах|ях|ые|ие|ый|ий|ая|яя|ое|ее|ы|и|а|я|ь|й|у|ю)$/u, ''))
+    .filter((word) => word.length >= 3);
+}
+
+function isLikelyDictionaryPair(singular, plural) {
+  if (!singular || !plural || singular.lesson !== plural.lesson || singular.ar === plural.ar) return false;
+  const left = String(singular.ru || '').toLowerCase().trim();
+  const right = String(plural.ru || '').toLowerCase().trim();
+  if (!left || !right || left === right) return false;
+  if (/(?:ть|ться)(?:\s|$|,)/u.test(left) || /(?:ть|ться)(?:\s|$|,)/u.test(right)) return false;
+  const serviceWords = /^(?:и|или|но|да|нет|ли|что|кто|где|когда|если|для|от|до|на|в|из|с)$/u;
+  if (serviceWords.test(left) || serviceWords.test(right)) return false;
+  const leftStems = dictionaryPairStem(left);
+  const rightStems = dictionaryPairStem(right);
+  const sharedStem = leftStems.some((first) => rightStems.some((second) =>
+    first === second || (Math.min(first.length, second.length) >= 4 && (first.startsWith(second) || second.startsWith(first)))
+  ));
+  if (!sharedStem) return false;
+  const arabicPlural = /(?:ات|ون|ين|اء|ان)(?:[\u064B-\u065F\u0670]*)$/u.test(String(plural.ar || '').replace(/[ـ\s]/gu, ''));
+  const russianPlural = /(?:ы|и|а|я|ов|ев|ей|ам|ям|ами|ями|ах|ях)(?:\s|$|,)/u.test(right);
+  return arabicPlural || russianPlural || right.length > left.length;
+}
+
 function makeDictBookRows(words) {
   const rows = [];
   for (let index = 0; index < words.length; index += 1) {
@@ -228,7 +259,7 @@ function makeDictBookRows(words) {
     if (
       plural &&
       singular.lesson === plural.lesson &&
-      isDictionaryPair(singular, plural)
+      (isDictionaryPair(singular, plural) || isLikelyDictionaryPair(singular, plural))
     ) {
       rows.push({ ru: singular.ru, singular: singular.ar, plural: plural.ar });
       index += 1;
