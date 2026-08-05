@@ -32,3 +32,27 @@
 #screen-verb-study .vs-table .vs-pronoun{font-size:21px}
 #screen-verb-study .vs-table .vs-result-form{font-size:27px}
 @media(max-width:560px){#screen-verb-study .vs-choice-grid{grid-template-columns:1fr}#screen-verb-study .vs-modal{padding-inline:0}#screen-verb-study .vs-modal-sheet{max-height:calc(100dvh - 8px);border-radius:18px 18px 0 0;padding-inline:12px}#screen-verb-study .vs-form-row{grid-template-columns:1fr 1.2fr;gap:10px}}
+
+/* Readable bilingual conjugation views */
+#screen-verb-study .vs-pattern-entry{display:flex;align-items:center;justify-content:space-between;gap:16px}
+#screen-verb-study .vs-pattern-entry .vs-action{color:#fff;border-color:#1e3a8a;background:#1e3a8a}
+#screen-verb-study .vs-group-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px;padding-bottom:11px;border-bottom:1px solid #e2e8f0}
+#screen-verb-study .vs-group-heading h3{margin:0;text-align:right}
+#screen-verb-study .vs-group-heading p{margin:0;color:#64748b;font-size:13px;line-height:1.35;text-align:right}
+#screen-verb-study .vs-form-row{grid-template-columns:minmax(120px,.75fr) minmax(150px,1fr);padding:13px 4px}
+#screen-verb-study .vs-form-row small{display:block;margin-top:1px;color:#64748b;font-size:13px}
+#screen-verb-study .vs-person-ru{color:#64748b;font-size:13px}
+#screen-verb-study .vs-table{min-width:570px}
+#screen-verb-study .vs-table th:nth-child(1){text-align:right}
+#screen-verb-study .vs-table th:nth-child(3){text-align:right}
+#screen-verb-study .vs-pattern-list{display:grid;gap:12px}
+#screen-verb-study .vs-pattern-card{padding:16px;border:1px solid #e2e8f0;border-radius:14px;background:#fff}
+#screen-verb-study .vs-pattern-top{display:flex;align-items:center;justify-content:space-between;gap:16px}
+#screen-verb-study .vs-pattern-top b{color:#1e3a8a;font-size:15px}
+#screen-verb-study .vs-pattern-top strong{color:#1e293b;font:27px/1.45 "Noto Naskh Arabic","Amiri",serif}
+#screen-verb-study .vs-pattern-card>p{margin:10px 0;color:#475569;line-height:1.55}
+#screen-verb-study .vs-pattern-examples{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#screen-verb-study .vs-pattern-examples>div{padding:10px 12px;border-radius:10px;background:#f8fafc}
+#screen-verb-study .vs-pattern-examples span{display:block;color:#1e293b;font:22px/1.5 "Noto Naskh Arabic","Amiri",serif;text-align:right}
+#screen-verb-study .vs-pattern-examples small{display:block;margin-top:3px;color:#64748b}
+@media(max-width:560px){#screen-verb-study .vs-pattern-entry{align-items:flex-start;flex-direction:column}#screen-verb-study .vs-pattern-entry .vs-action{width:100%}#screen-verb-study .vs-group-heading{align-items:flex-end;flex-direction:column;gap:4px}#screen-verb-study .vs-group-heading p{align-self:stretch;text-align:left}#screen-verb-study .vs-form-row{grid-template-columns:minmax(102px,.85fr) minmax(128px,1fr)}#screen-verb-study .vs-pattern-examples{grid-template-columns:1fr}}
