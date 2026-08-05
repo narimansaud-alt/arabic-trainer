@@ -2651,7 +2651,7 @@ button,input,select,textarea{max-width:100%;min-width:0;}
     </div>
   </div>
   <button class="btn-logout-c" style="margin-top:12px;" onclick="openCourseSettings()"><span class="ui-icon"><svg><use href="#ui-icon-settings"></use></svg></span>Настройки</button>
-  <button class="btn-logout-c" onclick="doLogout()">Выйти из аккаунта</button>
+  <button class="btn-logout-c" id="course-logout-btn" onclick="doLogout()">Выйти из аккаунта</button>
 </div>
 
 <!-- VOLUME SELECT -->
@@ -2664,7 +2664,7 @@ button,input,select,textarea{max-width:100%;min-width:0;}
   <div class="vol-cards" id="vol-cards"></div>
   <button id="btn-install-pwa" class="btn-back-vol" style="display:none;background:rgba(255,255,255,0.25);margin-bottom:8px;" onclick="installPWA()"><span class="ui-icon"><svg><use href="#ui-icon-download"></use></svg></span>Установить приложение</button>
   <button class="btn-back-vol" style="margin-top:12px;" onclick="openCourseSettings()"><span class="ui-icon"><svg><use href="#ui-icon-settings"></use></svg></span>Настройки</button>
-  <button class="btn-back-vol" onclick="doLogout()">Выйти из аккаунта</button>
+  <button class="btn-back-vol" id="volume-logout-btn" onclick="doLogout()">Выйти из аккаунта</button>
 </div>
 
 <!-- MAIN APP -->
@@ -2912,7 +2912,7 @@ button,input,select,textarea{max-width:100%;min-width:0;}
     <div class="sc">
       <div class="sc-title">Аккаунт</div>
       <div style="font-size:14px;color:#555;margin-bottom:12px;">Вы вошли как: <b id="s-uname">—</b></div>
-      <button class="btn-start settings-logout-btn" onclick="doLogout()">Выйти из аккаунта</button>
+      <button class="btn-start settings-logout-btn" id="settings-logout-btn" onclick="doLogout()">Выйти из аккаунта</button>
     </div>
     <div class="sc">
       <div class="sc-title">Обновление приложения</div>
@@ -3166,7 +3166,9 @@ body{height:100dvh!important;touch-action:pan-y;}
 }
 #tab-dict .dict-view-btn .ui-icon{width:18px;height:18px;}
 #tab-settings .sc{border-color:#d7e1e7!important;box-shadow:0 6px 22px rgba(20,31,40,.045)!important;}
-button[onclick="doLogout()"],
+#screen-course #course-logout-btn,
+#screen-volume #volume-logout-btn,
+#tab-settings #settings-logout-btn,
 #tab-settings #btn-check-app-update{
   min-height:46px!important;
   border:1px solid #3f6178!important;
@@ -3175,7 +3177,9 @@ button[onclick="doLogout()"],
   color:#fff!important;
   box-shadow:none!important;
 }
-button[onclick="doLogout()"]:hover,
+#screen-course #course-logout-btn:hover,
+#screen-volume #volume-logout-btn:hover,
+#tab-settings #settings-logout-btn:hover,
 #tab-settings #btn-check-app-update:hover{
   border-color:#314b5d!important;
   background:#314b5d!important;
