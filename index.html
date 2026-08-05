@@ -3220,6 +3220,16 @@ body{height:100dvh!important;touch-action:pan-y;}
 }
 </style>
 <link rel="stylesheet" href="src/verb-rules.css">
+<style id="final-theme-normalization">
+:root{--final-primary:#3f6178;--final-primary-strong:#29495f;--final-primary-soft:#edf3f6;--final-surface:#fff;--final-border:#d9e2e8;--final-text:#172631;--final-muted:#647783}
+button,[role="button"],.btn,.opt,.mode-pill,.lesson-pill,.course-card,.volume-card,.book-volume-card,.book-action-card,.nav-item,.dict-view-btn{-webkit-tap-highlight-color:transparent}
+button:focus-visible,[role="button"]:focus-visible,.opt:focus-visible,.book-action-card:focus-visible{outline:2px solid var(--final-primary);outline-offset:2px}
+button:not(:disabled):active,[role="button"]:not([aria-disabled="true"]):active,.opt:active,.mode-pill:active,.lesson-pill:active,.course-card:active,.volume-card:active,.book-volume-card:active,.book-action-card:active{background-color:var(--final-primary-soft)!important;border-color:var(--final-primary)!important;color:var(--final-primary-strong)!important;box-shadow:none!important;transform:translateY(1px)}
+.opt,.answer-option,.test-card,.quiz-card,.learn-card,.word-test-card{background:var(--final-surface)!important;border-color:var(--final-border)!important;color:var(--final-text)!important}
+.opt.selected,.answer-option.selected,.opt.ok,.answer-option.correct,.quiz-card.correct,.learn-card.correct{background:#edf3f6!important;border-color:#68869a!important;color:#203d50!important;box-shadow:inset 3px 0 0 #3f6178!important}
+.opt.err,.answer-option.incorrect,.quiz-card.incorrect,.learn-card.incorrect{background:#fbf2f1!important;border-color:#c58b84!important;color:#6d3732!important;box-shadow:inset 3px 0 0 #a76059!important}
+.opt:disabled,.answer-option:disabled{opacity:1}.rule-source-note{color:var(--final-muted);font-size:13px}.book-page-image{touch-action:none}
+</style>
 <script src="src/api.js"></script>
 <script src="src/state.js"></script>
 <script src="src/helpers.js"></script>

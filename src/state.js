@@ -93,11 +93,13 @@ const VOLUMES = {
     {
       id: 'Мединский курс (Том 2)',
       label: 'Том 2',
-      sub: 'Уроки 1–5+',
+      sub: 'Уроки 1–31',
       book: {
         url: './books/ar_02_Lessons_in_Arabic_Language.pdf',
         title: 'Мединский курс (Том 2)',
-        status: 'not-uploaded',
+        pageCount: 223,
+        pagePattern: './books/tom2-pages/page-{page}.jpg',
+        status: 'ready',
       },
     },
     { id: 'Мединский курс (Том 3)', label: 'Том 3', sub: 'В разработке', book: null },

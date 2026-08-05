@@ -1,0 +1,1 @@
+﻿-- Historical migration 20260630083401 was applied in Supabase before local migration tracking.
