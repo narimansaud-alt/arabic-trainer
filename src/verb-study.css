@@ -72,3 +72,28 @@
 #screen-verb-study .vs-inline-help{margin:0 0 14px}
 #screen-verb-study .vs-result-workspace .vs-results{gap:12px}
 @media(max-width:560px){#screen-verb-study .vs-result-workspace{padding:11px}#screen-verb-study .vs-result-workspace-head{flex-direction:column}#screen-verb-study .vs-result-workspace-head .vs-view-switch{width:100%}#screen-verb-study .vs-control-row{grid-template-columns:1fr;gap:6px}#screen-verb-study .vs-control-row>span{padding-left:2px}}
+
+/* Single and general conjugation tables */
+#screen-verb-study .vs-table-kind{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;margin:0 0 14px;border:1px solid #dce7ef;border-radius:11px;background:#f5f8fb}
+#screen-verb-study .vs-kind-button{min-height:40px;border:0;border-radius:8px;background:transparent;color:#64748b;font-family:inherit;font-size:13px;font-weight:750}
+#screen-verb-study .vs-kind-button.active{background:#315d79;color:#fff;box-shadow:0 4px 12px rgba(49,93,121,.18)}
+#screen-verb-study .is-general .vs-control-row:first-child,#screen-verb-study .is-general .vs-control-row:nth-child(3){display:none}
+#screen-verb-study .vs-general-table .vs-group-heading>span{color:#315d79;font:20px/1.4 "Noto Naskh Arabic","Amiri",serif;white-space:nowrap}
+#screen-verb-study .vs-general-forms{padding:0!important;min-width:210px}
+#screen-verb-study .vs-general-forms>div{display:grid;grid-template-columns:70px minmax(0,1fr);gap:8px;align-items:center;padding:8px 10px;border-bottom:1px solid #e2e8f0}
+#screen-verb-study .vs-general-forms>div:last-child{border-bottom:0}
+#screen-verb-study .vs-general-forms small{color:#64748b;font:17px/1.4 "Noto Naskh Arabic","Amiri",serif;text-align:right}
+#screen-verb-study .vs-general-forms b{color:#1e293b;font:24px/1.45 "Noto Naskh Arabic","Amiri",serif;text-align:right}
+@media(max-width:560px){#screen-verb-study .vs-general-table .vs-group-heading>span{font-size:16px}#screen-verb-study .vs-general-forms{min-width:190px}#screen-verb-study .vs-general-forms>div{grid-template-columns:58px minmax(0,1fr);padding:7px 8px}#screen-verb-study .vs-general-forms b{font-size:22px}}
+
+/* Formula matrix for the ten Arabic verb forms */
+#screen-verb-study .vs-pattern-matrix{margin-top:18px;padding:16px;border:1px solid #e2e8f0;border-radius:14px;background:#fff}
+#screen-verb-study .vs-pattern-matrix h3{margin:0;color:#1e293b;font-size:18px}
+#screen-verb-study .vs-pattern-matrix>p{margin:6px 0 14px;color:#64748b;font-size:13px;line-height:1.5}
+#screen-verb-study .vs-pattern-matrix-wrap{overflow:auto;border:1px solid #dce7ef;border-radius:11px}
+#screen-verb-study .vs-pattern-matrix table{min-width:1120px;width:100%;border-collapse:collapse}
+#screen-verb-study .vs-pattern-matrix th{min-width:112px;padding:10px 8px;background:#f6f9fb;border-right:1px solid #dce7ef;color:#475569;text-align:center}
+#screen-verb-study .vs-pattern-matrix th span{display:block;font-size:10px;line-height:1.25}
+#screen-verb-study .vs-pattern-matrix th b{display:block;margin-top:4px;color:#315d79;font:16px/1.35 "Noto Naskh Arabic","Amiri",serif}
+#screen-verb-study .vs-pattern-matrix td{padding:10px 8px;border-top:1px solid #e2e8f0;border-right:1px solid #e2e8f0;color:#1e293b;font:19px/1.4 "Noto Naskh Arabic","Amiri",serif;text-align:center;white-space:nowrap}
+#screen-verb-study .vs-pattern-matrix .vs-pattern-number{font-family:inherit;font-size:14px;font-weight:800;color:#315d79}
