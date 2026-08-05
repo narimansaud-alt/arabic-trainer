@@ -2788,10 +2788,10 @@ button,input,select,textarea{max-width:100%;min-width:0;}
     <div class="instr-block">
       <div class="instr-mode-title" style="font-size:17px;">С чего начать?</div>
       <div class="instr-text" style="line-height:1.9;">
-        <b>1.</b> Выбери Мединский курс или тренажёр глаголов<br>
-        <b>2.</b> Выбери том<br>
-        <b>3.</b> Выбери один или несколько уроков<br>
-        <b>4.</b> Выбери режим и нажми «Начать тренировку»<br><br>
+        <b>1.</b> Войди в аккаунт и выбери том Мединского курса<br>
+        <b>2.</b> В разделе «Тренировка» выбери один или несколько уроков<br>
+        <b>3.</b> Выбери режим тренировки<br>
+        <b>4.</b> Нажми «Начать тренировку»<br><br>
         Ниже подробно описан каждый режим.
       </div>
     </div>
@@ -2832,6 +2832,14 @@ button,input,select,textarea{max-width:100%;min-width:0;}
       </div>
     </div>
     <div class="instr-block">
+      <div class="instr-mode-title">Правила, породы и шпаргалки</div>
+      <div class="instr-text">
+        Во вкладке <b>«Правила»</b> сначала показаны уроки выбранного тома. Открой урок, чтобы прочитать его правила, примеры и пояснения.<br><br>
+        Кнопка <b>«Правила глаголов»</b> открывает отдельный справочник. В разделе <b>«Породы I–X»</b> все десять карточек раскрыты сразу. В каждой карточке указаны формула прошедшего и настоящего времени, способ образования, изменение значения, важное замечание, примеры с переводом и масдары. Буквы <b>ف، ع، ل</b> обозначают первую, вторую и третью буквы корня, а не конкретный глагол.<br><br>
+        Внутри каждого урока кнопки <b>«Местоимения»</b> и <b>«Глаголы»</b> открывают таблицы-шпаргалки. Закрыть таблицу можно крестиком, касанием затемнённой области или системной кнопкой «Назад».
+      </div>
+    </div>
+    <div class="instr-block">
       <div class="instr-mode-title">Рейтинги и серия дней</div>
       <div class="instr-text">
         Рейтинг обновляется после подтверждения очков сервером. Дневная цель — 30 правильных ответов. Новый день и серия рассчитываются по московскому времени; после обновления страницы значение восстанавливается из аккаунта.
@@ -2840,7 +2848,14 @@ button,input,select,textarea{max-width:100%;min-width:0;}
     <div class="instr-block">
       <div class="instr-mode-title">Книга</div>
       <div class="instr-text">
-        Открой раздел «Книга», выбери том, затем формат. «Читать в приложении» запускает полноэкранный режим: листай кнопками, стрелками клавиатуры или свайпом. «Открыть PDF» показывает исходный файл отдельно.
+        Открой раздел «Книга», выбери том, затем формат. «Читать в приложении» запускает полноэкранный режим: листай кнопками, стрелками клавиатуры или свайпом; двумя пальцами можно приблизить нужную область страницы. «Открыть PDF» показывает исходный файл отдельно.
+      </div>
+    </div>
+    <div class="instr-block">
+      <div class="instr-mode-title">Навигация и обновление</div>
+      <div class="instr-text">
+        Прокручивай содержимое движением пальца. Для возврата используй кнопку внутри страницы или системную кнопку «Назад».<br><br>
+        Чтобы вручную получить последнюю версию, открой <b>«Настройки»</b>, нажми <b>«Проверить обновление»</b> и следуй сообщению на экране.
       </div>
     </div>
     <div class="instr-block">
@@ -3142,6 +3157,33 @@ body{height:100dvh!important;touch-action:pan-y;}
 }
 #tab-dict .dict-view-btn .ui-icon{width:18px;height:18px;}
 #tab-settings .sc{border-color:#d7e1e7!important;box-shadow:0 6px 22px rgba(20,31,40,.045)!important;}
+#tab-settings .btn-start,
+#tab-settings #btn-check-app-update{
+  min-height:46px!important;
+  border:1px solid #3f6178!important;
+  border-radius:8px!important;
+  background:#3f6178!important;
+  color:#fff!important;
+  box-shadow:none!important;
+}
+#tab-settings .btn-start:hover,
+#tab-settings #btn-check-app-update:hover{
+  border-color:#314b5d!important;
+  background:#314b5d!important;
+}
+#tab-rules .vr-form-card[open]{border-color:#c6d5de!important;background:#fff!important;}
+#tab-rules .vr-form-card[open] summary{border-bottom:1px solid #d7e1e7!important;background:#f7fafb!important;}
+#tab-rules .vr-form-guide{
+  margin:14px 0 16px;
+  padding:14px;
+  border:1px solid #d7e1e7;
+  border-radius:8px;
+  background:#fbfcfd;
+}
+#tab-rules .vr-form-guide h4{margin:12px 0 4px;color:#2c4354;font:800 13px/1.4 'Manrope','Segoe UI',sans-serif;}
+#tab-rules .vr-form-guide h4:first-child{margin-top:0;}
+#tab-rules .vr-form-guide p{margin:0;color:#405665;font:500 14px/1.7 'Manrope','Segoe UI',sans-serif;}
+#tab-rules .vr-form-guide .vr-example{margin-top:12px;padding-top:12px;border-top:1px solid #d7e1e7;}
 .app-tab.active,.cc-arrow,.vol-arrow,.rules-home-kicker,.rules-lesson-num,.rules-lesson-open{color:#3f6178!important;}
 .app-tab.active::before,.streak-bar-fill,.quiz-bar-fill,.learn-dot.current{background:#3f6178!important;}
 .btn-primary,.btn-announcement,.btn-check,.btn-res:not(.sec),.btn-start.green{background:#3f6178!important;border-color:#3f6178!important;color:#fff!important;}
