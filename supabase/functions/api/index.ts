@@ -40,7 +40,8 @@ const CORS_HEADERS = {
 };
 const MOSCOW_OFFSET_MS = 3 * 60 * 60 * 1000;
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
-const MAX_DAILY_WORDS = 30;
+const DAILY_STREAK_GOAL = 30;
+const MAX_DAILY_WORDS = 1000000;
 const MAX_SCORE_POINTS = 500;
 
 function moscowDateKey(offsetDays = 0) {
@@ -400,7 +401,7 @@ Deno.serve(async (req: Request) => {
             // trusting a client-supplied streak number directly, to
             // avoid letting a tampered client award itself days.
             const today = moscowDateKey();
-            if (user.last_count_date !== today || Number(user.daily_words || 0) < MAX_DAILY_WORDS) {
+            if (user.last_count_date !== today || Number(user.daily_words || 0) < DAILY_STREAK_GOAL) {
               return json({ ok: true, streak: Number(user.streak || 0), max_streak: Number(user.max_streak || 0), unchanged: true });
             }
             const last = user.last_activity as string | null;
@@ -420,20 +421,19 @@ Deno.serve(async (req: Request) => {
           case "update-daily-count": {
             const count = body.daily_words;
             if (!isIntegerInRange(count, 0, MAX_DAILY_WORDS)) return badRequest("daily_words invalid");
-            const today = moscowDateKey();
-            const { error } = await db
-              .from("users")
-              .update({ daily_words: count, last_count_date: today })
-              .eq("username", username);
+            const { data, error } = await db.rpc("sync_user_daily_words", {
+              p_username: username,
+              p_count: count,
+            });
             if (error) return badRequest(error.message);
-            return json({ ok: true });
+            return json({ ok: true, daily_words: Number(data || 0) });
           }
 
           case "increment-daily-count": {
             const { data, error } = await db.rpc("increment_user_daily_words", { p_username: username });
             if (error) return badRequest(error.message);
             const dailyWords = Number(data || 0);
-            return json({ ok: true, daily_words: dailyWords, reached_goal: dailyWords === MAX_DAILY_WORDS });
+            return json({ ok: true, daily_words: dailyWords, reached_goal: dailyWords >= DAILY_STREAK_GOAL });
           }
 
           default:

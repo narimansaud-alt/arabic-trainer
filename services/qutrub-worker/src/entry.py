@@ -22,6 +22,7 @@
 # more than one dictionary entry (e.g. كَتَبَ is both ضمة and كسرة), so
 # verb_ar alone can't be a cache key.
 import json
+import re
 import unicodedata
 
 import pyarabic.araby as araby
@@ -34,9 +35,20 @@ from fastapi.responses import JSONResponse
 from workers import WorkerEntrypoint
 
 FUTURE_TYPES = {"فتحة", "ضمة", "كسرة"}
+MAX_VERB_LENGTH = 32
+ARABIC_VERB_RE = re.compile(r"^[\u0621-\u064A\u0671\u064B-\u065F\u0670\s]+$")
 
 app = FastAPI()
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://arabic-trainer.narimansaud.workers.dev",
+        "http://localhost:8787",
+        "http://127.0.0.1:8787",
+    ],
+    allow_methods=["GET"],
+    allow_headers=["Accept", "Content-Type"],
+)
 
 
 def nfc(s):
@@ -60,7 +72,13 @@ def build_triverb_index():
     for entry in triverbtable.TriVerbTable.values():
         vocverb = nfc(entry["verb"])
         key = unvocalized_key(vocverb)
-        index.setdefault(key, []).append({"verb": vocverb, "future_type": nfc(entry["haraka"])})
+        index.setdefault(key, []).append(
+            {
+                "verb": vocverb,
+                "future_type": nfc(entry["haraka"]),
+                "transitive": entry.get("transitive") != "ل",
+            }
+        )
     return index
 
 
@@ -104,7 +122,7 @@ def resolve_verb(verb, variant_verb, variant_future_type):
     return "resolved", {**chosen, "alternatives": alternatives}
 
 
-def build_forms(verb, future_type):
+def build_forms(verb, future_type, transitive=True):
     res = qutrub.conjugate(
         verb,
         future_type,
@@ -112,11 +130,12 @@ def build_forms(verb, future_type):
         future=True,
         imperative=True,
         alltense=True,
-        transitive=True,
+        transitive=transitive,
         display_format="DICT",
     )
     res = nfc_deep(res)
     return {
+        "transitive": bool(transitive),
         "all_forms": {key: value for key, value in res.items() if isinstance(value, dict)},
         "past": res.get("الماضي المعلوم", {}),
         "present": res.get("المضارع المعلوم", {}),
@@ -124,7 +143,7 @@ def build_forms(verb, future_type):
     }
 
 
-def cache_lookup(env, verb, future_type):
+def cache_lookup(env, verb, future_type, transitive):
     try:
         res = requests.get(
             env.SUPABASE_URL + "/rest/v1/verb_conjugations",
@@ -138,14 +157,19 @@ def cache_lookup(env, verb, future_type):
                 "select": "forms",
                 "limit": 1,
             },
-            timeout=10,
+            timeout=(1.5, 2.5),
         )
         rows = res.json()
         if rows:
             forms = rows[0]["forms"]
             # Cached legacy responses only contain three basic tables. Rebuild
             # them once so the user receives the full فصحى result as well.
-            if isinstance(forms, dict) and isinstance(forms.get("all_forms"), dict) and forms["all_forms"]:
+            if (
+                isinstance(forms, dict)
+                and isinstance(forms.get("all_forms"), dict)
+                and forms["all_forms"]
+                and forms.get("transitive") == bool(transitive)
+            ):
                 return forms
     except Exception:
         pass
@@ -164,7 +188,7 @@ def cache_result(env, verb, future_type, forms):
                 "Prefer": "resolution=merge-duplicates,return=minimal",
             },
             data=json.dumps({"verb_ar": verb, "forms": forms, "future_type": future_type}),
-            timeout=10,
+            timeout=(1.5, 2.5),
         )
     except Exception:
         pass
@@ -183,6 +207,10 @@ async def conjugate(
     variant_future_type = nfc(variant_future_type.strip())
     if not verb:
         return JSONResponse({"ok": False, "error": "verb is required"}, status_code=400)
+    if len(verb) > MAX_VERB_LENGTH or not ARABIC_VERB_RE.fullmatch(verb):
+        return JSONResponse({"ok": False, "error": "invalid Arabic verb"}, status_code=400)
+    if variant_verb and (len(variant_verb) > MAX_VERB_LENGTH or not ARABIC_VERB_RE.fullmatch(variant_verb)):
+        return JSONResponse({"ok": False, "error": "invalid Arabic variant"}, status_code=400)
 
     status, data = resolve_verb(verb, variant_verb, variant_future_type)
 
@@ -190,7 +218,7 @@ async def conjugate(
         if future_type not in FUTURE_TYPES:
             return JSONResponse({"ok": False, "error": "invalid future_type"}, status_code=400)
         try:
-            forms = build_forms(verb, future_type)
+            forms = build_forms(verb, future_type, True)
         except Exception:
             return JSONResponse({"ok": False, "error": "conjugation failed"}, status_code=422)
         if not forms["past"].get("هو") or not forms["present"].get("هو"):
@@ -205,11 +233,12 @@ async def conjugate(
 
     # status == "resolved"
     resolved_verb, resolved_future_type = data["verb"], data["future_type"]
+    is_transitive = bool(data.get("transitive", True))
     env = request.scope["env"]
-    forms = cache_lookup(env, resolved_verb, resolved_future_type)
+    forms = cache_lookup(env, resolved_verb, resolved_future_type, is_transitive)
     if forms is None:
         try:
-            forms = build_forms(resolved_verb, resolved_future_type)
+            forms = build_forms(resolved_verb, resolved_future_type, is_transitive)
         except Exception:
             return JSONResponse({"ok": False, "error": "conjugation failed"}, status_code=422)
         if not forms["past"].get("هو") or not forms["present"].get("هو"):
@@ -221,6 +250,7 @@ async def conjugate(
         "dictionary": True,
         "verb": resolved_verb,
         "future_type": resolved_future_type,
+        "transitive": is_transitive,
         "alternatives": data["alternatives"],
         "forms": forms,
     }

@@ -34,6 +34,8 @@ const DAILY_PROGRESS_CACHE_KEY = 'arabic_daily_progress_v1';
 const DAILY_STREAK_GOAL = 30;
 const DAILY_WORDS_DISPLAY_MAX = 9999;
 let __dailyGoalSyncedDate = null;
+let __dailyLastSyncedDate = null;
+let __dailyLastSyncedWords = 0;
 
 function normalizedDailyWords(value) {
   return Math.max(0, Math.min(DAILY_WORDS_DISPLAY_MAX, Number(value) || 0));
@@ -68,14 +70,23 @@ function restoreDailyProgressSnapshot() {
 }
 
 function syncDailyProgress() {
-  const target = Math.min(DAILY_STREAK_GOAL, normalizedDailyWords(App.dailyWords));
+  const target = normalizedDailyWords(App.dailyWords);
   const today = appDateKey();
-  if (target < DAILY_STREAK_GOAL || __dailyGoalSyncedDate === today) return __dailyIncrementQueue;
+  if (!App.username || target <= 0) return __dailyIncrementQueue;
+  if (__dailyLastSyncedDate !== today) {
+    __dailyLastSyncedDate = today;
+    __dailyLastSyncedWords = 0;
+  }
+  if (target <= __dailyLastSyncedWords) return __dailyIncrementQueue;
   __dailyIncrementQueue = __dailyIncrementQueue
     .then(async () => {
-      await Api.call('update-daily-count', { daily_words: target }, { timeoutMs: 4000, keepalive: true });
-      __dailyGoalSyncedDate = today;
-      await updateStreak();
+      const result = await Api.call('update-daily-count', { daily_words: target }, { timeoutMs: 4000, keepalive: true });
+      const savedWords = normalizedDailyWords(result?.daily_words ?? target);
+      __dailyLastSyncedWords = Math.max(__dailyLastSyncedWords, savedWords);
+      if (savedWords >= DAILY_STREAK_GOAL && __dailyGoalSyncedDate !== today) {
+        __dailyGoalSyncedDate = today;
+        await updateStreak();
+      }
     })
     .catch((e) => ErrorLog.capture(e, { source: 'streak', action: 'sync-daily-count', target, today }));
   return __dailyIncrementQueue;

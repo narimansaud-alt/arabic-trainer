@@ -181,3 +181,27 @@
 #screen-verb-study .vs-bottom-filter b{font:19px/1.5 "Noto Naskh Arabic","Amiri","Scheherazade New",serif}
 #screen-verb-study .vs-bottom-filter small{font-size:11px;line-height:1.25}
 #screen-verb-study .vs-bottom-filter.active{border-color:#1e3a8a;background:#1e3a8a;color:#fff;box-shadow:0 7px 16px rgba(30,58,138,.22)}
+
+/* Wide, filter-first table workspace. */
+#screen-verb-study .vs-modal.is-table-layout .vs-modal-sheet{width:min(1180px,100%)}
+#screen-verb-study .vs-result-workspace.is-table-view{padding:18px}
+#screen-verb-study .vs-result-workspace.is-table-view .vs-table-controls{position:sticky;top:-18px;z-index:4;margin-inline:-2px;box-shadow:0 8px 18px rgba(30,58,138,.08)}
+#screen-verb-study .vs-result-workspace.is-table-view .vs-table{min-width:760px;table-layout:fixed}
+#screen-verb-study .vs-general-table .vs-table{min-width:900px}
+#screen-verb-study .vs-table th:first-child{width:22%}
+#screen-verb-study .vs-table th:nth-child(2){width:25%}
+#screen-verb-study .vs-table th:nth-child(3){width:53%}
+#screen-verb-study .vs-variants{margin:0 0 14px;padding:14px;border:1px solid #dce7ef;border-radius:13px;background:#fff}
+#screen-verb-study .vs-variants>strong{display:block;color:#1e293b}
+#screen-verb-study .vs-variants>p{margin:4px 0 10px;color:#64748b;font-size:13px;line-height:1.45}
+#screen-verb-study .vs-variants>div{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+#screen-verb-study .vs-variant{flex:0 0 auto;display:grid;gap:1px;min-width:112px;padding:8px 12px;border:1px solid #d3dee7;border-radius:9px;background:#fff;color:#526273;text-align:center}
+#screen-verb-study .vs-variant b{font:20px/1.45 "Noto Naskh Arabic","Amiri",serif}
+#screen-verb-study .vs-variant small{font-size:11px}
+#screen-verb-study .vs-variant.active{border-color:#315d79;background:#eef5f9;color:#183d56}
+@media(max-width:600px){
+  #screen-verb-study .vs-result-workspace.is-table-view{padding:10px}
+  #screen-verb-study .vs-result-workspace.is-table-view .vs-table-controls{top:-10px}
+  #screen-verb-study .vs-result-workspace.is-table-view .vs-table{min-width:680px}
+  #screen-verb-study .vs-general-table .vs-table{min-width:820px}
+}

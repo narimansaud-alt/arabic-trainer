@@ -86,13 +86,20 @@ const ErrorLog = {
   },
 
   async send(payload) {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      keepalive: true,
-      body: JSON.stringify(payload),
-    });
-    if (!response.ok) throw new Error('error-log-http-' + response.status);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        keepalive: true,
+        signal: controller.signal,
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) throw new Error('error-log-http-' + response.status);
+    } finally {
+      clearTimeout(timeoutId);
+    }
   },
 
   async flush() {

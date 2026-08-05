@@ -1,0 +1,26 @@
+name: Release check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check browser JavaScript
+        run: find src -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: Check service worker JavaScript
+        run: node --check sw.js
+      - name: Check Qutrub worker Python
+        run: python -m py_compile services/qutrub-worker/src/entry.py
+      - name: Run release invariants
+        run: node scripts/release-check.mjs

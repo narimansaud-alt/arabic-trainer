@@ -3,7 +3,8 @@
 
   var rootId = 'screen-verb-study';
   var endpoint = 'https://arabic-trainer-qutrub.narimansaud.workers.dev/conjugate';
-  var state = { verb: '', forms: null, loading: false, error: '', modal: '', layout: 'table', tableMode: 'single', tense: 'past', voice: 'active', mood: 'plain' };
+  var state = { verb: '', forms: null, loading: false, error: '', modal: '', layout: 'table', tableMode: 'single', tense: 'past', voice: 'active', mood: 'plain', futureType: '', alternatives: [] };
+  var activeRequestController = null;
   var persons = {
     'هُوَ': 'Он', 'هو': 'Он', 'هُمَا': 'Они двое', 'هما': 'Они двое',
     'هُمْ': 'Они', 'هم': 'Они', 'هِيَ': 'Она', 'هي': 'Она',
@@ -61,9 +62,9 @@
     if (value.includes('الأمر')) return ['اَلْأَمْرُ', 'Повелительное наклонение'];
     if (value.includes('الماضي') && value.includes('المجهول')) return ['اَلْمَاضِي الْمَبْنِيُّ لِلْمَجْهُولِ', 'Прошедшее время · страдательный залог'];
     if (value.includes('الماضي')) return ['اَلْمَاضِي الْمَبْنِيُّ لِلْمَعْلُومِ', 'Прошедшее время · действительный залог'];
-    if (value.includes('المنصوب')) return ['اَلْمُضَارِعُ الْمَنْصُوبُ', 'Настоящее время · сослагательное наклонение'];
-    if (value.includes('المجزوم')) return ['اَلْمُضَارِعُ الْمَجْزُومُ', 'Настоящее время · усечённое наклонение'];
-    if (value.includes('المؤكد')) return ['اَلْمُضَارِعُ الْمُؤَكَّدُ', 'Настоящее время · усиленное наклонение'];
+    if (value.includes('المنصوب')) return ['اَلْمُضَارِعُ الْمَنْصُوبُ' + (value.includes('المجهول') ? ' الْمَبْنِيُّ لِلْمَجْهُولِ' : ''), 'Настоящее время · сослагательное наклонение' + (value.includes('المجهول') ? ' · страдательный залог' : '')];
+    if (value.includes('المجزوم')) return ['اَلْمُضَارِعُ الْمَجْزُومُ' + (value.includes('المجهول') ? ' الْمَبْنِيُّ لِلْمَجْهُولِ' : ''), 'Настоящее время · усечённое наклонение' + (value.includes('المجهول') ? ' · страдательный залог' : '')];
+    if (value.includes('المؤكد')) return ['اَلْمُضَارِعُ الْمُؤَكَّدُ' + (value.includes('المجهول') ? ' الْمَبْنِيُّ لِلْمَجْهُولِ' : ''), 'Настоящее время · усиленное наклонение' + (value.includes('المجهول') ? ' · страдательный залог' : '')];
     if (value.includes('المجهول')) return ['اَلْمُضَارِعُ الْمَبْنِيُّ لِلْمَجْهُولِ', 'Настоящее время · страдательный залог'];
     return ['اَلْمُضَارِعُ الْمَرْفُوعُ الْمَبْنِيُّ لِلْمَعْلُومِ', 'Настоящее время · действительный залог'];
   }  function matches(name) {
@@ -116,16 +117,21 @@
     return (group.rows || []).filter(function (row) { return row.pronoun === pronoun; })[0]?.form || '—';
   }
 
-  function generalTable() {
-    var past = findFormGroup('past', state.voice);
-    var present = findFormGroup('present', state.voice);
-    var imperative = state.voice === 'active' ? findFormGroup('imperative', 'active') : { rows: [] };
+  function generalTableForVoice(voice) {
+    var past = findFormGroup('past', voice);
+    var present = findFormGroup('present', voice);
+    var imperative = voice === 'active' ? findFormGroup('imperative', 'active') : { rows: [] };
     var personRows = past.rows.length ? past.rows : present.rows;
     if (!personRows.length) return '<div class="vs-empty">Для выбранного залога Qutrub не вернул базовые формы.</div>';
-    return '<section class="vs-result-group vs-general-table"><div class="vs-group-heading"><div><h3>Общая таблица</h3><p>Прошедшее, настоящее и повелительное в одной строке.</p></div><span dir="rtl">الماضي · المضارع · الأمر</span></div><div class="vs-table-wrap"><table class="vs-table"><thead><tr><th>Лицо</th><th>Перевод</th><th>Формы</th></tr></thead><tbody>' +
+    var voiceLabel = voice === 'passive' ? 'Страдательный залог' : 'Действительный залог';
+    return '<section class="vs-result-group vs-general-table"><div class="vs-group-heading"><div><h3>Общая таблица</h3><p>' + voiceLabel + ' · прошедшее, настоящее и повелительное.</p></div><span dir="rtl">الماضي · المضارع · الأمر</span></div><div class="vs-table-wrap"><table class="vs-table"><thead><tr><th>Лицо</th><th>Перевод</th><th>Формы</th></tr></thead><tbody>' +
       personRows.map(function (row) {
         return '<tr><td class="vs-pronoun" dir="rtl">' + esc(row.pronoun) + '</td><td class="vs-person-ru">' + esc(personRu(row.pronoun)) + '</td><td class="vs-general-forms" dir="rtl"><div><small>اَلْمَاضِي</small><b>' + esc(formFor(past, row.pronoun)) + '</b></div><div><small>اَلْمُضَارِعُ</small><b>' + esc(formFor(present, row.pronoun)) + '</b></div><div><small>اَلْأَمْرُ</small><b>' + esc(formFor(imperative, row.pronoun)) + '</b></div></td></tr>';
       }).join('') + '</tbody></table></div></section>';
+  }
+  function generalTable() {
+    var voices = state.voice === 'all' ? ['active', 'passive'] : [state.voice];
+    return voices.map(generalTableForVoice).join('');
   }
   function renderGroup(group) {
     var title = groupInfo(group.name);
@@ -138,15 +144,30 @@
         }).join('') + '</div>';
     return '<section class="vs-result-group"><div class="vs-group-heading"><h3 dir="rtl">' + esc(title[0]) + '</h3><p>' + esc(title[1]) + '</p></div>' + content + '</section>';
   }
+  function variantSelector() {
+    var choices = [{ verb: state.verb, future_type: state.futureType }].concat(state.alternatives || []);
+    var seen = {};
+    choices = choices.filter(function (item) {
+      var key = String(item.verb || '') + '|' + String(item.future_type || '');
+      if (!item.verb || seen[key]) return false;
+      seen[key] = true;
+      return true;
+    });
+    if (choices.length < 2) return '';
+    return '<section class="vs-variants"><strong>Вариант глагола</strong><p>У этого написания несколько словарных огласовок настоящего времени.</p><div>' + choices.map(function (item, index) {
+      return '<button type="button" class="vs-variant ' + (index === 0 ? 'active' : '') + '" data-variant-verb="' + esc(item.verb) + '" data-variant-future="' + esc(item.future_type || '') + '"><b dir="rtl">' + esc(item.verb) + '</b><small>' + esc(item.future_type || 'словарный вариант') + '</small></button>';
+    }).join('') + '</div></section>';
+  }
   function conjugationModal() {
     var groups = visibleGroups();
     var resultHtml = state.tableMode === 'general' ? generalTable() : (groups.length ? groups.map(renderGroup).join('') : '<div class="vs-empty">Для выбранных параметров Qutrub не вернул формы глагола.</div>');
-    return '<div class="vs-modal" role="dialog" aria-modal="true"><div class="vs-modal-sheet"><header class="vs-modal-head"><div><p class="vs-eyebrow">Спряжения глагола</p><h2 class="vs-modal-verb" dir="rtl">' + esc(state.verb) + '</h2></div><button class="vs-icon-button" data-action="close">×</button></header>' +
-      '<section class="vs-result-workspace '+(state.tableMode === 'general' ? 'is-general' : '')+'"><div class="vs-table-kind"><button class="vs-kind-button '+(state.tableMode === 'single' ? 'active' : '')+'" data-table-mode="single">Обычная</button><button class="vs-kind-button '+(state.tableMode === 'general' ? 'active' : '')+'" data-table-mode="general">Общая таблица</button></div><div class="vs-result-workspace-head"><div><h3>Формы глагола</h3><p>Выберите нужные параметры прямо здесь.</p></div><div class="vs-view-switch"><button class="vs-view-button ' + (state.layout === 'list' ? 'active' : '') + '" data-layout="list">Список</button><button class="vs-view-button ' + (state.layout === 'table' ? 'active' : '') + '" data-layout="table">Таблица</button></div></div>' +
+    return '<div class="vs-modal ' + (state.layout === 'table' || state.tableMode === 'general' ? 'is-table-layout' : '') + '" role="dialog" aria-modal="true"><div class="vs-modal-sheet"><header class="vs-modal-head"><div><p class="vs-eyebrow">Спряжения глагола</p><h2 class="vs-modal-verb" dir="rtl">' + esc(state.verb) + '</h2></div><button class="vs-icon-button" data-action="close">×</button></header>' + variantSelector() +
+      '<section class="vs-result-workspace '+(state.tableMode === 'general' ? 'is-general ' : '')+(state.layout === 'table' ? 'is-table-view' : '')+'"><div class="vs-table-kind"><button class="vs-kind-button '+(state.tableMode === 'single' ? 'active' : '')+'" data-table-mode="single">Обычная</button><button class="vs-kind-button '+(state.tableMode === 'general' ? 'active' : '')+'" data-table-mode="general">Общая таблица</button></div><div class="vs-result-workspace-head"><div><h3>Формы глагола</h3><p>Выберите нужные параметры прямо здесь.</p></div><div class="vs-view-switch"><button class="vs-view-button ' + (state.layout === 'list' ? 'active' : '') + '" data-layout="list">Список</button><button class="vs-view-button ' + (state.layout === 'table' ? 'active' : '') + '" data-layout="table">Таблица</button></div></div>' +
+      '<div class="vs-help vs-inline-help"><strong>Подсказка</strong><span>Фильтры меняют таблицу сразу, без нового запроса.</span></div>' +
       '<div class="vs-table-controls"><div class="vs-control-row"><span>Время</span><div><button class="vs-filter ' + (state.tense === 'all' ? 'active' : '') + '" data-filter="tense" data-value="all">Все</button><button class="vs-filter ' + (state.tense === 'past' ? 'active' : '') + '" data-filter="tense" data-value="past">اَلْمَاضِي</button><button class="vs-filter ' + (state.tense === 'present' ? 'active' : '') + '" data-filter="tense" data-value="present">اَلْمُضَارِعُ</button><button class="vs-filter ' + (state.tense === 'imperative' ? 'active' : '') + '" data-filter="tense" data-value="imperative">اَلْأَمْرُ</button></div></div>' +
       '<div class="vs-control-row"><span>Залог · اَلصِّيغَةُ</span><div><button class="vs-filter ' + (state.voice === 'all' ? 'active' : '') + '" data-filter="voice" data-value="all">Все</button><button class="vs-filter vs-voice-filter ' + (state.voice === 'active' ? 'active' : '') + '" data-filter="voice" data-value="active"><b dir="rtl">اَلْمَبْنِيُّ لِلْمَعْلُومِ</b><small>Действительный залог</small></button><button class="vs-filter vs-voice-filter ' + (state.voice === 'passive' ? 'active' : '') + '" data-filter="voice" data-value="passive"><b dir="rtl">اَلْمَبْنِيُّ لِلْمَجْهُولِ</b><small>Страдательный залог</small></button></div></div>' +
       '<div class="vs-control-row"><span>Наклонение</span><div><button class="vs-filter ' + (state.mood === 'all' ? 'active' : '') + '" data-filter="mood" data-value="all">Все</button><button class="vs-filter ' + (state.mood === 'plain' ? 'active' : '') + '" data-filter="mood" data-value="plain">Обычное</button><button class="vs-filter ' + (state.mood === 'subjunctive' ? 'active' : '') + '" data-filter="mood" data-value="subjunctive">اَلْمَنْصُوبُ</button><button class="vs-filter ' + (state.mood === 'jussive' ? 'active' : '') + '" data-filter="mood" data-value="jussive">اَلْمَجْزُومُ</button><button class="vs-filter ' + (state.mood === 'emphatic' ? 'active' : '') + '" data-filter="mood" data-value="emphatic">اَلْمُؤَكَّدُ</button></div></div></div>' +
-      '<div class="vs-help vs-inline-help"><strong>Подсказка</strong><span>Фильтры влияют только на показ форм ниже: их можно менять в любой момент без нового запроса.</span></div><div class="vs-results">' + (groups.length ? groups.map(renderGroup).join('') : '<div class="vs-empty">Для выбранных параметров Qutrub не вернул формы глагола.</div>') + '</div></section></div></div>';
+      '<div class="vs-results">' + resultHtml + '</div></section></div></div>';
   }
   function bottomFilters() {
     function item(filter, value, arabic, russian, active) {
@@ -216,9 +237,7 @@
   function render() {
     var root = document.getElementById(rootId);
     if (!root) return;
-    root.innerHTML = '<main class="vs-page"><header class="vs-head"><button class="vs-back" data-action="back">‹</button><div><h1>Спряжение глаголов</h1><p class="vs-sub">Фусха: формы строятся по правилам Qutrub.</p></div></header><section class="vs-card"><label class="vs-label" for="vs-input">Глагол в прошедшем времени</label><div class="vs-search"><input id="vs-input" class="vs-input" value="' + esc(state.verb) + '" placeholder="كَتَبَ" dir="rtl" autocomplete="off"><button class="vs-primary" data-action="conjugate" ' + (state.loading ? 'disabled' : '') + '>' + (state.loading ? 'Строим…' : 'Спрягать') + '</button></div><p class="vs-tip">После нажатия откроются все формы с русским переводом лиц. Внутри можно выбрать время, залог, наклонение и вид.</p></section><section class="vs-card vs-pattern-entry"><div><p class="vs-eyebrow">Справка</p><h2>Породы глаголов</h2><p class="vs-copy">10 моделей фусха: формула, объяснение и два примера с переводом.</p></div><button class="vs-action" data-action="patterns">Открыть породы</button></section></main>' + (state.modal === 'conjugations' ? conjugationModal() : state.modal === 'patterns' ? patternsModal() : '');
-    var resultWorkspace = root.querySelector('.vs-result-workspace');
-    if (resultWorkspace) resultWorkspace.insertAdjacentHTML('beforeend', bottomFilters());
+    root.innerHTML = '<main class="vs-page"><header class="vs-head"><button class="vs-back" data-action="back">‹</button><div><h1>Спряжение глаголов</h1><p class="vs-sub">Фусха: формы строятся по правилам Qutrub.</p></div></header><section class="vs-card"><label class="vs-label" for="vs-input">Глагол в прошедшем времени</label><div class="vs-search"><input id="vs-input" class="vs-input" value="' + esc(state.verb) + '" placeholder="كَتَبَ" dir="rtl" autocomplete="off" maxlength="32"><button class="vs-primary" data-action="conjugate" ' + (state.loading ? 'disabled' : '') + '>' + (state.loading ? 'Строим…' : 'Спрягать') + '</button></div>' + (state.error ? '<p class="vs-error" role="alert">' + esc(state.error) + '</p>' : '') + '<p class="vs-tip">После нажатия откроются все формы с русским переводом лиц. Внутри можно выбрать время, залог, наклонение и вид.</p></section><section class="vs-card vs-pattern-entry"><div><p class="vs-eyebrow">Справка</p><h2>Породы глаголов</h2><p class="vs-copy">10 моделей фусха: формула, объяснение и два примера с переводом.</p></div><button class="vs-action" data-action="patterns">Открыть породы</button></section></main>' + (state.modal === 'conjugations' ? conjugationModal() : state.modal === 'patterns' ? patternsModal() : '');
     root.querySelectorAll('[data-action]').forEach(function (button) { button.onclick = function () {
       var action = button.dataset.action;
       if (action === 'back') {
@@ -230,7 +249,8 @@
       if (action === 'close') { state.modal = ''; render(); }
     }; });
     root.querySelectorAll('[data-layout]').forEach(function (button) { button.onclick = function () { state.layout = button.dataset.layout; render(); }; });
-    root.querySelectorAll('[data-table-mode]').forEach(function (button) { button.onclick = function () { state.tableMode = button.dataset.tableMode; render(); }; });
+    root.querySelectorAll('[data-table-mode]').forEach(function (button) { button.onclick = function () { state.tableMode = button.dataset.tableMode; if (state.tableMode === 'general') state.layout = 'table'; render(); }; });
+    root.querySelectorAll('[data-variant-verb]').forEach(function (button) { button.onclick = function () { conjugate(button.dataset.variantVerb, button.dataset.variantFuture); }; });
     root.querySelectorAll('[data-filter]').forEach(function (button) {
       button.onclick = function () {
         state[button.dataset.filter] = button.dataset.value;
@@ -242,19 +262,26 @@
     var input = root.querySelector('#vs-input');
     if (input) input.onkeydown = function (event) { if (event.key === 'Enter') conjugate(); };
   }
-  function conjugate() {
+  function conjugate(variantVerb, variantFutureType) {
+    if (state.loading) return;
     var input = document.getElementById('vs-input');
     state.verb = (input ? input.value : state.verb).trim();
     if (!state.verb) { state.error = 'Введите арабский глагол.'; render(); return; }
+    if (state.verb.length > 32 || !/^[\u0621-\u064A\u0671\u064B-\u065F\u0670\s]+$/u.test(state.verb)) { state.error = 'Введите глагол арабскими буквами.'; render(); return; }
     state.loading = true; state.error = ''; state.modal = ''; render();
-    fetch(endpoint + '?verb=' + encodeURIComponent(state.verb), { headers: { Accept: 'application/json' } })
+    if (activeRequestController) activeRequestController.abort();
+    activeRequestController = new AbortController();
+    var requestUrl = endpoint + '?verb=' + encodeURIComponent(state.verb);
+    if (variantVerb && variantFutureType) requestUrl += '&variant_verb=' + encodeURIComponent(variantVerb) + '&variant_future_type=' + encodeURIComponent(variantFutureType);
+    var timeoutId = setTimeout(function () { activeRequestController.abort(); }, 12000);
+    fetch(requestUrl, { headers: { Accept: 'application/json' }, signal: activeRequestController.signal })
       .then(function (response) { if (!response.ok) throw new Error('Qutrub временно недоступен.'); return response.json(); })
       .then(function (data) {
         if (!data || !data.ok || !data.forms) throw new Error('Не удалось построить формы этого глагола.');
-        state.forms = data.forms; state.verb = data.verb || state.verb; state.tableMode = 'single'; state.tense = 'past'; state.voice = 'active'; state.mood = 'plain'; state.layout = 'table'; state.modal = 'conjugations';
+        state.forms = data.forms; state.verb = data.verb || state.verb; state.futureType = data.future_type || ''; state.alternatives = Array.isArray(data.alternatives) ? data.alternatives : []; state.tableMode = 'single'; state.tense = 'past'; state.voice = 'active'; state.mood = 'plain'; state.layout = 'table'; state.modal = 'conjugations';
       })
-      .catch(function (error) { state.forms = null; state.error = error.message || 'Не удалось построить спряжение.'; })
-      .finally(function () { state.loading = false; render(); });
+      .catch(function (error) { state.forms = null; state.error = error.name === 'AbortError' ? 'Сервис спряжений не ответил вовремя. Попробуйте ещё раз.' : (error.message || 'Не удалось построить спряжение.'); })
+      .finally(function () { clearTimeout(timeoutId); activeRequestController = null; state.loading = false; render(); });
   }
   window.openVerbStudy = function () { if (window.showScreen) window.showScreen(rootId); render(); };
 }());

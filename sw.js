@@ -1,4 +1,4 @@
-const CACHE = 'arabic-v20260805-progress-2';
+const CACHE = 'arabic-__BUILD_HASH__';
 const FILES = [
   './',
   './index.html',
@@ -28,6 +28,8 @@ const FILES = [
   './src/lb.js',
   './src/dict.js',
   './src/verbs.js',
+  './src/verb-study.css',
+  './src/verb-study.js',
   './src/quiz.js',
   './src/learn.js',
   './src/main.js',
@@ -56,6 +58,8 @@ const APP_SHELL_NETWORK_FIRST = [
   './src/lb.js',
   './src/dict.js',
   './src/verbs.js',
+  './src/verb-study.css',
+  './src/verb-study.js',
   './src/quiz.js',
   './src/learn.js',
   './src/main.js'

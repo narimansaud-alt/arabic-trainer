@@ -370,9 +370,36 @@ async function loadRulesAll() {
   renderRules();
 }
 
+const RULE_ALLOWED_TAGS = new Set([
+  'A', 'B', 'BLOCKQUOTE', 'BR', 'CAPTION', 'CODE', 'DIV', 'EM', 'H1', 'H2', 'H3', 'H4',
+  'H5', 'H6', 'HR', 'I', 'LI', 'OL', 'P', 'PRE', 'SMALL', 'SPAN', 'STRONG', 'SUB', 'SUP',
+  'TABLE', 'TBODY', 'TD', 'TFOOT', 'TH', 'THEAD', 'TR', 'U', 'UL'
+]);
+const RULE_ALLOWED_ATTRIBUTES = new Set(['class', 'dir', 'lang', 'colspan', 'rowspan', 'scope', 'abbr']);
+const RULE_BLOCKED_TAGS = new Set(['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'SVG', 'MATH', 'FORM', 'INPUT', 'BUTTON']);
+
+function sanitizeRuleHtml(value) {
+  const template = document.createElement('template');
+  template.innerHTML = String(value || '');
+  Array.from(template.content.querySelectorAll('*')).forEach((node) => {
+    if (RULE_BLOCKED_TAGS.has(node.tagName)) {
+      node.remove();
+      return;
+    }
+    if (!RULE_ALLOWED_TAGS.has(node.tagName)) {
+      node.replaceWith(...Array.from(node.childNodes));
+      return;
+    }
+    Array.from(node.attributes).forEach((attribute) => {
+      if (!RULE_ALLOWED_ATTRIBUTES.has(attribute.name.toLowerCase())) node.removeAttribute(attribute.name);
+    });
+  });
+  return template.innerHTML;
+}
+
 function wrapArabic(text) {
   const groups = [];
-  const protectedText = String(text || '').replace(
+  const protectedText = sanitizeRuleHtml(text).replace(
     /(\(\s*)([\u0600-\u06FF]+(?:\s+[\u0600-\u06FF]+)*)(\s*\))/gu,
     (_, opening, phrase, closing) => {
       const token = '@@ARABIC_GROUP_' + groups.length + '@@';
