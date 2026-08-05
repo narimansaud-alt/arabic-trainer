@@ -6,7 +6,7 @@ Last updated: 2026-08-04
 
 - Application stack: static HTML/CSS/vanilla JavaScript PWA, Supabase database and Edge Functions, Cloudflare hosting.
 - The main application has no bundler requirement; browser scripts are loaded directly from `index.html`.
-- Arabic verb morphology uses the separate Qutrub worker configuration under `services/qutrub-worker/`.
+- The client has no standalone conjugation mode. Static verb lessons live inside the Medina rules section; the historical Qutrub worker source under `services/qutrub-worker/` is not loaded by the PWA.
 - Workspace: `C:\Users\user\Desktop\arabic-trainer`
 - GitHub: `https://github.com/narimansaud-alt/arabic-trainer.git`
 - Production branch: `main`

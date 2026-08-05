@@ -1086,6 +1086,7 @@ function renderRulesIndex(cont, grouped) {
   const lessons = Object.keys(grouped).sort(lessonSort);
   cont.innerHTML =
     '<div class="rules-home-head"><div><div class="rules-home-kicker">Правила курса</div><div class="rules-home-title">Уроки</div><div class="rules-home-sub">Правила, примеры, разборы и таблицы.</div></div></div>' +
+    '<button class="rules-lesson-tile" type="button" onclick="showVerbRules()"><span class="rules-lesson-num">Отдельный справочник</span><span class="rules-lesson-label">Правила глаголов</span><span class="rules-lesson-full-outline"><span class="rules-lesson-preview-row accent-1"><span class="rules-lesson-preview-num">1</span><b class="rules-preview-title">Времена, отрицание и залоги</b></span><span class="rules-lesson-preview-row accent-2"><span class="rules-lesson-preview-num">2</span><b class="rules-preview-title">Виды глаголов и породы I–X</b></span><span class="rules-lesson-preview-row accent-3"><span class="rules-lesson-preview-num">3</span><b class="rules-preview-title">Производные формы и таблицы</b></span></span><span class="rules-lesson-open">Открыть справочник ›</span></button>' +
     '<div class="rules-lesson-grid">' +
     lessons
       .map((lesson) => {
@@ -1151,7 +1152,7 @@ function renderRuleLessonDetail(cont, lesson, items, query) {
     ' ' +
     (items.length === 1 ? 'правило' : items.length < 5 ? 'правила' : 'правил') +
     (words ? ' · ' + words + ' слов в уроке' : '') +
-    '</div><div class="rule-detail-actions"><button type="button" onclick="openGrammarTable(\'pronouns\')">Местоимения</button><button type="button" onclick="openGrammarTable(\'verbs\')">Глаголы</button><button type="button" onclick="copyRuleLesson(this)">Копировать</button><button type="button" onclick="downloadRuleLesson()">Скачать</button></div></div>' +
+    '</div><div class="rule-detail-actions"><button type="button" onclick="openGrammarTable(\'pronouns\')">Местоимения</button><button type="button" onclick="showVerbRules()">Правила глаголов</button><button type="button" onclick="copyRuleLesson(this)">Копировать</button><button type="button" onclick="downloadRuleLesson()">Скачать</button></div></div>' +
     '<div class="rule-detail-outline"><div class="rule-outline-title">Содержание урока</div><div class="rule-outline-sub">Все правила урока. Нажмите на пункт, чтобы перейти к пояснению.</div><div class="rule-outline-list">' +
     lessonOutline(items) +
     '</div></div><div class="rule-list">' +
@@ -1209,6 +1210,11 @@ function renderRules() {
 
   if (!cont) return;
 
+  if (Settings.rulesLesson === 'verb-rules' && typeof window.renderVerbRules === 'function') {
+    window.renderVerbRules(cont);
+    return;
+  }
+
   let rules = Dict.rules;
   if (Settings.rulesLesson !== 'all') rules = rules.filter((r) => String(r.lesson_number) === Settings.rulesLesson);
   if (q) rules = rules.filter((r) => ruleSearchText(r).includes(q));
@@ -1231,11 +1237,12 @@ function renderRules() {
 }
 
 function openGrammarTable(type, pushHistory = true) {
-  const title = type === 'verbs' ? 'Глаголы по временам' : 'Местоимения';
-  const sub =
-    type === 'verbs'
-      ? 'Полезные таблицы по спряжению и временам'
-      : 'Кратко о личных местоимениях';
+  if (type === 'verbs') {
+    showVerbRules(pushHistory);
+    return;
+  }
+  const title = 'Местоимения';
+  const sub = 'Кратко о личных местоимениях';
   const titleEl = document.getElementById('verb-modal-title');
   const subEl = document.getElementById('verb-modal-sub');
   const bodyEl = document.getElementById('verb-modal-body');
@@ -1245,7 +1252,7 @@ function openGrammarTable(type, pushHistory = true) {
 
   titleEl.textContent = title;
   subEl.textContent = sub;
-  bodyEl.innerHTML = type === 'verbs' ? renderVerbReferenceTable() : renderPronounReferenceTable();
+  bodyEl.innerHTML = renderPronounReferenceTable();
   overlay.classList.remove('hidden');
   if (pushHistory) pushAppHistoryState({ appModal: 'grammar-table', table: type, appView: 'rule-lesson', lesson: Settings.rulesLesson });
 }
@@ -1274,21 +1281,6 @@ function renderPronounReferenceTable() {
   return (
     '<div class="grammar-ref-note">Быстрая таблица для повторения: отдельное местоимение, слитное местоимение и формы принадлежности.</div>' +
     grammarRefTable(['Значение', 'Отдельно', 'Слитно', 'У / принадлежит'], rows)
-  );
-}
-
-function renderVerbReferenceTable() {
-  const rows = [
-    ['Прошедшее', '<span class="ar-text">فَعَلَ</span>', 'действие уже произошло', '<span class="ar-text">ذَهَبَ</span> — он пошел'],
-    ['Настоящее', '<span class="ar-text">يَفْعَلُ</span>', 'действие происходит сейчас или обычно', '<span class="ar-text">يَذْهَبُ</span> — он идет'],
-    ['Будущее близкое', '<span class="ar-text">سَيَفْعَلُ</span>', 'скоро / затем сделает', '<span class="ar-text">سَيَذْهَبُ</span> — он пойдет'],
-    ['Будущее общее', '<span class="ar-text">سَوْفَ يَفْعَلُ</span>', 'сделает в будущем', '<span class="ar-text">سَوْفَ يَذْهَبُ</span> — он пойдет'],
-    ['Повелительное', '<span class="ar-text">اِفْعَلْ</span>', 'приказ / просьба', '<span class="ar-text">اِذْهَبْ</span> — иди'],
-    ['Запрет', '<span class="ar-text">لَا تَفْعَلْ</span>', 'не делай', '<span class="ar-text">لَا تَذْهَبْ</span> — не иди'],
-  ];
-  return (
-    '<div class="grammar-ref-note">Шпаргалка по временам. Для полного спряжения открой раздел “Глаголы и спряжения” и введи арабский глагол.</div>' +
-    grammarRefTable(['Время / форма', 'Шаблон', 'Смысл', 'Пример'], rows)
   );
 }
 

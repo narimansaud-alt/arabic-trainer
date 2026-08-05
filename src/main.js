@@ -255,6 +255,19 @@ function restoreNestedAppHistory(state) {
     return true;
   }
 
+  if (state.app === 'arabic-trainer' && (state.appView === 'verb-rules' || state.appView === 'verb-rules-topic')) {
+    appScreenHistoryRestoring = true;
+    try {
+      if (document.querySelector('.screen.active')?.id !== 'screen-app') showScreen('screen-app');
+    } finally {
+      appScreenHistoryRestoring = false;
+    }
+    switchTab('rules');
+    if (state.appView === 'verb-rules-topic') showVerbRuleTopic(state.topic || 'basics', false);
+    else showVerbRules(false);
+    return true;
+  }
+
   if (document.querySelector('.tab-content.active')?.id === 'tab-rules' && Settings.rulesLesson !== 'all') {
     showRulesIndex(false);
   }
@@ -265,7 +278,7 @@ function restoreNestedAppHistory(state) {
 // history entry; on the root screen we restore a guard entry instead of exit.
 let appScreenHistoryReady = false;
 let appScreenHistoryRestoring = false;
-const APP_NAVIGATION_SCREENS = new Set(['screen-course', 'screen-volume', 'screen-app', 'screen-verbs', 'screen-quiz', 'screen-results']);
+const APP_NAVIGATION_SCREENS = new Set(['screen-course', 'screen-volume', 'screen-app', 'screen-quiz', 'screen-results']);
 
 function setupAppScreenHistory() {
   if (appScreenHistoryReady || typeof window.showScreen !== 'function') return;

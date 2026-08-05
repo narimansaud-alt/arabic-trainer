@@ -2,7 +2,7 @@
 
 Before changing this project, read `docs/PROJECT_KNOWLEDGE.md`.
 
-Runtime summary: static HTML/CSS/vanilla JavaScript PWA + Supabase database/Edge Function + Cloudflare deployment from GitHub `main`. Arabic verb morphology uses the Qutrub worker under `services/qutrub-worker/`.
+Runtime summary: static HTML/CSS/vanilla JavaScript PWA + Supabase database/Edge Function + Cloudflare deployment from GitHub `main`. Verb grammar is a static learning section inside the Medina rules; the client has no standalone conjugation mode.
 
 Project rules:
 
