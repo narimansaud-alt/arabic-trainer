@@ -44,6 +44,17 @@
   }
   function clean(value) { return String(value || '').replace(/[\u064B-\u065F\u0670]/g, ''); }
   function personRu(value) { return persons[value] || persons[clean(value)] || 'Лицо'; }
+  function orderPersonRows(rows) {
+    var order = ['هُوَ', 'هُمَا', 'هُمْ', 'هِيَ', 'هُمَا', 'هُنَّ', 'أَنْتَ', 'أَنْتُمَا', 'أَنْتُمْ', 'أَنْتِ', 'أَنْتُمَا', 'أَنْتُنَّ', 'أَنَا', 'نَحْنُ'];
+    var rest = (rows || []).slice();
+    var sorted = [];
+    order.forEach(function (pronoun) {
+      var target = clean(pronoun);
+      var index = rest.findIndex(function (row) { return clean(row.pronoun) === target; });
+      if (index >= 0) sorted.push(rest.splice(index, 1)[0]);
+    });
+    return sorted.concat(rest);
+  }
   function groupInfo(name) {
     var value = clean(name);
     if (value.includes('الأمر') && value.includes('المؤكد')) return ['اَلْأَمْرُ الْمُؤَكَّدُ', 'Усиленное повелительное наклонение'];
@@ -73,12 +84,12 @@
     var source = state.forms.all_forms || {};
     var groups = Object.keys(source).map(function (name) {
       var values = source[name] || {};
-      return { name: name, rows: Object.keys(values).filter(function (key) { return values[key]; }).map(function (key) { return { pronoun: key, form: values[key] }; }) };
+      return { name: name, rows: orderPersonRows(Object.keys(values).filter(function (key) { return values[key]; }).map(function (key) { return { pronoun: key, form: values[key] }; })) };
     }).filter(function (group) { return group.rows.length; });
     if (!groups.length) {
       [['الماضي المعلوم', state.forms.past], ['المضارع المعلوم', state.forms.present], ['الأمر', state.forms.imperative]].forEach(function (entry) {
         var values = entry[1] || {};
-        var rows = Object.keys(values).filter(function (key) { return values[key]; }).map(function (key) { return { pronoun: key, form: values[key] }; });
+        var rows = orderPersonRows(Object.keys(values).filter(function (key) { return values[key]; }).map(function (key) { return { pronoun: key, form: values[key] }; }));
         if (rows.length) groups.push({ name: entry[0], rows: rows });
       });
     }
@@ -102,7 +113,7 @@
   }
 
   function formFor(group, pronoun) {
-    return (group.rows || []).filter(function (row) { return row.pronoun === pronoun; })[0]?.form || 'вЂ”';
+    return (group.rows || []).filter(function (row) { return row.pronoun === pronoun; })[0]?.form || '—';
   }
 
   function generalTable() {
@@ -113,7 +124,7 @@
     if (!personRows.length) return '<div class="vs-empty">Для выбранного залога Qutrub не вернул базовые формы.</div>';
     return '<section class="vs-result-group vs-general-table"><div class="vs-group-heading"><div><h3>Общая таблица</h3><p>Прошедшее, настоящее и повелительное в одной строке.</p></div><span dir="rtl">الماضي · المضارع · الأمر</span></div><div class="vs-table-wrap"><table class="vs-table"><thead><tr><th>Лицо</th><th>Перевод</th><th>Формы</th></tr></thead><tbody>' +
       personRows.map(function (row) {
-        return '<tr><td class="vs-pronoun" dir="rtl">' + esc(row.pronoun) + '</td><td class="vs-person-ru">' + esc(personRu(row.pronoun)) + '</td><td class="vs-general-forms" dir="rtl"><div><small>الماضي</small><b>' + esc(formFor(past, row.pronoun)) + '</b></div><div><small>المضارع</small><b>' + esc(formFor(present, row.pronoun)) + '</b></div><div><small>الأمر</small><b>' + esc(formFor(imperative, row.pronoun)) + '</b></div></td></tr>';
+        return '<tr><td class="vs-pronoun" dir="rtl">' + esc(row.pronoun) + '</td><td class="vs-person-ru">' + esc(personRu(row.pronoun)) + '</td><td class="vs-general-forms" dir="rtl"><div><small>اَلْمَاضِي</small><b>' + esc(formFor(past, row.pronoun)) + '</b></div><div><small>اَلْمُضَارِعُ</small><b>' + esc(formFor(present, row.pronoun)) + '</b></div><div><small>اَلْأَمْرُ</small><b>' + esc(formFor(imperative, row.pronoun)) + '</b></div></td></tr>';
       }).join('') + '</tbody></table></div></section>';
   }
   function renderGroup(group) {
@@ -131,11 +142,24 @@
     var groups = visibleGroups();
     var resultHtml = state.tableMode === 'general' ? generalTable() : (groups.length ? groups.map(renderGroup).join('') : '<div class="vs-empty">Для выбранных параметров Qutrub не вернул формы глагола.</div>');
     return '<div class="vs-modal" role="dialog" aria-modal="true"><div class="vs-modal-sheet"><header class="vs-modal-head"><div><p class="vs-eyebrow">Спряжения глагола</p><h2 class="vs-modal-verb" dir="rtl">' + esc(state.verb) + '</h2></div><button class="vs-icon-button" data-action="close">×</button></header>' +
-      '<section class="vs-result-workspace '+(state.tableMode === 'general' ? 'is-general' : '')+'"><div class="vs-table-kind"><button class="vs-kind-button '+(state.tableMode === 'single' ? 'active' : '')+'" data-table-mode="single">�������</button><button class="vs-kind-button '+(state.tableMode === 'general' ? 'active' : '')+'" data-table-mode="general">����� �������</button></div><div class="vs-result-workspace-head"><div><h3>Формы глагола</h3><p>Выберите нужные параметры прямо здесь.</p></div><div class="vs-view-switch"><button class="vs-view-button ' + (state.layout === 'list' ? 'active' : '') + '" data-layout="list">Список</button><button class="vs-view-button ' + (state.layout === 'table' ? 'active' : '') + '" data-layout="table">Таблица</button></div></div>' +
-      '<div class="vs-table-controls"><div class="vs-control-row"><span>Время</span><div><button class="vs-filter ' + (state.tense === 'all' ? 'active' : '') + '" data-filter="tense" data-value="all">Все</button><button class="vs-filter ' + (state.tense === 'past' ? 'active' : '') + '" data-filter="tense" data-value="past">الماضي</button><button class="vs-filter ' + (state.tense === 'present' ? 'active' : '') + '" data-filter="tense" data-value="present">المضارع</button><button class="vs-filter ' + (state.tense === 'imperative' ? 'active' : '') + '" data-filter="tense" data-value="imperative">الأمر</button></div></div>' +
-      '<div class="vs-control-row"><span>Залог</span><div><button class="vs-filter ' + (state.voice === 'all' ? 'active' : '') + '" data-filter="voice" data-value="all">Все</button><button class="vs-filter ' + (state.voice === 'active' ? 'active' : '') + '" data-filter="voice" data-value="active">Действительный</button><button class="vs-filter ' + (state.voice === 'passive' ? 'active' : '') + '" data-filter="voice" data-value="passive">Страдательный</button></div></div>' +
-      '<div class="vs-control-row"><span>Наклонение</span><div><button class="vs-filter ' + (state.mood === 'all' ? 'active' : '') + '" data-filter="mood" data-value="all">Все</button><button class="vs-filter ' + (state.mood === 'plain' ? 'active' : '') + '" data-filter="mood" data-value="plain">Обычное</button><button class="vs-filter ' + (state.mood === 'subjunctive' ? 'active' : '') + '" data-filter="mood" data-value="subjunctive">منصوب</button><button class="vs-filter ' + (state.mood === 'jussive' ? 'active' : '') + '" data-filter="mood" data-value="jussive">مجزوم</button><button class="vs-filter ' + (state.mood === 'emphatic' ? 'active' : '') + '" data-filter="mood" data-value="emphatic">مؤكد</button></div></div></div>' +
+      '<section class="vs-result-workspace '+(state.tableMode === 'general' ? 'is-general' : '')+'"><div class="vs-table-kind"><button class="vs-kind-button '+(state.tableMode === 'single' ? 'active' : '')+'" data-table-mode="single">Обычная</button><button class="vs-kind-button '+(state.tableMode === 'general' ? 'active' : '')+'" data-table-mode="general">Общая таблица</button></div><div class="vs-result-workspace-head"><div><h3>Формы глагола</h3><p>Выберите нужные параметры прямо здесь.</p></div><div class="vs-view-switch"><button class="vs-view-button ' + (state.layout === 'list' ? 'active' : '') + '" data-layout="list">Список</button><button class="vs-view-button ' + (state.layout === 'table' ? 'active' : '') + '" data-layout="table">Таблица</button></div></div>' +
+      '<div class="vs-table-controls"><div class="vs-control-row"><span>Время</span><div><button class="vs-filter ' + (state.tense === 'all' ? 'active' : '') + '" data-filter="tense" data-value="all">Все</button><button class="vs-filter ' + (state.tense === 'past' ? 'active' : '') + '" data-filter="tense" data-value="past">اَلْمَاضِي</button><button class="vs-filter ' + (state.tense === 'present' ? 'active' : '') + '" data-filter="tense" data-value="present">اَلْمُضَارِعُ</button><button class="vs-filter ' + (state.tense === 'imperative' ? 'active' : '') + '" data-filter="tense" data-value="imperative">اَلْأَمْرُ</button></div></div>' +
+      '<div class="vs-control-row"><span>Залог · اَلصِّيغَةُ</span><div><button class="vs-filter ' + (state.voice === 'all' ? 'active' : '') + '" data-filter="voice" data-value="all">Все</button><button class="vs-filter vs-voice-filter ' + (state.voice === 'active' ? 'active' : '') + '" data-filter="voice" data-value="active"><b dir="rtl">اَلْمَبْنِيُّ لِلْمَعْلُومِ</b><small>Действительный залог</small></button><button class="vs-filter vs-voice-filter ' + (state.voice === 'passive' ? 'active' : '') + '" data-filter="voice" data-value="passive"><b dir="rtl">اَلْمَبْنِيُّ لِلْمَجْهُولِ</b><small>Страдательный залог</small></button></div></div>' +
+      '<div class="vs-control-row"><span>Наклонение</span><div><button class="vs-filter ' + (state.mood === 'all' ? 'active' : '') + '" data-filter="mood" data-value="all">Все</button><button class="vs-filter ' + (state.mood === 'plain' ? 'active' : '') + '" data-filter="mood" data-value="plain">Обычное</button><button class="vs-filter ' + (state.mood === 'subjunctive' ? 'active' : '') + '" data-filter="mood" data-value="subjunctive">اَلْمَنْصُوبُ</button><button class="vs-filter ' + (state.mood === 'jussive' ? 'active' : '') + '" data-filter="mood" data-value="jussive">اَلْمَجْزُومُ</button><button class="vs-filter ' + (state.mood === 'emphatic' ? 'active' : '') + '" data-filter="mood" data-value="emphatic">اَلْمُؤَكَّدُ</button></div></div></div>' +
       '<div class="vs-help vs-inline-help"><strong>Подсказка</strong><span>Фильтры влияют только на показ форм ниже: их можно менять в любой момент без нового запроса.</span></div><div class="vs-results">' + (groups.length ? groups.map(renderGroup).join('') : '<div class="vs-empty">Для выбранных параметров Qutrub не вернул формы глагола.</div>') + '</div></section></div></div>';
+  }
+  function bottomFilters() {
+    function item(filter, value, arabic, russian, active) {
+      return '<button class="vs-bottom-filter ' + (active ? 'active' : '') + '" data-filter="' + filter + '" data-value="' + value + '"><b dir="rtl">' + arabic + '</b><small>' + russian + '</small></button>';
+    }
+    return '<nav class="vs-bottom-filters" aria-label="Фильтры формы глагола">'
+      + item('tense', 'past', 'اَلْمَاضِي', 'Прошедшее', state.tense === 'past')
+      + item('tense', 'present', 'اَلْمُضَارِعُ', 'Настоящее', state.tense === 'present' && state.mood === 'plain')
+      + item('mood', 'subjunctive', 'اَلْمَنْصُوبُ', 'Сослагательное', state.mood === 'subjunctive')
+      + item('mood', 'jussive', 'اَلْمَجْزُومُ', 'Усечённое', state.mood === 'jussive')
+      + item('mood', 'emphatic', 'اَلْمُؤَكَّدُ', 'Усиленное', state.mood === 'emphatic')
+      + item('tense', 'imperative', 'اَلْأَمْرُ', 'Повелительное', state.tense === 'imperative')
+      + '</nav>';
   }
   function patternsConcepts() {
     return '<section class="vs-pattern-concepts" aria-label="Справка по породам и производным формам">'
@@ -163,8 +187,8 @@
       ['IX','اِفْعَلَّ','يَفْعَلُّ','مُفْعَلّ','—','—','—','اِفْعِلَال','—','—'],
       ['X','اِسْتَفْعَلَ','يَسْتَفْعِلُ','مُسْتَفْعِل','مُسْتَفْعَل','اُسْتُفْعِلَ','يُسْتَفْعَلُ','اِسْتِفْعَال','اِسْتَفْعِلْ','لَا تَسْتَفْعِلْ']
     ];
-    var headings = ['������|?????','���������|??????','���������|???????','������. ���������|??? ??????','�����. ���������|??? ???????','�����. ���������|?????? ???????','�����. ���������|??????? ???????','������|??????','�������������|?????','������|?????'];
-    return '<section class="vs-pattern-matrix"><h3>Общая таблица пород</h3><p>Формулы для ориентира. У I породы масдар и гласная настоящего времени уточняются по словарю.</p><div class="vs-pattern-matrix-wrap"><table><thead><tr>' + headings.map(function (heading) { var parts = heading.split('|'); return '<th><span>' + parts[0] + '</span><b dir="rtl">' + parts[1] + '</b></th>'; }).join('') + '</tr></thead><tbody>' + rows.map(function (row) { return '<tr>' + row.map(function (cell, index) { return '<td class="' + (index === 0 ? 'vs-pattern-number' : '') + '" dir="' + (index ? 'rtl' : 'ltr') + '">' + cell + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div></section>';
+    var headings = ['Порода|اَلْوَزْنُ','Прошедшее|اَلْمَاضِي','Настоящее|اَلْمُضَارِعُ','Действ. причастие|اِسْمُ الْفَاعِلِ','Страд. причастие|اِسْمُ الْمَفْعُولِ','Страд. прошедшее|اَلْمَاضِي لِلْمَجْهُولِ','Страд. настоящее|اَلْمُضَارِعُ لِلْمَجْهُولِ','Масдар|اَلْمَصْدَرُ','Повелительное|اَلْأَمْرُ','Запрет|اَلنَّهْيُ'];
+    return '<section class="vs-pattern-matrix"><h3><span dir="rtl">جَدْوَلُ الأَوْزَانِ</span><small>Общая таблица пород</small></h3><p>Формулы для ориентира. У I породы масдар и гласная настоящего времени уточняются по словарю.</p><div class="vs-pattern-matrix-wrap"><table><thead><tr>' + headings.map(function (heading) { var parts = heading.split('|'); return '<th><span>' + parts[0] + '</span><b dir="rtl">' + parts[1] + '</b></th>'; }).join('') + '</tr></thead><tbody>' + rows.map(function (row) { return '<tr>' + row.map(function (cell, index) { return '<td class="' + (index === 0 ? 'vs-pattern-number' : '') + '" dir="' + (index ? 'rtl' : 'ltr') + '">' + cell + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div></section>';
   }
   function patternTitle(number) {
     var titles = {
@@ -193,6 +217,8 @@
     var root = document.getElementById(rootId);
     if (!root) return;
     root.innerHTML = '<main class="vs-page"><header class="vs-head"><button class="vs-back" data-action="back">‹</button><div><h1>Спряжение глаголов</h1><p class="vs-sub">Фусха: формы строятся по правилам Qutrub.</p></div></header><section class="vs-card"><label class="vs-label" for="vs-input">Глагол в прошедшем времени</label><div class="vs-search"><input id="vs-input" class="vs-input" value="' + esc(state.verb) + '" placeholder="كَتَبَ" dir="rtl" autocomplete="off"><button class="vs-primary" data-action="conjugate" ' + (state.loading ? 'disabled' : '') + '>' + (state.loading ? 'Строим…' : 'Спрягать') + '</button></div><p class="vs-tip">После нажатия откроются все формы с русским переводом лиц. Внутри можно выбрать время, залог, наклонение и вид.</p></section><section class="vs-card vs-pattern-entry"><div><p class="vs-eyebrow">Справка</p><h2>Породы глаголов</h2><p class="vs-copy">10 моделей фусха: формула, объяснение и два примера с переводом.</p></div><button class="vs-action" data-action="patterns">Открыть породы</button></section></main>' + (state.modal === 'conjugations' ? conjugationModal() : state.modal === 'patterns' ? patternsModal() : '');
+    var resultWorkspace = root.querySelector('.vs-result-workspace');
+    if (resultWorkspace) resultWorkspace.insertAdjacentHTML('beforeend', bottomFilters());
     root.querySelectorAll('[data-action]').forEach(function (button) { button.onclick = function () {
       var action = button.dataset.action;
       if (action === 'back') {
@@ -208,6 +234,8 @@
     root.querySelectorAll('[data-filter]').forEach(function (button) {
       button.onclick = function () {
         state[button.dataset.filter] = button.dataset.value;
+        if (button.dataset.filter === 'tense') state.mood = 'plain';
+        if (button.dataset.filter === 'mood' && button.dataset.value !== 'plain') state.tense = 'present';
         render();
       };
     });

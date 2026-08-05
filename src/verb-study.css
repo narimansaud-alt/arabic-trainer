@@ -142,3 +142,42 @@
 #screen-verb-study .vs-matrix-divider strong{color:#1e3348;font-size:18px}
 #screen-verb-study .vs-matrix-divider small{color:#64748b;font-size:13px}
 @media(max-width:440px){#screen-verb-study .vs-contrast,#screen-verb-study .vs-example-pairs{grid-template-columns:1fr}}
+/* Arabic tables: generous line-height keeps every haraka visible. */
+#screen-verb-study .vs-pattern-matrix h3{display:grid;gap:2px}
+#screen-verb-study .vs-pattern-matrix h3 span{font:700 25px/1.65 "Noto Naskh Arabic","Amiri","Scheherazade New",serif;color:#193851;direction:rtl}
+#screen-verb-study .vs-pattern-matrix h3 small{font-size:14px;font-weight:650;color:#526c81}
+#screen-verb-study .vs-pattern-matrix th{vertical-align:middle;line-height:1.45}
+#screen-verb-study .vs-pattern-matrix th b{font-size:18px;line-height:1.7}
+#screen-verb-study .vs-pattern-matrix td{padding:13px 9px;font-size:21px;line-height:1.7;vertical-align:middle}
+#screen-verb-study .vs-pattern-card .vs-pattern-top>strong{line-height:1.7}
+#screen-verb-study .vs-pattern-concept [lang="ar"]{line-height:1.7}
+
+/* Three columns stay readable at phone width without clipping Arabic marks. */
+#screen-verb-study .vs-table{min-width:0;table-layout:fixed}
+#screen-verb-study .vs-table th:first-child{width:24%}
+#screen-verb-study .vs-table th:nth-child(2){width:25%}
+#screen-verb-study .vs-table th,#screen-verb-study .vs-table td{overflow-wrap:anywhere;word-break:normal}
+#screen-verb-study .vs-person-ru{color:#526b7e;font-size:13px;line-height:1.35}
+#screen-verb-study .vs-pronoun{line-height:1.7}
+@media(max-width:560px){
+  #screen-verb-study .vs-table th{padding:9px 6px;font-size:11px;line-height:1.35}
+  #screen-verb-study .vs-table td{padding:10px 6px}
+  #screen-verb-study .vs-pronoun{font-size:20px}
+  #screen-verb-study .vs-result-form{font-size:23px;line-height:1.75}
+  #screen-verb-study .vs-general-forms{min-width:0}
+  #screen-verb-study .vs-general-forms>div{grid-template-columns:54px minmax(0,1fr);padding:7px 6px}
+  #screen-verb-study .vs-general-forms small{font-size:15px;line-height:1.65}
+  #screen-verb-study .vs-general-forms b{font-size:21px;line-height:1.75}
+}
+
+/* Filters are placed above and below the forms, like a study workspace. */
+#screen-verb-study .vs-voice-filter{display:inline-grid!important;gap:1px;min-height:50px;padding:6px 10px!important;text-align:center}
+#screen-verb-study .vs-voice-filter b{font:17px/1.45 "Noto Naskh Arabic","Amiri","Scheherazade New",serif}
+#screen-verb-study .vs-voice-filter small{font-size:10px;line-height:1.2}
+#screen-verb-study .vs-table-controls .vs-control-row:nth-child(3){display:none}
+#screen-verb-study .vs-bottom-filters{position:sticky;bottom:0;z-index:3;display:flex;gap:7px;overflow-x:auto;margin:16px -2px -2px;padding:11px 2px calc(11px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(248,250,252,0),#f8fafc 25%);scrollbar-width:none}
+#screen-verb-study .vs-bottom-filter{flex:0 0 112px;min-height:60px;padding:7px 8px;border:1px solid #cad7e4;border-radius:12px;background:#fff;color:#38536a;text-align:center;box-shadow:0 4px 12px rgba(20,39,61,.06)}
+#screen-verb-study .vs-bottom-filter b,#screen-verb-study .vs-bottom-filter small{display:block}
+#screen-verb-study .vs-bottom-filter b{font:19px/1.5 "Noto Naskh Arabic","Amiri","Scheherazade New",serif}
+#screen-verb-study .vs-bottom-filter small{font-size:11px;line-height:1.25}
+#screen-verb-study .vs-bottom-filter.active{border-color:#1e3a8a;background:#1e3a8a;color:#fff;box-shadow:0 7px 16px rgba(30,58,138,.22)}

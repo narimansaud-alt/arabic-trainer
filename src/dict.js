@@ -1124,13 +1124,55 @@ function renderRuleLessonDetail(cont, lesson, items, query) {
     ' ' +
     (items.length === 1 ? 'правило' : items.length < 5 ? 'правила' : 'правил') +
     (words ? ' · ' + words + ' слов в уроке' : '') +
-    '</div><div class="rule-detail-actions"><button type="button" onclick="openGrammarTable(\'pronouns\')">Местоимения</button><button type="button" onclick="openGrammarTable(\'verbs\')">Глаголы</button></div></div>' +
+    '</div><div class="rule-detail-actions"><button type="button" onclick="openGrammarTable(\'pronouns\')">Местоимения</button><button type="button" onclick="openGrammarTable(\'verbs\')">Глаголы</button><button type="button" onclick="copyRuleLesson(this)">Копировать</button><button type="button" onclick="downloadRuleLesson()">Скачать</button></div></div>' +
     '<div class="rule-detail-outline"><div class="rule-outline-title">Содержание урока</div><div class="rule-outline-sub">Все правила урока. Нажмите на пункт, чтобы перейти к пояснению.</div><div class="rule-outline-list">' +
     lessonOutline(items) +
     '</div></div><div class="rule-list">' +
     renderRuleCards(items, false) +
     '</div></div>';
   highlightRuleMatches(cont, query);
+}
+
+function ruleLessonPlainText() {
+  const page = document.querySelector('#rules-content .rule-detail-page');
+  return page ? page.innerText.replace(/\n{3,}/g, '\n\n').trim() : '';
+}
+
+async function copyRuleLesson(button) {
+  const text = ruleLessonPlainText();
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (e) {
+    const area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.cssText = 'position:fixed;opacity:0;pointer-events:none;';
+    document.body.appendChild(area);
+    area.select();
+    document.execCommand('copy');
+    area.remove();
+  }
+  if (button) {
+    const original = button.textContent;
+    button.textContent = 'Скопировано';
+    setTimeout(() => { button.textContent = original; }, 1600);
+  }
+}
+
+function downloadRuleLesson() {
+  const text = ruleLessonPlainText();
+  if (!text) return;
+  const lesson = String(Settings.rulesLesson || 'all').replace(/[^0-9A-Za-z_-]/g, '');
+  const blob = new Blob(['\uFEFF' + text], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'medinsky-kurs-pravila-urok-' + (lesson || 'all') + '.txt';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
 function renderRules() {
