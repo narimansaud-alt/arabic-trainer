@@ -2415,6 +2415,121 @@ body,.screen{background:var(--app-bg)!important;color:var(--ink)!important;}
 .verb-result-heading{padding:14px 12px 11px;border-bottom:1px solid #e7ecf2;text-align:center;}.verb-result-heading b{display:block;color:#17324d;font-family:'Noto Naskh Arabic',serif;font-size:27px;direction:rtl;}.verb-result-heading span{color:#718196;font-size:12px;}.verb-form-list{border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;background:#fff;}.verb-form-row{padding:10px 13px!important;border-bottom:1px solid #e7ecf2!important;min-height:54px;}.verb-form-row:nth-child(even){background:#f8faff;}.verb-form-pron{font-family:'Noto Naskh Arabic',serif;font-size:22px!important;color:#28435f!important;direction:rtl;}.verb-form-pron small{display:block;font-family:'Manrope',sans-serif;color:#718196;font-size:11px;direction:ltr;}.verb-form-ar{font-size:27px!important;color:#14283d!important;}.verb-form-table-wrap{overflow:auto;border:1px solid #dfe7f1;border-radius:12px;}.verb-form-table{min-width:650px;width:100%;border-collapse:collapse;background:#fff;}.verb-form-table th,.verb-form-table td{border-bottom:1px solid #e6ebf2;border-right:1px solid #e6ebf2;padding:11px 10px;text-align:center;vertical-align:middle;}.verb-form-table th{background:#f5f8fc;color:#405870;font-size:11px;}.verb-form-table td{font-family:'Noto Naskh Arabic',serif;color:#14283d;font-size:23px;direction:rtl;}.verb-form-table td:first-child{font-family:'Manrope',sans-serif;font-size:12px;direction:ltr;color:#53697f;}
 .verb-derived{margin-top:16px;border-top:1px solid #e5ebf2;padding-top:15px;}.verb-derived h4{margin:0 0 6px;color:#18334d;font-size:16px;}.verb-derived p{margin:0 0 11px;color:#718196;font-size:12px;line-height:1.5;}.verb-derived-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}.verb-derived-item{border:1px solid #e3e9f1;border-radius:8px;padding:10px;background:#fbfcfe;}.verb-derived-item b{font-family:'Noto Naskh Arabic',serif;font-size:20px;color:#1c3650;direction:rtl;display:block;}.verb-derived-item span{display:block;color:#718196;font-size:11px;margin-top:3px;}.verb-derived-item em{display:block;font-style:normal;color:#436079;font-size:11px;margin-top:4px;}@media (max-width:420px){.arabic-dict-head h2{font-size:22px;}.verb-modal-box{padding-left:12px!important;padding-right:12px!important;}}
 </style>
+<style>
+/* Course and volume selection: one calm visual system for the entry screens. */
+#screen-course,#screen-volume{
+  background:radial-gradient(circle at 12% 0%,#f4f8fb 0,transparent 34%),linear-gradient(145deg,#fbfcfd 0%,#eef3f7 100%)!important;
+  padding:calc(26px + env(safe-area-inset-top,0)) 18px calc(34px + env(safe-area-inset-bottom,0))!important;
+}
+#screen-course .course-header,#screen-volume .vol-header{
+  width:min(100%,520px)!important;
+  margin:0 auto 22px!important;
+  padding:20px!important;
+  text-align:left!important;
+  background:rgba(255,255,255,.86)!important;
+  border:1px solid #dce5ec!important;
+  border-radius:16px!important;
+  box-shadow:0 12px 30px rgba(31,54,73,.06)!important;
+}
+#screen-course .course-header::before,#screen-volume .vol-header::before{
+  display:block;
+  margin-bottom:10px;
+  color:#496a80;
+  font:800 10px/1 'Manrope',sans-serif;
+  letter-spacing:.14em;
+}
+#screen-course .course-header::before{content:'ВАШЕ ОБУЧЕНИЕ';}
+#screen-volume .vol-header::before{content:'ВЫБОР ТОМА';}
+#screen-course .course-header .hello{
+  margin:0 0 12px!important;
+  color:#385a73!important;
+  font-family:'Noto Naskh Arabic',serif!important;
+  font-size:22px!important;
+  line-height:1.55!important;
+  text-align:right!important;
+}
+#screen-course .course-header h2,#screen-volume .vol-header h2{
+  margin:0!important;
+  color:#172b3d!important;
+  font-family:'Manrope',sans-serif!important;
+  font-size:clamp(26px,7vw,32px)!important;
+  font-weight:800!important;
+  letter-spacing:-.045em!important;
+  line-height:1.1!important;
+  text-align:left!important;
+}
+#screen-course .course-header h2::after{display:none!important;content:none!important;}
+#screen-course .course-header>p,#screen-volume .vol-header p{
+  display:block!important;
+  margin:9px 0 0!important;
+  color:#718196!important;
+  font-size:13px!important;
+  line-height:1.5!important;
+  opacity:1!important;
+  text-align:left!important;
+}
+#screen-course .course-cards,#screen-volume .vol-cards{width:min(100%,520px)!important;gap:12px!important;}
+#screen-course .course-card,#screen-volume .vol-card{
+  position:relative;
+  overflow:hidden!important;
+  border:1px solid #dce5ec!important;
+  border-radius:16px!important;
+  background:rgba(255,255,255,.94)!important;
+  box-shadow:0 12px 28px rgba(31,54,73,.055)!important;
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease!important;
+}
+#screen-course .course-card:hover,#screen-volume .vol-card:hover{border-color:#aebfcb!important;box-shadow:0 16px 34px rgba(31,54,73,.09)!important;}
+#screen-course .course-card:active,#screen-volume .vol-card:active{transform:scale(.985)!important;}
+#screen-course .course-card{min-height:128px!important;display:flex!important;align-items:center!important;padding:14px!important;gap:14px!important;}
+#screen-course .cc-cover,#screen-course .cc-cover-placeholder{display:none!important;}
+#screen-course .course-card-icon{
+  width:72px;
+  height:72px;
+  display:grid;
+  place-items:center;
+  flex:0 0 auto;
+  color:#34566f;
+  background:linear-gradient(145deg,#eef4f8,#e4edf3);
+  border:1px solid #d4e0e8;
+  border-radius:15px;
+}
+#screen-course .course-card:nth-child(2) .course-card-icon{color:#496174;background:linear-gradient(145deg,#f0f3f5,#e7ecef);border-color:#d9e1e5;}
+#screen-course .course-card-icon svg{width:39px;height:39px;}
+#screen-course .cc-body-row{padding:0!important;gap:10px!important;min-width:0!important;}
+#screen-course .cc-title,#screen-volume .vol-title{color:#172b3d!important;font-family:'Manrope',sans-serif!important;font-size:17px!important;font-weight:800!important;letter-spacing:-.02em!important;}
+#screen-course .cc-sub{margin-top:6px!important;color:#718196!important;font-size:13px!important;line-height:1.45!important;}
+#screen-course .cc-arrow,#screen-volume .vol-arrow{color:#476980!important;font-size:29px!important;font-weight:300!important;line-height:1!important;}
+#screen-volume .vol-card{min-height:82px!important;padding:12px 14px!important;gap:13px!important;}
+#screen-volume .vol-num{
+  width:58px!important;
+  height:58px!important;
+  padding:6px!important;
+  border:1px solid #d4e0e8!important;
+  border-radius:14px!important;
+  background:linear-gradient(145deg,#eff5f8,#e5edf2)!important;
+  color:#35566e!important;
+  font-family:'Manrope',sans-serif!important;
+  font-size:12px!important;
+  font-weight:800!important;
+  line-height:1.15!important;
+  letter-spacing:-.02em!important;
+}
+#screen-course .btn-logout-c,#screen-volume .btn-back-vol{
+  margin-top:22px!important;
+  background:rgba(255,255,255,.78)!important;
+  color:#385a73!important;
+  border:1px solid #d5e0e7!important;
+  border-radius:10px!important;
+  box-shadow:none!important;
+}
+@media(max-width:420px){
+  #screen-course,#screen-volume{padding-left:14px!important;padding-right:14px!important;}
+  #screen-course .course-header,#screen-volume .vol-header{padding:18px!important;}
+  #screen-course .course-card-icon{width:64px;height:64px;border-radius:14px;}
+  #screen-course .course-card-icon svg{width:35px;height:35px;}
+  #screen-course .cc-title,#screen-volume .vol-title{font-size:16px!important;}
+}
+</style>
 <div class="verb-modal-overlay hidden" id="verb-modal-overlay">
   <div class="verb-modal-box">
     <button class="verb-modal-close" aria-label="Закрыть" onclick="closeVerbModal()">X</button>
@@ -2465,17 +2580,14 @@ body,.screen{background:var(--app-bg)!important;color:var(--ink)!important;}
 <div class="screen" id="screen-course">
   <div class="course-header">
     <div class="hello" id="course-hello">Добро пожаловать!</div>
-    <h2>Выбор курса</h2>
-    <p style="font-size:13px;opacity:0.7;margin-top:6px;">Нажми на курс чтобы выбрать том</p>
+    <h2>Выберите курс</h2>
+    <p>Откройте Мединский курс или арабский словарь.</p>
   </div>
 
   <div class="course-cards">
     <div class="course-card" onclick="showVolumeScreen('Мединский курс','med')">
-      <img class="cc-cover" src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Medina_arabic_book.jpg/400px-Medina_arabic_book.jpg" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" alt="Мединский курс">
-      <div class="cc-cover-placeholder" style="display:none;">
-        <span class="ui-icon ui-icon-book">
-          <svg><use href="#ui-icon-book"></use></svg>
-        </span>
+      <div class="course-card-icon" aria-hidden="true">
+        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9.5h18.5a5.5 5.5 0 0 1 5.5 5.5v23.5H17.5a5.5 5.5 0 0 0-5.5 5.5V9.5Z"/><path d="M12 9.5h-1a4 4 0 0 0-4 4V38a6 6 0 0 1 6-6h23"/><path d="M20 18h9M20 24h9M20 30h6"/></svg>
       </div>
       <div class="cc-body-row">
         <div class="cc-body"><div class="cc-title">Мединский курс</div><div class="cc-sub">4 тома — классический арабский</div></div>
@@ -2483,10 +2595,8 @@ body,.screen{background:var(--app-bg)!important;color:var(--ink)!important;}
       </div>
     </div>
     <div class="course-card" onclick="showScreen('screen-verbs')">
-      <div class="cc-cover-placeholder">
-        <span class="ui-icon ui-icon-refresh">
-          <svg><use href="#ui-icon-refresh"></use></svg>
-        </span>
+      <div class="course-card-icon" aria-hidden="true">
+        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="14"/><path d="M24 10v28M10 24h28M15 15l18 18M33 15 15 33"/><path d="M35.5 8.5 40 13l-7 7-4.5-4.5 7-7Z"/></svg>
       </div>
       <div class="cc-body-row">
         <div class="cc-body"><div class="cc-title">Арабский словарь</div><div class="cc-sub">Фусха: полный разбор и спряжение глаголов</div></div>
