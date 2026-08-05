@@ -2631,12 +2631,12 @@ body,.screen{background:var(--app-bg)!important;color:var(--ink)!important;}
         <div class="cc-arrow">›</div>
       </div>
     </div>
-    <div class="course-card" onclick="showScreen('screen-verbs')">
+    <div class="course-card" onclick="openVerbStudy()">
       <div class="course-card-icon" aria-hidden="true">
         <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="14"/><path d="M24 10v28M10 24h28M15 15l18 18M33 15 15 33"/><path d="M35.5 8.5 40 13l-7 7-4.5-4.5 7-7Z"/></svg>
       </div>
       <div class="cc-body-row">
-        <div class="cc-body"><div class="cc-title">Арабский словарь</div><div class="cc-sub">Фусха: полный разбор и спряжение глаголов</div></div>
+        <div class="cc-body"><div class="cc-title">Спряжение глаголов</div><div class="cc-sub">Фусха: таблицы, формы и понятные объяснения</div></div>
         <div class="cc-arrow">›</div>
       </div>
     </div>
@@ -2675,6 +2675,11 @@ body,.screen{background:var(--app-bg)!important;color:var(--ink)!important;}
   <section class="arabic-dict-learning" aria-label="Справочник по породам"><h3>الأوزان — породы глагола</h3><p>Формула объясняет строение глагола; для I породы гласная настоящего времени уточняется словарём.</p><div class="verb-reference-grid" id="verb-reference-grid"></div></section>
   <button class="btn-back-vol" onclick="appNavigateBack('screen-course')">Назад к курсам</button>
   </div>
+</div>
+
+<!-- VERB STUDY: isolated from the Medina course application -->
+<div class="screen" id="screen-verb-study">
+  <div id="verb-study-root"></div>
 </div>
 
 <!-- MAIN APP -->
@@ -2994,6 +2999,7 @@ body,.screen{background:var(--app-bg)!important;color:var(--ink)!important;}
   </div>
 </div>
 
+<link rel="stylesheet" href="src/verb-study.css">
 <script src="src/api.js"></script>
 <script src="src/state.js"></script>
 <script src="src/helpers.js"></script>
@@ -3004,6 +3010,7 @@ body,.screen{background:var(--app-bg)!important;color:var(--ink)!important;}
 <script src="src/lb.js"></script>
 <script src="src/dict.js"></script>
 <script src="src/verbs.js"></script>
+<script src="src/verb-study.js"></script>
 <script src="src/quiz.js"></script>
 <script src="src/learn.js"></script>
 <script src="src/main.js"></script>
