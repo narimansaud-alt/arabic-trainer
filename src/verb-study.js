@@ -5,36 +5,36 @@
   var endpoint = 'https://arabic-trainer-qutrub.narimansaud.workers.dev/conjugate';
   var state = { verb: '', forms: null, loading: false, error: '', modal: '', layout: 'table', tableMode: 'single', tense: 'past', voice: 'active', mood: 'plain' };
   var persons = {
-    'Щ‡ЩЏЩ€ЩЋ': 'РћРЅ', 'Щ‡Щ€': 'РћРЅ', 'Щ‡ЩЏЩ…ЩЋШ§': 'РћРЅРё РґРІРѕРµ', 'Щ‡Щ…Ш§': 'РћРЅРё РґРІРѕРµ',
-    'Щ‡ЩЏЩ…Щ’': 'РћРЅРё', 'Щ‡Щ…': 'РћРЅРё', 'Щ‡ЩђЩЉЩЋ': 'РћРЅР°', 'Щ‡ЩЉ': 'РћРЅР°',
-    'Щ‡ЩЏЩ†Щ‘ЩЋ': 'РћРЅРё (Р¶.)', 'Щ‡Щ†': 'РћРЅРё (Р¶.)', 'ШЈЩЋЩ†Щ’ШЄЩЋ': 'РўС‹ (Рј.)', 'ШЈЩ†ШЄ': 'РўС‹',
-    'ШЈЩЋЩ†Щ’ШЄЩђ': 'РўС‹ (Р¶.)', 'ШЈЩ†ШЄЩђ': 'РўС‹ (Р¶.)', 'ШЈЩЋЩ†Щ’ШЄЩЏЩ…ЩЋШ§': 'Р’С‹ РґРІРѕРµ', 'ШЈЩ†ШЄЩ…Ш§': 'Р’С‹ РґРІРѕРµ',
-    'ШЈЩЋЩ†Щ’ШЄЩЏЩ…Щ’': 'Р’С‹ (Рј.)', 'ШЈЩ†ШЄЩ…': 'Р’С‹ (Рј.)', 'ШЈЩЋЩ†Щ’ШЄЩЏЩ†Щ‘ЩЋ': 'Р’С‹ (Р¶.)', 'ШЈЩ†ШЄЩ†': 'Р’С‹ (Р¶.)',
-    'ШЈЩЋЩ†ЩЋШ§': 'РЇ', 'ШЈЩ†Ш§': 'РЇ', 'Щ†ЩЋШ­Щ’Щ†ЩЏ': 'РњС‹', 'Щ†Ш­Щ†': 'РњС‹'
+    'هُوَ': 'Он', 'هو': 'Он', 'هُمَا': 'Они двое', 'هما': 'Они двое',
+    'هُمْ': 'Они', 'هم': 'Они', 'هِيَ': 'Она', 'هي': 'Она',
+    'هُنَّ': 'Они (ж.)', 'هن': 'Они (ж.)', 'أَنْتَ': 'Ты (м.)', 'أنت': 'Ты',
+    'أَنْتِ': 'Ты (ж.)', 'أنتِ': 'Ты (ж.)', 'أَنْتُمَا': 'Вы двое', 'أنتما': 'Вы двое',
+    'أَنْتُمْ': 'Вы (м.)', 'أنتم': 'Вы (м.)', 'أَنْتُنَّ': 'Вы (ж.)', 'أنتن': 'Вы (ж.)',
+    'أَنَا': 'Я', 'أنا': 'Я', 'نَحْنُ': 'Мы', 'نحن': 'Мы'
   };
   var modes = [
-    ['all', 'Р’СЃРµ С„РѕСЂРјС‹', 'Ш¬Щ…ЩЉШ№ Ш§Щ„ШЄШµШ±ЩЉЩЃШ§ШЄ', 'РџРѕР»РЅС‹Р№ РѕР±Р·РѕСЂ РІСЃРµС… РІСЂРµРјС‘РЅ, Р·Р°Р»РѕРіРѕРІ Рё РЅР°РєР»РѕРЅРµРЅРёР№.'],
-    ['past-active', 'РџСЂРѕС€РµРґС€РµРµ', 'Ш§Щ„Щ…Ш§Ш¶ЩЉ Ш§Щ„Щ…Ш№Щ„Щ€Щ…', 'РџСЂРѕС€РµРґС€РµРµ РІСЂРµРјСЏ, РґРµР№СЃС‚РІРёС‚РµР»СЊРЅС‹Р№ Р·Р°Р»РѕРі.'],
-    ['past-passive', 'РџСЂРѕС€РµРґС€РµРµ, СЃС‚СЂР°РґР°С‚РµР»СЊРЅРѕРµ', 'Ш§Щ„Щ…Ш§Ш¶ЩЉ Ш§Щ„Щ…Ш¬Щ‡Щ€Щ„', 'РџСЂРѕС€РµРґС€РµРµ РІСЂРµРјСЏ, СЃС‚СЂР°РґР°С‚РµР»СЊРЅС‹Р№ Р·Р°Р»РѕРі.'],
-    ['present-active', 'РќР°СЃС‚РѕСЏС‰РµРµ', 'Ш§Щ„Щ…Ш¶Ш§Ш±Ш№ Ш§Щ„Щ…Ш№Щ„Щ€Щ…', 'РќР°СЃС‚РѕСЏС‰РµРµ РёР»Рё Р±СѓРґСѓС‰РµРµ, РґРµР№СЃС‚РІРёС‚РµР»СЊРЅС‹Р№ Р·Р°Р»РѕРі.'],
-    ['present-passive', 'РќР°СЃС‚РѕСЏС‰РµРµ, СЃС‚СЂР°РґР°С‚РµР»СЊРЅРѕРµ', 'Ш§Щ„Щ…Ш¶Ш§Ш±Ш№ Ш§Щ„Щ…Ш¬Щ‡Щ€Щ„', 'РќР°СЃС‚РѕСЏС‰РµРµ РёР»Рё Р±СѓРґСѓС‰РµРµ, СЃС‚СЂР°РґР°С‚РµР»СЊРЅС‹Р№ Р·Р°Р»РѕРі.'],
-    ['subjunctive', 'РЎРѕСЃР»Р°РіР°С‚РµР»СЊРЅРѕРµ', 'Ш§Щ„Щ…Ш¶Ш§Ш±Ш№ Ш§Щ„Щ…Щ†ШµЩ€ШЁ', 'РЈРїРѕС‚СЂРµР±Р»СЏРµС‚СЃСЏ, РЅР°РїСЂРёРјРµСЂ, РїРѕСЃР»Рµ ШЈЩЋЩ†Щ’ Рё Щ„ЩЋЩ†Щ’.'],
-    ['jussive', 'РЈСЃРµС‡С‘РЅРЅРѕРµ', 'Ш§Щ„Щ…Ш¶Ш§Ш±Ш№ Ш§Щ„Щ…Ш¬ШІЩ€Щ…', 'РЈРїРѕС‚СЂРµР±Р»СЏРµС‚СЃСЏ, РЅР°РїСЂРёРјРµСЂ, РїРѕСЃР»Рµ Щ„ЩЋЩ…Щ’.'],
-    ['emphatic', 'РЈСЃРёР»РµРЅРЅРѕРµ', 'Ш§Щ„Щ…Ш¶Ш§Ш±Ш№ Ш§Щ„Щ…Ш¤ЩѓШЇ', 'РџРѕРґС‡С‘СЂРєРёРІР°РµС‚ РґРµР№СЃС‚РІРёРµ РЅСѓРЅРѕРј СѓСЃРёР»РµРЅРёСЏ.'],
-    ['imperative', 'РџРѕРІРµР»РёС‚РµР»СЊРЅРѕРµ', 'Ш§Щ„ШЈЩ…Ш±', 'РџСЂРѕСЃСЊР±Р°, РїСЂРёРєР°Р· РёР»Рё СЃРѕРІРµС‚ РґР»СЏ РІС‚РѕСЂРѕРіРѕ Р»РёС†Р°.'],
-    ['imperative-emphatic', 'РЈСЃРёР»РµРЅРЅРѕРµ РїРѕРІРµР»РёС‚РµР»СЊРЅРѕРµ', 'Ш§Щ„ШЈЩ…Ш± Ш§Щ„Щ…Ш¤ЩѓШЇ', 'РџРѕРІРµР»РёС‚РµР»СЊРЅР°СЏ С„РѕСЂРјР° СЃ СѓСЃРёР»РµРЅРёРµРј.']
+    ['all', 'Все формы', 'جميع التصريفات', 'Полный обзор всех времён, залогов и наклонений.'],
+    ['past-active', 'Прошедшее', 'الماضي المعلوم', 'Прошедшее время, действительный залог.'],
+    ['past-passive', 'Прошедшее, страдательное', 'الماضي المجهول', 'Прошедшее время, страдательный залог.'],
+    ['present-active', 'Настоящее', 'المضارع المعلوم', 'Настоящее или будущее, действительный залог.'],
+    ['present-passive', 'Настоящее, страдательное', 'المضارع المجهول', 'Настоящее или будущее, страдательный залог.'],
+    ['subjunctive', 'Сослагательное', 'المضارع المنصوب', 'Употребляется, например, после أَنْ и لَنْ.'],
+    ['jussive', 'Усечённое', 'المضارع المجزوم', 'Употребляется, например, после لَمْ.'],
+    ['emphatic', 'Усиленное', 'المضارع المؤكد', 'Подчёркивает действие нуном усиления.'],
+    ['imperative', 'Повелительное', 'الأمر', 'Просьба, приказ или совет для второго лица.'],
+    ['imperative-emphatic', 'Усиленное повелительное', 'الأمر المؤكد', 'Повелительная форма с усилением.']
   ];
   var patterns = [
-    ['I', 'ЩЃЩЋШ№ЩЋЩ„ЩЋ / ЩЉЩЋЩЃЩ’Ш№ЩЋЩ„ЩЏ', 'Р‘Р°Р·РѕРІР°СЏ С‚СЂС‘С…Р±СѓРєРІРµРЅРЅР°СЏ РїРѕСЂРѕРґР°. Р“Р»Р°СЃРЅР°СЏ РЅР°СЃС‚РѕСЏС‰РµРіРѕ РІСЂРµРјРµРЅРё РѕРїСЂРµРґРµР»СЏРµС‚СЃСЏ СЃР»РѕРІР°СЂС‘Рј.', [['ЩѓЩЋШЄЩЋШЁЩЋ / ЩЉЩЋЩѓЩ’ШЄЩЏШЁЩЏ', 'РїРёСЃР°С‚СЊ'], ['Ш°ЩЋЩ‡ЩЋШЁЩЋ / ЩЉЩЋШ°Щ’Щ‡ЩЋШЁЩЏ', 'РёРґС‚Рё']]],
-    ['II', 'ЩЃЩЋШ№Щ‘ЩЋЩ„ЩЋ / ЩЉЩЏЩЃЩЋШ№Щ‘ЩђЩ„ЩЏ', 'РЈСЃРёР»РµРЅРёРµ РґРµР№СЃС‚РІРёСЏ, РёРЅС‚РµРЅСЃРёРІРЅРѕСЃС‚СЊ РёР»Рё РїРѕР±СѓР¶РґРµРЅРёРµ Рє РґРµР№СЃС‚РІРёСЋ.', [['Ш№ЩЋЩ„Щ‘ЩЋЩ…ЩЋ / ЩЉЩЏШ№ЩЋЩ„Щ‘ЩђЩ…ЩЏ', 'РѕР±СѓС‡Р°С‚СЊ'], ['ЩѓЩЋШіЩ‘ЩЋШ±ЩЋ / ЩЉЩЏЩѓЩЋШіЩ‘ЩђШ±ЩЏ', 'СЂР°Р·Р±РёРІР°С‚СЊ РЅР° С‡Р°СЃС‚Рё']]],
-    ['III', 'ЩЃЩЋШ§Ш№ЩЋЩ„ЩЋ / ЩЉЩЏЩЃЩЋШ§Ш№ЩђЩ„ЩЏ', 'Р§Р°СЃС‚Рѕ РІС‹СЂР°Р¶Р°РµС‚ РІР·Р°РёРјРЅРѕРµ РґРµР№СЃС‚РІРёРµ РёР»Рё РґРµР№СЃС‚РІРёРµ, РЅР°РїСЂР°РІР»РµРЅРЅРѕРµ РЅР° РґСЂСѓРіРѕРіРѕ.', [['ШґЩЋШ§Ш±ЩЋЩѓЩЋ / ЩЉЩЏШґЩЋШ§Ш±ЩђЩѓЩЏ', 'СѓС‡Р°СЃС‚РІРѕРІР°С‚СЊ'], ['ШіЩЋШ§Ш№ЩЋШЇЩЋ / ЩЉЩЏШіЩЋШ§Ш№ЩђШЇЩЏ', 'РїРѕРјРѕРіР°С‚СЊ']]],
-    ['IV', 'ШЈЩЋЩЃЩ’Ш№ЩЋЩ„ЩЋ / ЩЉЩЏЩЃЩ’Ш№ЩђЩ„ЩЏ', 'Р§Р°СЃС‚Рѕ РїСЂРёРґР°С‘С‚ Р·РЅР°С‡РµРЅРёРµ РїРѕР±СѓР¶РґРµРЅРёСЏ, РІРІРµРґРµРЅРёСЏ РІ СЃРѕСЃС‚РѕСЏРЅРёРµ РёР»Рё РїРµСЂРµС…РѕРґРЅРѕСЃС‚Рё.', [['ШЈЩЋШ®Щ’Ш±ЩЋШ¬ЩЋ / ЩЉЩЏШ®Щ’Ш±ЩђШ¬ЩЏ', 'РІС‹РІРѕРґРёС‚СЊ'], ['ШЈЩЋШіЩ’Щ„ЩЋЩ…ЩЋ / ЩЉЩЏШіЩ’Щ„ЩђЩ…ЩЏ', 'РїСЂРµРґР°РІР°С‚СЊСЃСЏ, РїСЂРёРЅРёРјР°С‚СЊ РёСЃР»Р°Рј']]],
-    ['V', 'ШЄЩЋЩЃЩЋШ№Щ‘ЩЋЩ„ЩЋ / ЩЉЩЋШЄЩЋЩЃЩЋШ№Щ‘ЩЋЩ„ЩЏ', 'Р’РѕР·РІСЂР°С‚РЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РёР»Рё РїСЂРёРѕР±СЂРµС‚РµРЅРёРµ РєР°С‡РµСЃС‚РІР° РѕС‚ II РїРѕСЂРѕРґС‹.', [['ШЄЩЋШ№ЩЋЩ„Щ‘ЩЋЩ…ЩЋ / ЩЉЩЋШЄЩЋШ№ЩЋЩ„Щ‘ЩЋЩ…ЩЏ', 'СѓС‡РёС‚СЊСЃСЏ'], ['ШЄЩЋЩѓЩЋШіЩ‘ЩЋШ±ЩЋ / ЩЉЩЋШЄЩЋЩѓЩЋШіЩ‘ЩЋШ±ЩЏ', 'Р»РѕРјР°С‚СЊСЃСЏ РЅР° С‡Р°СЃС‚Рё']]],
-    ['VI', 'ШЄЩЋЩЃЩЋШ§Ш№ЩЋЩ„ЩЋ / ЩЉЩЋШЄЩЋЩЃЩЋШ§Ш№ЩЋЩ„ЩЏ', 'Р’Р·Р°РёРјРЅРѕСЃС‚СЊ РёР»Рё РґРµР№СЃС‚РІРёРµ РЅРµСЃРєРѕР»СЊРєРёС… СѓС‡Р°СЃС‚РЅРёРєРѕРІ.', [['ШЄЩЋШ№ЩЋШ§Щ€ЩЋЩ†ЩЋ / ЩЉЩЋШЄЩЋШ№ЩЋШ§Щ€ЩЋЩ†ЩЏ', 'СЃРѕС‚СЂСѓРґРЅРёС‡Р°С‚СЊ'], ['ШЄЩЋШґЩЋШ§Ш±ЩЋЩѓЩЋ / ЩЉЩЋШЄЩЋШґЩЋШ§Ш±ЩЋЩѓЩЏ', 'РґРµР»РёС‚СЊ, СѓС‡Р°СЃС‚РІРѕРІР°С‚СЊ РІРјРµСЃС‚Рµ']]],
-    ['VII', 'Ш§ЩђЩ†Щ’ЩЃЩЋШ№ЩЋЩ„ЩЋ / ЩЉЩЋЩ†Щ’ЩЃЩЋШ№ЩђЩ„ЩЏ', 'РћР±С‹С‡РЅРѕ РІРѕР·РІСЂР°С‚РЅРѕСЃС‚СЊ РёР»Рё СЂРµР·СѓР»СЊС‚Р°С‚ РґРµР№СЃС‚РІРёСЏ РЅР°Рґ РїСЂРµРґРјРµС‚РѕРј.', [['Ш§ЩђЩ†Щ’ЩѓЩЋШіЩЋШ±ЩЋ / ЩЉЩЋЩ†Щ’ЩѓЩЋШіЩђШ±ЩЏ', 'СЃР»РѕРјР°С‚СЊСЃСЏ'], ['Ш§ЩђЩ†Щ’ЩЃЩЋШЄЩЋШ­ЩЋ / ЩЉЩЋЩ†Щ’ЩЃЩЋШЄЩђШ­ЩЏ', 'РѕС‚РєСЂС‹РІР°С‚СЊСЃСЏ']]],
-    ['VIII', 'Ш§ЩђЩЃЩ’ШЄЩЋШ№ЩЋЩ„ЩЋ / ЩЉЩЋЩЃЩ’ШЄЩЋШ№ЩђЩ„ЩЏ', 'РЈС‡Р°СЃС‚РёРµ СЃСѓР±СЉРµРєС‚Р° РІ РґРµР№СЃС‚РІРёРё, СѓСЃРёР»РёРµ РёР»Рё РїСЂРёРЅСЏС‚РёРµ РґРµР№СЃС‚РІРёСЏ.', [['Ш§ЩђШ¬Щ’ШЄЩЋЩ…ЩЋШ№ЩЋ / ЩЉЩЋШ¬Щ’ШЄЩЋЩ…ЩђШ№ЩЏ', 'СЃРѕР±РёСЂР°С‚СЊСЃСЏ'], ['Ш§ЩђШ­Щ’ШЄЩЋЩ…ЩЋЩ„ЩЋ / ЩЉЩЋШ­Щ’ШЄЩЋЩ…ЩђЩ„ЩЏ', 'РїРµСЂРµРЅРѕСЃРёС‚СЊ, С‚РµСЂРїРµС‚СЊ']]],
-    ['IX', 'Ш§ЩђЩЃЩ’Ш№ЩЋЩ„Щ‘ЩЋ / ЩЉЩЋЩЃЩ’Ш№ЩЋЩ„Щ‘ЩЏ', 'Р РµРґРєР°СЏ РїРѕСЂРѕРґР°, РіР»Р°РІРЅС‹Рј РѕР±СЂР°Р·РѕРј РґР»СЏ С†РІРµС‚РѕРІ Рё С„РёР·РёС‡РµСЃРєРёС… РєР°С‡РµСЃС‚РІ.', [['Ш§ЩђШ­Щ’Щ…ЩЋШ±Щ‘ЩЋ / ЩЉЩЋШ­Щ’Щ…ЩЋШ±Щ‘ЩЏ', 'РєСЂР°СЃРЅРµС‚СЊ'], ['Ш§ЩђШµЩ’ЩЃЩЋШ±Щ‘ЩЋ / ЩЉЩЋШµЩ’ЩЃЩЋШ±Щ‘ЩЏ', 'Р¶РµР»С‚РµС‚СЊ']]],
-    ['X', 'Ш§ЩђШіЩ’ШЄЩЋЩЃЩ’Ш№ЩЋЩ„ЩЋ / ЩЉЩЋШіЩ’ШЄЩЋЩЃЩ’Ш№ЩђЩ„ЩЏ', 'РџСЂРѕСЃСЊР±Р°, РїРѕРёСЃРє, СЃС‚СЂРµРјР»РµРЅРёРµ РёР»Рё РїРѕР»СѓС‡РµРЅРёРµ СЃРІРѕР№СЃС‚РІР°.', [['Ш§ЩђШіЩ’ШЄЩЋШ®Щ’Ш±ЩЋШ¬ЩЋ / ЩЉЩЋШіЩ’ШЄЩЋШ®Щ’Ш±ЩђШ¬ЩЏ', 'РёР·РІР»РµРєР°С‚СЊ'], ['Ш§ЩђШіЩ’ШЄЩЋШєЩ’ЩЃЩЋШ±ЩЋ / ЩЉЩЋШіЩ’ШЄЩЋШєЩ’ЩЃЩђШ±ЩЏ', 'РїСЂРѕСЃРёС‚СЊ РїСЂРѕС‰РµРЅРёСЏ']]]
+    ['I', 'فَعَلَ / يَفْعَلُ', 'Базовая трёхбуквенная порода. Гласная настоящего времени определяется словарём.', [['كَتَبَ / يَكْتُبُ', 'писать'], ['ذَهَبَ / يَذْهَبُ', 'идти']]],
+    ['II', 'فَعَّلَ / يُفَعِّلُ', 'Усиление действия, интенсивность или побуждение к действию.', [['عَلَّمَ / يُعَلِّمُ', 'обучать'], ['كَسَّرَ / يُكَسِّرُ', 'разбивать на части']]],
+    ['III', 'فَاعَلَ / يُفَاعِلُ', 'Часто выражает взаимное действие или действие, направленное на другого.', [['شَارَكَ / يُشَارِكُ', 'участвовать'], ['سَاعَدَ / يُسَاعِدُ', 'помогать']]],
+    ['IV', 'أَفْعَلَ / يُفْعِلُ', 'Часто придаёт значение побуждения, введения в состояние или переходности.', [['أَخْرَجَ / يُخْرِجُ', 'выводить'], ['أَسْلَمَ / يُسْلِمُ', 'предаваться, принимать ислам']]],
+    ['V', 'تَفَعَّلَ / يَتَفَعَّلُ', 'Возвратное значение или приобретение качества от II породы.', [['تَعَلَّمَ / يَتَعَلَّمُ', 'учиться'], ['تَكَسَّرَ / يَتَكَسَّرُ', 'ломаться на части']]],
+    ['VI', 'تَفَاعَلَ / يَتَفَاعَلُ', 'Взаимность или действие нескольких участников.', [['تَعَاوَنَ / يَتَعَاوَنُ', 'сотрудничать'], ['تَشَارَكَ / يَتَشَارَكُ', 'делить, участвовать вместе']]],
+    ['VII', 'اِنْفَعَلَ / يَنْفَعِلُ', 'Обычно возвратность или результат действия над предметом.', [['اِنْكَسَرَ / يَنْكَسِرُ', 'сломаться'], ['اِنْفَتَحَ / يَنْفَتِحُ', 'открываться']]],
+    ['VIII', 'اِفْتَعَلَ / يَفْتَعِلُ', 'Участие субъекта в действии, усилие или принятие действия.', [['اِجْتَمَعَ / يَجْتَمِعُ', 'собираться'], ['اِحْتَمَلَ / يَحْتَمِلُ', 'переносить, терпеть']]],
+    ['IX', 'اِفْعَلَّ / يَفْعَلُّ', 'Редкая порода, главным образом для цветов и физических качеств.', [['اِحْمَرَّ / يَحْمَرُّ', 'краснеть'], ['اِصْفَرَّ / يَصْفَرُّ', 'желтеть']]],
+    ['X', 'اِسْتَفْعَلَ / يَسْتَفْعِلُ', 'Просьба, поиск, стремление или получение свойства.', [['اِسْتَخْرَجَ / يَسْتَخْرِجُ', 'извлекать'], ['اِسْتَغْفَرَ / يَسْتَغْفِرُ', 'просить прощения']]]
   ];
 
   function esc(value) {
@@ -43,30 +43,29 @@
     });
   }
   function clean(value) { return String(value || '').replace(/[\u064B-\u065F\u0670]/g, ''); }
-  function personRu(value) { return persons[value] || persons[clean(value)] || 'Р›РёС†Рѕ'; }
+  function personRu(value) { return persons[value] || persons[clean(value)] || 'Лицо'; }
   function groupInfo(name) {
     var value = clean(name);
-    if (value.includes('Ш§Щ„ШЈЩ…Ш±') && value.includes('Ш§Щ„Щ…Ш¤ЩѓШЇ')) return ['Ш§Щ„ШЈЩ…Ш± Ш§Щ„Щ…Ш¤ЩѓШЇ', 'РЈСЃРёР»РµРЅРЅРѕРµ РїРѕРІРµР»РёС‚РµР»СЊРЅРѕРµ'];
-    if (value.includes('Ш§Щ„ШЈЩ…Ш±')) return ['Ш§Щ„ШЈЩ…Ш±', 'РџРѕРІРµР»РёС‚РµР»СЊРЅРѕРµ'];
-    if (value.includes('Ш§Щ„Щ…Ш§Ш¶ЩЉ') && value.includes('Ш§Щ„Щ…Ш¬Щ‡Щ€Щ„')) return ['Ш§Щ„Щ…Ш§Ш¶ЩЉ Ш§Щ„Щ…Ш¬Щ‡Щ€Щ„', 'РџСЂРѕС€РµРґС€РµРµ, СЃС‚СЂР°РґР°С‚РµР»СЊРЅС‹Р№ Р·Р°Р»РѕРі'];
-    if (value.includes('Ш§Щ„Щ…Ш§Ш¶ЩЉ')) return ['Ш§Щ„Щ…Ш§Ш¶ЩЉ Ш§Щ„Щ…Ш№Щ„Щ€Щ…', 'РџСЂРѕС€РµРґС€РµРµ, РґРµР№СЃС‚РІРёС‚РµР»СЊРЅС‹Р№ Р·Р°Р»РѕРі'];
-    if (value.includes('Ш§Щ„Щ…Щ†ШµЩ€ШЁ')) return ['Ш§Щ„Щ…Ш¶Ш§Ш±Ш№ Ш§Щ„Щ…Щ†ШµЩ€ШЁ', 'РќР°СЃС‚РѕСЏС‰РµРµ, СЃРѕСЃР»Р°РіР°С‚РµР»СЊРЅРѕРµ'];
-    if (value.includes('Ш§Щ„Щ…Ш¬ШІЩ€Щ…')) return ['Ш§Щ„Щ…Ш¶Ш§Ш±Ш№ Ш§Щ„Щ…Ш¬ШІЩ€Щ…', 'РќР°СЃС‚РѕСЏС‰РµРµ, СѓСЃРµС‡С‘РЅРЅРѕРµ'];
-    if (value.includes('Ш§Щ„Щ…Ш¤ЩѓШЇ')) return ['Ш§Щ„Щ…Ш¶Ш§Ш±Ш№ Ш§Щ„Щ…Ш¤ЩѓШЇ', 'РќР°СЃС‚РѕСЏС‰РµРµ, СѓСЃРёР»РµРЅРЅРѕРµ'];
-    if (value.includes('Ш§Щ„Щ…Ш¬Щ‡Щ€Щ„')) return ['Ш§Щ„Щ…Ш¶Ш§Ш±Ш№ Ш§Щ„Щ…Ш¬Щ‡Щ€Щ„', 'РќР°СЃС‚РѕСЏС‰РµРµ, СЃС‚СЂР°РґР°С‚РµР»СЊРЅС‹Р№ Р·Р°Р»РѕРі'];
-    return ['Ш§Щ„Щ…Ш¶Ш§Ш±Ш№ Ш§Щ„Щ…Ш№Щ„Щ€Щ…', 'РќР°СЃС‚РѕСЏС‰РµРµ, РґРµР№СЃС‚РІРёС‚РµР»СЊРЅС‹Р№ Р·Р°Р»РѕРі'];
-  }
-  function matches(name) {
+    if (value.includes('الأمر') && value.includes('المؤكد')) return ['اَلْأَمْرُ الْمُؤَكَّدُ', 'Усиленное повелительное наклонение'];
+    if (value.includes('الأمر')) return ['اَلْأَمْرُ', 'Повелительное наклонение'];
+    if (value.includes('الماضي') && value.includes('المجهول')) return ['اَلْمَاضِي الْمَبْنِيُّ لِلْمَجْهُولِ', 'Прошедшее время · страдательный залог'];
+    if (value.includes('الماضي')) return ['اَلْمَاضِي الْمَبْنِيُّ لِلْمَعْلُومِ', 'Прошедшее время · действительный залог'];
+    if (value.includes('المنصوب')) return ['اَلْمُضَارِعُ الْمَنْصُوبُ', 'Настоящее время · сослагательное наклонение'];
+    if (value.includes('المجزوم')) return ['اَلْمُضَارِعُ الْمَجْزُومُ', 'Настоящее время · усечённое наклонение'];
+    if (value.includes('المؤكد')) return ['اَلْمُضَارِعُ الْمُؤَكَّدُ', 'Настоящее время · усиленное наклонение'];
+    if (value.includes('المجهول')) return ['اَلْمُضَارِعُ الْمَبْنِيُّ لِلْمَجْهُولِ', 'Настоящее время · страдательный залог'];
+    return ['اَلْمُضَارِعُ الْمَرْفُوعُ الْمَبْنِيُّ لِلْمَعْلُومِ', 'Настоящее время · действительный залог'];
+  }  function matches(name) {
     var value = clean(name);
-    if (state.tense === 'past' && !value.includes('Ш§Щ„Щ…Ш§Ш¶ЩЉ')) return false;
-    if (state.tense === 'present' && !value.includes('Ш§Щ„Щ…Ш¶Ш§Ш±Ш№')) return false;
-    if (state.tense === 'imperative' && !value.includes('Ш§Щ„ШЈЩ…Ш±')) return false;
-    if (state.voice === 'active' && value.includes('Ш§Щ„Щ…Ш¬Щ‡Щ€Щ„')) return false;
-    if (state.voice === 'passive' && !value.includes('Ш§Щ„Щ…Ш¬Щ‡Щ€Щ„')) return false;
-    if (state.mood === 'plain' && (value.includes('Ш§Щ„Щ…Щ†ШµЩ€ШЁ') || value.includes('Ш§Щ„Щ…Ш¬ШІЩ€Щ…') || value.includes('Ш§Щ„Щ…Ш¤ЩѓШЇ'))) return false;
-    if (state.mood === 'subjunctive' && !value.includes('Ш§Щ„Щ…Щ†ШµЩ€ШЁ')) return false;
-    if (state.mood === 'jussive' && !value.includes('Ш§Щ„Щ…Ш¬ШІЩ€Щ…')) return false;
-    if (state.mood === 'emphatic' && !value.includes('Ш§Щ„Щ…Ш¤ЩѓШЇ')) return false;
+    if (state.tense === 'past' && !value.includes('الماضي')) return false;
+    if (state.tense === 'present' && !value.includes('المضارع')) return false;
+    if (state.tense === 'imperative' && !value.includes('الأمر')) return false;
+    if (state.voice === 'active' && value.includes('المجهول')) return false;
+    if (state.voice === 'passive' && !value.includes('المجهول')) return false;
+    if (state.mood === 'plain' && (value.includes('المنصوب') || value.includes('المجزوم') || value.includes('المؤكد'))) return false;
+    if (state.mood === 'subjunctive' && !value.includes('المنصوب')) return false;
+    if (state.mood === 'jussive' && !value.includes('المجزوم')) return false;
+    if (state.mood === 'emphatic' && !value.includes('المؤكد')) return false;
     return true;
   }
   function allGroups() {
@@ -77,7 +76,7 @@
       return { name: name, rows: Object.keys(values).filter(function (key) { return values[key]; }).map(function (key) { return { pronoun: key, form: values[key] }; }) };
     }).filter(function (group) { return group.rows.length; });
     if (!groups.length) {
-      [['Ш§Щ„Щ…Ш§Ш¶ЩЉ Ш§Щ„Щ…Ш№Щ„Щ€Щ…', state.forms.past], ['Ш§Щ„Щ…Ш¶Ш§Ш±Ш№ Ш§Щ„Щ…Ш№Щ„Щ€Щ…', state.forms.present], ['Ш§Щ„ШЈЩ…Ш±', state.forms.imperative]].forEach(function (entry) {
+      [['الماضي المعلوم', state.forms.past], ['المضارع المعلوم', state.forms.present], ['الأمر', state.forms.imperative]].forEach(function (entry) {
         var values = entry[1] || {};
         var rows = Object.keys(values).filter(function (key) { return values[key]; }).map(function (key) { return { pronoun: key, form: values[key] }; });
         if (rows.length) groups.push({ name: entry[0], rows: rows });
@@ -94,11 +93,11 @@
     var groups = allGroups();
     return groups.filter(function (group) {
       var name = clean(group.name);
-      var wantedVoice = voice === 'passive' ? name.includes('Ш§Щ„Щ…Ш¬Щ‡Щ€Щ„') : !name.includes('Ш§Щ„Щ…Ш¬Щ‡Щ€Щ„');
+      var wantedVoice = voice === 'passive' ? name.includes('المجهول') : !name.includes('المجهول');
       if (!wantedVoice) return false;
-      if (kind === 'past') return name.includes('Ш§Щ„Щ…Ш§Ш¶ЩЉ');
-      if (kind === 'present') return name.includes('Ш§Щ„Щ…Ш¶Ш§Ш±Ш№') && !name.includes('Ш§Щ„Щ…Щ†ШµЩ€ШЁ') && !name.includes('Ш§Щ„Щ…Ш¬ШІЩ€Щ…') && !name.includes('Ш§Щ„Щ…Ш¤ЩѓШЇ');
-      return name.includes('Ш§Щ„ШЈЩ…Ш±') && !name.includes('Ш§Щ„Щ…Ш¤ЩѓШЇ');
+      if (kind === 'past') return name.includes('الماضي');
+      if (kind === 'present') return name.includes('المضارع') && !name.includes('المنصوب') && !name.includes('المجزوم') && !name.includes('المؤكد');
+      return name.includes('الأمر') && !name.includes('المؤكد');
     })[0] || { rows: [] };
   }
 
@@ -111,16 +110,16 @@
     var present = findFormGroup('present', state.voice);
     var imperative = state.voice === 'active' ? findFormGroup('imperative', 'active') : { rows: [] };
     var personRows = past.rows.length ? past.rows : present.rows;
-    if (!personRows.length) return '<div class="vs-empty">Р”Р»СЏ РІС‹Р±СЂР°РЅРЅРѕРіРѕ Р·Р°Р»РѕРіР° Qutrub РЅРµ РІРµСЂРЅСѓР» Р±Р°Р·РѕРІС‹Рµ С„РѕСЂРјС‹.</div>';
-    return '<section class="vs-result-group vs-general-table"><div class="vs-group-heading"><div><h3>РћР±С‰Р°СЏ С‚Р°Р±Р»РёС†Р°</h3><p>РџСЂРѕС€РµРґС€РµРµ, РЅР°СЃС‚РѕСЏС‰РµРµ Рё РїРѕРІРµР»РёС‚РµР»СЊРЅРѕРµ РІ РѕРґРЅРѕР№ СЃС‚СЂРѕРєРµ.</p></div><span dir="rtl">Ш§Щ„Щ…Ш§Ш¶ЩЉ В· Ш§Щ„Щ…Ш¶Ш§Ш±Ш№ В· Ш§Щ„ШЈЩ…Ш±</span></div><div class="vs-table-wrap"><table class="vs-table"><thead><tr><th>Р›РёС†Рѕ</th><th>РџРµСЂРµРІРѕРґ</th><th>Р¤РѕСЂРјС‹</th></tr></thead><tbody>' +
+    if (!personRows.length) return '<div class="vs-empty">Для выбранного залога Qutrub не вернул базовые формы.</div>';
+    return '<section class="vs-result-group vs-general-table"><div class="vs-group-heading"><div><h3>Общая таблица</h3><p>Прошедшее, настоящее и повелительное в одной строке.</p></div><span dir="rtl">الماضي · المضارع · الأمر</span></div><div class="vs-table-wrap"><table class="vs-table"><thead><tr><th>Лицо</th><th>Перевод</th><th>Формы</th></tr></thead><tbody>' +
       personRows.map(function (row) {
-        return '<tr><td class="vs-pronoun" dir="rtl">' + esc(row.pronoun) + '</td><td class="vs-person-ru">' + esc(personRu(row.pronoun)) + '</td><td class="vs-general-forms" dir="rtl"><div><small>Ш§Щ„Щ…Ш§Ш¶ЩЉ</small><b>' + esc(formFor(past, row.pronoun)) + '</b></div><div><small>Ш§Щ„Щ…Ш¶Ш§Ш±Ш№</small><b>' + esc(formFor(present, row.pronoun)) + '</b></div><div><small>Ш§Щ„ШЈЩ…Ш±</small><b>' + esc(formFor(imperative, row.pronoun)) + '</b></div></td></tr>';
+        return '<tr><td class="vs-pronoun" dir="rtl">' + esc(row.pronoun) + '</td><td class="vs-person-ru">' + esc(personRu(row.pronoun)) + '</td><td class="vs-general-forms" dir="rtl"><div><small>الماضي</small><b>' + esc(formFor(past, row.pronoun)) + '</b></div><div><small>المضارع</small><b>' + esc(formFor(present, row.pronoun)) + '</b></div><div><small>الأمر</small><b>' + esc(formFor(imperative, row.pronoun)) + '</b></div></td></tr>';
       }).join('') + '</tbody></table></div></section>';
   }
   function renderGroup(group) {
     var title = groupInfo(group.name);
     var content = state.layout === 'table'
-      ? '<div class="vs-table-wrap"><table class="vs-table"><thead><tr><th>Р›РёС†Рѕ</th><th>РџРµСЂРµРІРѕРґ</th><th>Р¤РѕСЂРјР°</th></tr></thead><tbody>' + group.rows.map(function (row) {
+      ? '<div class="vs-table-wrap"><table class="vs-table"><thead><tr><th>Лицо</th><th>Перевод</th><th>Форма</th></tr></thead><tbody>' + group.rows.map(function (row) {
           return '<tr><td class="vs-pronoun" dir="rtl">' + esc(row.pronoun) + '</td><td class="vs-person-ru">' + esc(personRu(row.pronoun)) + '</td><td class="vs-result-form" dir="rtl">' + esc(row.form) + '</td></tr>';
         }).join('') + '</tbody></table></div>'
       : '<div class="vs-form-list">' + group.rows.map(function (row) {
@@ -131,18 +130,18 @@
   function conjugationModal() {
     var groups = visibleGroups();
     var resultHtml = state.tableMode === 'general' ? generalTable() : (groups.length ? groups.map(renderGroup).join('') : '<div class="vs-empty">Для выбранных параметров Qutrub не вернул формы глагола.</div>');
-    return '<div class="vs-modal" role="dialog" aria-modal="true"><div class="vs-modal-sheet"><header class="vs-modal-head"><div><p class="vs-eyebrow">РЎРїСЂСЏР¶РµРЅРёСЏ РіР»Р°РіРѕР»Р°</p><h2 class="vs-modal-verb" dir="rtl">' + esc(state.verb) + '</h2></div><button class="vs-icon-button" data-action="close">Г—</button></header>' +
-      '<section class="vs-result-workspace '+(state.tableMode === 'general' ? 'is-general' : '')+'"><div class="vs-table-kind"><button class="vs-kind-button '+(state.tableMode === 'single' ? 'active' : '')+'" data-table-mode="single">Обычная</button><button class="vs-kind-button '+(state.tableMode === 'general' ? 'active' : '')+'" data-table-mode="general">Общая таблица</button></div><div class="vs-result-workspace-head"><div><h3>Р¤РѕСЂРјС‹ РіР»Р°РіРѕР»Р°</h3><p>Р’С‹Р±РµСЂРёС‚Рµ РЅСѓР¶РЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹ РїСЂСЏРјРѕ Р·РґРµСЃСЊ.</p></div><div class="vs-view-switch"><button class="vs-view-button ' + (state.layout === 'list' ? 'active' : '') + '" data-layout="list">РЎРїРёСЃРѕРє</button><button class="vs-view-button ' + (state.layout === 'table' ? 'active' : '') + '" data-layout="table">РўР°Р±Р»РёС†Р°</button></div></div>' +
-      '<div class="vs-table-controls"><div class="vs-control-row"><span>Р’СЂРµРјСЏ</span><div><button class="vs-filter ' + (state.tense === 'all' ? 'active' : '') + '" data-filter="tense" data-value="all">Р’СЃРµ</button><button class="vs-filter ' + (state.tense === 'past' ? 'active' : '') + '" data-filter="tense" data-value="past">Ш§Щ„Щ…Ш§Ш¶ЩЉ</button><button class="vs-filter ' + (state.tense === 'present' ? 'active' : '') + '" data-filter="tense" data-value="present">Ш§Щ„Щ…Ш¶Ш§Ш±Ш№</button><button class="vs-filter ' + (state.tense === 'imperative' ? 'active' : '') + '" data-filter="tense" data-value="imperative">Ш§Щ„ШЈЩ…Ш±</button></div></div>' +
-      '<div class="vs-control-row"><span>Р—Р°Р»РѕРі</span><div><button class="vs-filter ' + (state.voice === 'all' ? 'active' : '') + '" data-filter="voice" data-value="all">Р’СЃРµ</button><button class="vs-filter ' + (state.voice === 'active' ? 'active' : '') + '" data-filter="voice" data-value="active">Р”РµР№СЃС‚РІРёС‚РµР»СЊРЅС‹Р№</button><button class="vs-filter ' + (state.voice === 'passive' ? 'active' : '') + '" data-filter="voice" data-value="passive">РЎС‚СЂР°РґР°С‚РµР»СЊРЅС‹Р№</button></div></div>' +
-      '<div class="vs-control-row"><span>РќР°РєР»РѕРЅРµРЅРёРµ</span><div><button class="vs-filter ' + (state.mood === 'all' ? 'active' : '') + '" data-filter="mood" data-value="all">Р’СЃРµ</button><button class="vs-filter ' + (state.mood === 'plain' ? 'active' : '') + '" data-filter="mood" data-value="plain">РћР±С‹С‡РЅРѕРµ</button><button class="vs-filter ' + (state.mood === 'subjunctive' ? 'active' : '') + '" data-filter="mood" data-value="subjunctive">Щ…Щ†ШµЩ€ШЁ</button><button class="vs-filter ' + (state.mood === 'jussive' ? 'active' : '') + '" data-filter="mood" data-value="jussive">Щ…Ш¬ШІЩ€Щ…</button><button class="vs-filter ' + (state.mood === 'emphatic' ? 'active' : '') + '" data-filter="mood" data-value="emphatic">Щ…Ш¤ЩѓШЇ</button></div></div></div>' +
-      '<div class="vs-help vs-inline-help"><strong>РџРѕРґСЃРєР°Р·РєР°</strong><span>Р¤РёР»СЊС‚СЂС‹ РІР»РёСЏСЋС‚ С‚РѕР»СЊРєРѕ РЅР° РїРѕРєР°Р· С„РѕСЂРј РЅРёР¶Рµ: РёС… РјРѕР¶РЅРѕ РјРµРЅСЏС‚СЊ РІ Р»СЋР±РѕР№ РјРѕРјРµРЅС‚ Р±РµР· РЅРѕРІРѕРіРѕ Р·Р°РїСЂРѕСЃР°.</span></div><div class="vs-results">' + (groups.length ? groups.map(renderGroup).join('') : '<div class="vs-empty">Р”Р»СЏ РІС‹Р±СЂР°РЅРЅС‹С… РїР°СЂР°РјРµС‚СЂРѕРІ Qutrub РЅРµ РІРµСЂРЅСѓР» С„РѕСЂРјС‹ РіР»Р°РіРѕР»Р°.</div>') + '</div></section></div></div>';
+    return '<div class="vs-modal" role="dialog" aria-modal="true"><div class="vs-modal-sheet"><header class="vs-modal-head"><div><p class="vs-eyebrow">Спряжения глагола</p><h2 class="vs-modal-verb" dir="rtl">' + esc(state.verb) + '</h2></div><button class="vs-icon-button" data-action="close">×</button></header>' +
+      '<section class="vs-result-workspace '+(state.tableMode === 'general' ? 'is-general' : '')+'"><div class="vs-table-kind"><button class="vs-kind-button '+(state.tableMode === 'single' ? 'active' : '')+'" data-table-mode="single">�������</button><button class="vs-kind-button '+(state.tableMode === 'general' ? 'active' : '')+'" data-table-mode="general">����� �������</button></div><div class="vs-result-workspace-head"><div><h3>Формы глагола</h3><p>Выберите нужные параметры прямо здесь.</p></div><div class="vs-view-switch"><button class="vs-view-button ' + (state.layout === 'list' ? 'active' : '') + '" data-layout="list">Список</button><button class="vs-view-button ' + (state.layout === 'table' ? 'active' : '') + '" data-layout="table">Таблица</button></div></div>' +
+      '<div class="vs-table-controls"><div class="vs-control-row"><span>Время</span><div><button class="vs-filter ' + (state.tense === 'all' ? 'active' : '') + '" data-filter="tense" data-value="all">Все</button><button class="vs-filter ' + (state.tense === 'past' ? 'active' : '') + '" data-filter="tense" data-value="past">الماضي</button><button class="vs-filter ' + (state.tense === 'present' ? 'active' : '') + '" data-filter="tense" data-value="present">المضارع</button><button class="vs-filter ' + (state.tense === 'imperative' ? 'active' : '') + '" data-filter="tense" data-value="imperative">الأمر</button></div></div>' +
+      '<div class="vs-control-row"><span>Залог</span><div><button class="vs-filter ' + (state.voice === 'all' ? 'active' : '') + '" data-filter="voice" data-value="all">Все</button><button class="vs-filter ' + (state.voice === 'active' ? 'active' : '') + '" data-filter="voice" data-value="active">Действительный</button><button class="vs-filter ' + (state.voice === 'passive' ? 'active' : '') + '" data-filter="voice" data-value="passive">Страдательный</button></div></div>' +
+      '<div class="vs-control-row"><span>Наклонение</span><div><button class="vs-filter ' + (state.mood === 'all' ? 'active' : '') + '" data-filter="mood" data-value="all">Все</button><button class="vs-filter ' + (state.mood === 'plain' ? 'active' : '') + '" data-filter="mood" data-value="plain">Обычное</button><button class="vs-filter ' + (state.mood === 'subjunctive' ? 'active' : '') + '" data-filter="mood" data-value="subjunctive">منصوب</button><button class="vs-filter ' + (state.mood === 'jussive' ? 'active' : '') + '" data-filter="mood" data-value="jussive">مجزوم</button><button class="vs-filter ' + (state.mood === 'emphatic' ? 'active' : '') + '" data-filter="mood" data-value="emphatic">مؤكد</button></div></div></div>' +
+      '<div class="vs-help vs-inline-help"><strong>Подсказка</strong><span>Фильтры влияют только на показ форм ниже: их можно менять в любой момент без нового запроса.</span></div><div class="vs-results">' + (groups.length ? groups.map(renderGroup).join('') : '<div class="vs-empty">Для выбранных параметров Qutrub не вернул формы глагола.</div>') + '</div></section></div></div>';
   }
   function patternsConcepts() {
     return '<section class="vs-pattern-concepts" aria-label="Справка по производным формам">'
       + '<article class="vs-pattern-concept"><div class="vs-pattern-concept-kicker">ЗАЛОГИ · الصِّيغَةُ</div><h3>Действительный и страдательный залог</h3><p><strong>المَبْنِيُّ لِلْمَعْلُومِ</strong> — действие совершает названный деятель: <span lang="ar" dir="rtl">كَتَبَ الطَّالِبُ الدَّرْسَ</span> — «студент написал урок».</p><p><strong>المَبْنِيُّ لِلْمَجْهُولِ</strong> — важен результат действия, а исполнитель не назван: <span lang="ar" dir="rtl">كُتِبَ الدَّرْسُ</span> — «урок был написан».</p></article>'
       + '<article class="vs-pattern-concept"><div class="vs-pattern-concept-kicker">МАСДАР · المَصْدَرُ</div><h3>Отглагольное существительное</h3><p><strong>المَصْدَرُ</strong> называет само действие без времени и лица: <span lang="ar" dir="rtl">كَتَبَ — كِتَابَةً</span> — «писать — письмо, писание»; <span lang="ar" dir="rtl">تَعَلَّمَ — تَعَلُّمًا</span> — «учиться — обучение».</p><p>У I породы масдар часто словарный и его нужно запоминать. У производных пород он обычно узнаётся по модели, приведённой в таблице ниже.</p></article>'
-      + '<article class="vs-pattern-concept"><div class="vs-pattern-concept-kicker">ПРОИЗВОДНЫЕ · المُشْتَقَّاتُ</div><h3>Какие формы можно получить от глагола</h3><div class="vs-derived-grid"><div><strong lang="ar" dir="rtl">اِسْمُ الفَاعِلِ</strong><span>Действительное причастие: <b lang="ar" dir="rtl">كَاتِبٌ</b> — пишущий.</span></div><div><strong lang="ar" dir="rtl">اِسْمُ المَفْعُولِ</strong><span>Страдательное причастие: <b lang="ar" dir="rtl">مَكْتُوبٌ</b> — написанный.</span></div><div><strong lang="ar" dir="rtl">اِسْمُ الزَّمَانِ وَالمَكَانِ</strong><span>Время или место действия: <b lang="ar" dir="rtl">مَكْتَبٌ</b> — место письма, кабинет.</span></div><div><strong lang="ar" dir="rtl">اِسْمُ الآلَةِ</strong><span>Инструмент действия: <b lang="ar" dir="rtl">مِفْتَاحٌ</b> — ключ.</span></div><div><strong lang="ar" dir="rtl">صِفَةٌ مُشَبَّهَةٌ</strong><span>Постоянное качество: <b lang="ar" dir="rtl">كَبِيرٌ</b> — большой.</span></div><div><strong lang="ar" dir="rtl">اِسْمُ التَّفْضِيلِ</strong><span>Сравнительная степень: <b lang="ar" dir="rtl">أَكْبَرُ</b> — больше, самый большой.</span></div></div></article>'
+      + '<article class="vs-pattern-concept"><div class="vs-pattern-concept-kicker">����������� � ??????????????</div><h3>����� ����� ����� �������� �� �������</h3><div class="vs-derived-grid"><div><strong lang="ar" dir="rtl">?????? ?????????</strong><span>�������������� ���������: <b lang="ar" dir="rtl">???????</b> � �������.</span></div><div><strong lang="ar" dir="rtl">?????? ???????????</strong><span>������������� ���������: <b lang="ar" dir="rtl">?????????</b> � ����������.</span></div><div><strong lang="ar" dir="rtl">?????? ?????????? ???????????</strong><span>����� ��� ����� ��������: <b lang="ar" dir="rtl">????????</b> � ����� ������, �������.</span></div><div><strong lang="ar" dir="rtl">?????? ???????</strong><span>���������� ��������: <b lang="ar" dir="rtl">?????????</b> � ����.</span></div><div><strong lang="ar" dir="rtl">?????? ???????????</strong><span>���������� ��������: <b lang="ar" dir="rtl">???????</b> � �������.</span></div><div><strong lang="ar" dir="rtl">?????? ????????????</strong><span>������������� �������: <b lang="ar" dir="rtl">????????</b> � ������, ����� �������.</span></div></div></article>'
       + '<p class="vs-pattern-note">Не каждая производная форма образуется от любого глагола. Точную словарную форму и значение всегда сверяйте по словарю.</p></section>';
   }
 
@@ -163,12 +162,28 @@
       ['IX','اِفْعَلَّ','يَفْعَلُّ','مُفْعَلّ','—','—','—','اِفْعِلَال','—','—'],
       ['X','اِسْتَفْعَلَ','يَسْتَفْعِلُ','مُسْتَفْعِل','مُسْتَفْعَل','اُسْتُفْعِلَ','يُسْتَفْعَلُ','اِسْتِفْعَال','اِسْتَفْعِلْ','لَا تَسْتَفْعِلْ']
     ];
-    var headings = ['Порода|الوزن','Прошедшее|الماضي','Настоящее|المضارع','Действ. причастие|اسم الفاعل','Страд. причастие|اسم المفعول','Страд. прошедшее|الماضي للمجهول','Страд. настоящее|المضارع للمجهول','Масдар|المصدر','Повелительное|الأمر','Запрет|النهي'];
+    var headings = ['������|?????','���������|??????','���������|???????','������. ���������|??? ??????','�����. ���������|??? ???????','�����. ���������|?????? ???????','�����. ���������|??????? ???????','������|??????','�������������|?????','������|?????'];
     return '<section class="vs-pattern-matrix"><h3>Общая таблица пород</h3><p>Формулы для ориентира. У I породы масдар и гласная настоящего времени уточняются по словарю.</p><div class="vs-pattern-matrix-wrap"><table><thead><tr>' + headings.map(function (heading) { var parts = heading.split('|'); return '<th><span>' + parts[0] + '</span><b dir="rtl">' + parts[1] + '</b></th>'; }).join('') + '</tr></thead><tbody>' + rows.map(function (row) { return '<tr>' + row.map(function (cell, index) { return '<td class="' + (index === 0 ? 'vs-pattern-number' : '') + '" dir="' + (index ? 'rtl' : 'ltr') + '">' + cell + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div></section>';
   }
+  function patternTitle(number) {
+    var titles = {
+      I: ['اَلْبَابُ الْأَوَّلُ', 'I порода — основная трёхбуквенная'],
+      II: ['اَلْبَابُ الثَّانِي', 'II порода — усиление или побуждение'],
+      III: ['اَلْبَابُ الثَّالِثُ', 'III порода — взаимодействие'],
+      IV: ['اَلْبَابُ الرَّابِعُ', 'IV порода — побуждение к действию'],
+      V: ['اَلْبَابُ الْخَامِسُ', 'V порода — возвратное значение'],
+      VI: ['اَلْبَابُ السَّادِسُ', 'VI порода — взаимное действие'],
+      VII: ['اَلْبَابُ السَّابِعُ', 'VII порода — результат действия'],
+      VIII: ['اَلْبَابُ الثَّامِنُ', 'VIII порода — участие субъекта'],
+      IX: ['اَلْبَابُ التَّاسِعُ', 'IX порода — цвета и качества'],
+      X: ['اَلْبَابُ الْعَاشِرُ', 'X порода — поиск или просьба']
+    };
+    return titles[number] || ['اَلْوَزْنُ', 'Порода глагола'];
+  }
   function patternsModal() {
-    return '<div class="vs-modal" role="dialog" aria-modal="true"><div class="vs-modal-sheet"><header class="vs-modal-head"><div><p class="vs-eyebrow">РљСЂР°С‚РєР°СЏ СЃРїСЂР°РІРєР°</p><h2>РџРѕСЂРѕРґС‹ РіР»Р°РіРѕР»РѕРІ вЂ” Ш§Щ„ШЈЩ€ШІШ§Щ†</h2></div><button class="vs-icon-button" data-action="close">Г—</button></header><div class="vs-help"><strong>РљР°Рє С‡РёС‚Р°С‚СЊ С„РѕСЂРјСѓР»Сѓ</strong><span>ЩЃ вЂ” РїРµСЂРІР°СЏ Р±СѓРєРІР° РєРѕСЂРЅСЏ, Ш№ вЂ” РІС‚РѕСЂР°СЏ, Щ„ вЂ” С‚СЂРµС‚СЊСЏ. Р¤РѕСЂРјСѓР»Р° РїРѕРєР°Р·С‹РІР°РµС‚ СЃС‚СЂРѕРµРЅРёРµ РїРѕСЂРѕРґС‹, Р° РЅРµ РїРµСЂРµРІРѕРґ РєРѕРЅРєСЂРµС‚РЅРѕРіРѕ СЃР»РѕРІР°.</span></div><div class="vs-pattern-list">' + patterns.map(function (item) {
-      return '<article class="vs-pattern-card"><div class="vs-pattern-top"><b>РџРѕСЂРѕРґР° ' + item[0] + '</b><strong dir="rtl">' + item[1] + '</strong></div><p>' + item[2] + '</p><div class="vs-pattern-examples">' + item[3].map(function (example) {
+    return '<div class="vs-modal" role="dialog" aria-modal="true"><div class="vs-modal-sheet"><header class="vs-modal-head"><div><p class="vs-eyebrow">Краткая справка</p><h2>Породы глаголов — الأوزان</h2></div><button class="vs-icon-button" data-action="close">×</button></header><div class="vs-help"><strong>Как читать формулу</strong><span>ف — первая буква корня, ع — вторая, ل — третья. Формула показывает строение породы, а не перевод конкретного слова.</span></div><div class="vs-pattern-list">' + patterns.map(function (item) {
+      var title = patternTitle(item[0]);
+      return '<article class="vs-pattern-card"><div class="vs-pattern-top"><div><b dir="rtl">' + title[0] + '</b><small>' + title[1] + '</small></div><strong dir="rtl">' + item[1] + '</strong></div><p>' + item[2] + '</p><div class="vs-pattern-examples">' + item[3].map(function (example) {
         return '<div><span dir="rtl">' + example[0] + '</span><small>' + example[1] + '</small></div>';
       }).join('') + '</div></article>';
     }).join('') + '</div>' + patternsMatrix() + '</div></div>';
@@ -176,7 +191,7 @@
   function render() {
     var root = document.getElementById(rootId);
     if (!root) return;
-    root.innerHTML = '<main class="vs-page"><header class="vs-head"><button class="vs-back" data-action="back">вЂ№</button><div><h1>РЎРїСЂСЏР¶РµРЅРёРµ РіР»Р°РіРѕР»РѕРІ</h1><p class="vs-sub">Р¤СѓСЃС…Р°: С„РѕСЂРјС‹ СЃС‚СЂРѕСЏС‚СЃСЏ РїРѕ РїСЂР°РІРёР»Р°Рј Qutrub.</p></div></header><section class="vs-card"><label class="vs-label" for="vs-input">Р“Р»Р°РіРѕР» РІ РїСЂРѕС€РµРґС€РµРј РІСЂРµРјРµРЅРё</label><div class="vs-search"><input id="vs-input" class="vs-input" value="' + esc(state.verb) + '" placeholder="ЩѓЩЋШЄЩЋШЁЩЋ" dir="rtl" autocomplete="off"><button class="vs-primary" data-action="conjugate" ' + (state.loading ? 'disabled' : '') + '>' + (state.loading ? 'РЎС‚СЂРѕРёРјвЂ¦' : 'РЎРїСЂСЏРіР°С‚СЊ') + '</button></div><p class="vs-tip">РџРѕСЃР»Рµ РЅР°Р¶Р°С‚РёСЏ РѕС‚РєСЂРѕСЋС‚СЃСЏ РІСЃРµ С„РѕСЂРјС‹ СЃ СЂСѓСЃСЃРєРёРј РїРµСЂРµРІРѕРґРѕРј Р»РёС†. Р’РЅСѓС‚СЂРё РјРѕР¶РЅРѕ РІС‹Р±СЂР°С‚СЊ РІСЂРµРјСЏ, Р·Р°Р»РѕРі, РЅР°РєР»РѕРЅРµРЅРёРµ Рё РІРёРґ.</p></section><section class="vs-card vs-pattern-entry"><div><p class="vs-eyebrow">РЎРїСЂР°РІРєР°</p><h2>РџРѕСЂРѕРґС‹ РіР»Р°РіРѕР»РѕРІ</h2><p class="vs-copy">10 РјРѕРґРµР»РµР№ С„СѓСЃС…Р°: С„РѕСЂРјСѓР»Р°, РѕР±СЉСЏСЃРЅРµРЅРёРµ Рё РґРІР° РїСЂРёРјРµСЂР° СЃ РїРµСЂРµРІРѕРґРѕРј.</p></div><button class="vs-action" data-action="patterns">РћС‚РєСЂС‹С‚СЊ РїРѕСЂРѕРґС‹</button></section></main>' + (state.modal === 'conjugations' ? conjugationModal() : state.modal === 'patterns' ? patternsModal() : '');
+    root.innerHTML = '<main class="vs-page"><header class="vs-head"><button class="vs-back" data-action="back">‹</button><div><h1>Спряжение глаголов</h1><p class="vs-sub">Фусха: формы строятся по правилам Qutrub.</p></div></header><section class="vs-card"><label class="vs-label" for="vs-input">Глагол в прошедшем времени</label><div class="vs-search"><input id="vs-input" class="vs-input" value="' + esc(state.verb) + '" placeholder="كَتَبَ" dir="rtl" autocomplete="off"><button class="vs-primary" data-action="conjugate" ' + (state.loading ? 'disabled' : '') + '>' + (state.loading ? 'Строим…' : 'Спрягать') + '</button></div><p class="vs-tip">После нажатия откроются все формы с русским переводом лиц. Внутри можно выбрать время, залог, наклонение и вид.</p></section><section class="vs-card vs-pattern-entry"><div><p class="vs-eyebrow">Справка</p><h2>Породы глаголов</h2><p class="vs-copy">10 моделей фусха: формула, объяснение и два примера с переводом.</p></div><button class="vs-action" data-action="patterns">Открыть породы</button></section></main>' + (state.modal === 'conjugations' ? conjugationModal() : state.modal === 'patterns' ? patternsModal() : '');
     root.querySelectorAll('[data-action]').forEach(function (button) { button.onclick = function () {
       var action = button.dataset.action;
       if (action === 'back') {
@@ -201,15 +216,15 @@
   function conjugate() {
     var input = document.getElementById('vs-input');
     state.verb = (input ? input.value : state.verb).trim();
-    if (!state.verb) { state.error = 'Р’РІРµРґРёС‚Рµ Р°СЂР°Р±СЃРєРёР№ РіР»Р°РіРѕР».'; render(); return; }
+    if (!state.verb) { state.error = 'Введите арабский глагол.'; render(); return; }
     state.loading = true; state.error = ''; state.modal = ''; render();
     fetch(endpoint + '?verb=' + encodeURIComponent(state.verb), { headers: { Accept: 'application/json' } })
-      .then(function (response) { if (!response.ok) throw new Error('Qutrub РІСЂРµРјРµРЅРЅРѕ РЅРµРґРѕСЃС‚СѓРїРµРЅ.'); return response.json(); })
+      .then(function (response) { if (!response.ok) throw new Error('Qutrub временно недоступен.'); return response.json(); })
       .then(function (data) {
-        if (!data || !data.ok || !data.forms) throw new Error('РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕСЃС‚СЂРѕРёС‚СЊ С„РѕСЂРјС‹ СЌС‚РѕРіРѕ РіР»Р°РіРѕР»Р°.');
+        if (!data || !data.ok || !data.forms) throw new Error('Не удалось построить формы этого глагола.');
         state.forms = data.forms; state.verb = data.verb || state.verb; state.tableMode = 'single'; state.tense = 'past'; state.voice = 'active'; state.mood = 'plain'; state.layout = 'table'; state.modal = 'conjugations';
       })
-      .catch(function (error) { state.forms = null; state.error = error.message || 'РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕСЃС‚СЂРѕРёС‚СЊ СЃРїСЂСЏР¶РµРЅРёРµ.'; })
+      .catch(function (error) { state.forms = null; state.error = error.message || 'Не удалось построить спряжение.'; })
       .finally(function () { state.loading = false; render(); });
   }
   window.openVerbStudy = function () { if (window.showScreen) window.showScreen(rootId); render(); };

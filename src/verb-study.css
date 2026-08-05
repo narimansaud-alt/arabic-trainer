@@ -113,3 +113,7 @@
 #screen-verb-study .vs-derived-grid span{color:#65778a;font-size:13px;line-height:1.45}
 #screen-verb-study .vs-pattern-note{margin:0;padding:0 4px;color:#68798a;font-size:13px;line-height:1.55}
 @media(max-width:440px){#screen-verb-study .vs-derived-grid{grid-template-columns:1fr}}
+
+#screen-verb-study .vs-pattern-top>div{min-width:0}
+#screen-verb-study .vs-pattern-top>div>b{display:block;color:#17324a;font:700 20px/1.45 "Noto Naskh Arabic","Amiri",serif}
+#screen-verb-study .vs-pattern-top>div>small{display:block;margin-top:2px;color:#60768a;font-size:12px;line-height:1.35}
