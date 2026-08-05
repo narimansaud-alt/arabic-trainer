@@ -1,4 +1,4 @@
-const CACHE = 'arabic-__BUILD_HASH__';
+const CACHE = 'arabic-v20260805-progress';
 const FILES = [
   './',
   './index.html',
@@ -44,6 +44,23 @@ const SHOULD_NETWORK_FIRST = [
   './medina-premium-icon-192.png'
 ];
 
+const APP_SHELL_NETWORK_FIRST = [
+  './index.html',
+  './src/api.js',
+  './src/state.js',
+  './src/helpers.js',
+  './src/auth.js',
+  './src/announcement.js',
+  './src/course.js',
+  './src/streak.js',
+  './src/lb.js',
+  './src/dict.js',
+  './src/verbs.js',
+  './src/quiz.js',
+  './src/learn.js',
+  './src/main.js'
+];
+
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));
   self.skipWaiting();
@@ -59,7 +76,7 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const requested = normalizeRequestUrl(e.request.url);
-  if (SHOULD_NETWORK_FIRST.includes(requested)) {
+  if (SHOULD_NETWORK_FIRST.includes(requested) || APP_SHELL_NETWORK_FIRST.includes(requested)) {
     e.respondWith(
       fetch(e.request).then(response => {
         const copy = response.clone();

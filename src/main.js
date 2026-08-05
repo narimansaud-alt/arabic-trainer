@@ -134,6 +134,11 @@ async function bootstrapApp() {
     return;
   }
 
+  if (typeof restoreDailyProgressSnapshot === 'function' && restoreDailyProgressSnapshot()) {
+    updateStreakBanner();
+    if (typeof syncDailyProgress === 'function') void syncDailyProgress();
+  }
+
   let restored = false;
   try {
     restored = await withTimeout(restoreProgress({ skipPrompt: true }), 1500, 'restore-progress');
