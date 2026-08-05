@@ -232,6 +232,23 @@ function dictionaryPairStem(value) {
     .filter((word) => word.length >= 3);
 }
 
+function hasRussianYIPluralPair(singular, plural) {
+  const words = (value) => String(value || '')
+    .toLowerCase()
+    .replace(/ё/gu, 'е')
+    .replace(/\([^)]*\)/gu, ' ')
+    .replace(/[^а-я\s-]/gu, ' ')
+    .split(/[\s-]+/u)
+    .filter((word) => word.length >= 5);
+  const singularWords = words(singular);
+  const pluralWords = words(plural);
+  return singularWords.some((single) =>
+    single.endsWith('й') && pluralWords.some((many) =>
+      many.endsWith('и') && single.slice(0, -1) === many.slice(0, -1) && single.length >= 5
+    )
+  );
+}
+
 const DICTIONARY_EXPLICIT_PLURALS = {
   'مائة': 'مئات',
   'مئة': 'مئات',
@@ -259,6 +276,7 @@ function isLikelyDictionaryPair(singular, plural) {
   if (/(?:ть|ться)(?:\s|$|,)/u.test(left) || /(?:ть|ться)(?:\s|$|,)/u.test(right)) return false;
   const serviceWords = /^(?:и|или|но|да|нет|ли|что|кто|где|когда|если|для|от|до|на|в|из|с)$/u;
   if (serviceWords.test(left) || serviceWords.test(right)) return false;
+  if (hasRussianYIPluralPair(left, right)) return true;
   const leftStems = dictionaryPairStem(left);
   const rightStems = dictionaryPairStem(right);
   const sharedStem = leftStems.some((first) => rightStems.some((second) =>

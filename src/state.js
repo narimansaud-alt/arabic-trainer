@@ -102,8 +102,30 @@ const VOLUMES = {
         status: 'ready',
       },
     },
-    { id: 'Мединский курс (Том 3)', label: 'Том 3', sub: 'В разработке', book: null },
-    { id: 'Мединский курс (Том 4)', label: 'Том 4', sub: 'В разработке', book: null },
+    {
+      id: 'Мединский курс (Том 3)',
+      label: 'Том 3',
+      sub: 'Уроки 1-17',
+      book: {
+        url: './books/ar_03_Lessons_in_Arabic_Language.pdf',
+        title: 'Мединский курс (Том 3)',
+        pageCount: 143,
+        pagePattern: './books/tom3-pages/page-{page}.jpg',
+        status: 'ready',
+      },
+    },
+    {
+      id: 'Мединский курс (Том 4)',
+      label: 'Том 4',
+      sub: 'Уроки 1-17',
+      book: {
+        url: './books/ar_04_Lessons_in_Arabic_Language.pdf',
+        title: 'Мединский курс (Том 4)',
+        pageCount: 161,
+        pagePattern: './books/tom4-pages/page-{page}.jpg',
+        status: 'ready',
+      },
+    },
   ],
 };
 
