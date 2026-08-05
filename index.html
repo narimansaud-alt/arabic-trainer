@@ -2537,6 +2537,33 @@ body,.screen{background:var(--app-bg)!important;color:var(--ink)!important;}
   #screen-course .cc-title,#screen-volume .vol-title{font-size:16px!important;}
 }
 </style>
+<style>
+/* Mixed Russian/Arabic rule titles keep each script in its own reading direction. */
+#tab-rules .rules-preview-title,#tab-rules .rule-outline-title-text{
+  direction:ltr!important;
+  unicode-bidi:plaintext!important;
+  overflow-wrap:normal!important;
+  word-break:normal!important;
+}
+#tab-rules .rules-preview-title .ar-inline,
+#tab-rules .rules-preview-title .ar-term,
+#tab-rules .rules-preview-title .ar-text,
+#tab-rules .rules-preview-title .ar-sentence,
+#tab-rules .rule-outline-title-text .ar-inline,
+#tab-rules .rule-outline-title-text .ar-term,
+#tab-rules .rule-outline-title-text .ar-text,
+#tab-rules .rule-outline-title-text .ar-sentence{
+  display:inline!important;
+  direction:rtl!important;
+  unicode-bidi:isolate!important;
+  font-family:var(--ui-font-ar)!important;
+  font-size:inherit!important;
+  font-weight:inherit!important;
+  line-height:inherit!important;
+  white-space:normal!important;
+  margin-inline:.08em!important;
+}
+</style>
 <div class="verb-modal-overlay hidden" id="verb-modal-overlay">
   <div class="verb-modal-box">
     <button class="verb-modal-close" aria-label="Закрыть" onclick="closeVerbModal()">X</button>

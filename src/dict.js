@@ -633,8 +633,8 @@ function lessonPreviewList(items) {
         ruleAccent(r, i) +
         '"><span class="rules-lesson-preview-num">' +
         (i + 1) +
-        '</span><b class="rules-preview-title" dir="auto">' +
-        esc(r.title) +
+        '</span><b class="rules-preview-title">' +
+        wrapArabic(esc(r.title)) +
         '</b></span>'
     )
     .join('');
@@ -652,8 +652,8 @@ function lessonOutline(items) {
         esc(String(r.id)) +
         '"><span>' +
         (i + 1) +
-        '</span><b class="rule-outline-title-text" dir="auto">' +
-        esc(r.title) +
+        '</span><b class="rule-outline-title-text">' +
+        wrapArabic(esc(r.title)) +
         '</b></button>'
     )
     .join('');
