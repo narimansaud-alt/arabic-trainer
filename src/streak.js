@@ -31,15 +31,22 @@ async function updateStreak() {
 
 let __dailyIncrementQueue = Promise.resolve();
 const DAILY_PROGRESS_CACHE_KEY = 'arabic_daily_progress_v1';
+const DAILY_STREAK_GOAL = 30;
+const DAILY_WORDS_DISPLAY_MAX = 9999;
+let __dailyGoalSyncedDate = null;
+
+function normalizedDailyWords(value) {
+  return Math.max(0, Math.min(DAILY_WORDS_DISPLAY_MAX, Number(value) || 0));
+}
 
 function saveDailyProgressSnapshot() {
   try {
     const date = appDateKey();
     const saved = JSON.parse(localStorage.getItem(DAILY_PROGRESS_CACHE_KEY) || 'null');
-    const previous = saved && saved.date === date ? Math.max(0, Math.min(30, Number(saved.words) || 0)) : 0;
+    const previous = saved && saved.date === date ? normalizedDailyWords(saved.words) : 0;
     localStorage.setItem(DAILY_PROGRESS_CACHE_KEY, JSON.stringify({
       date,
-      words: Math.max(previous, Math.max(0, Math.min(30, Number(App.dailyWords) || 0)))
+      words: Math.max(previous, normalizedDailyWords(App.dailyWords))
     }));
   } catch (_) {
     // The server remains the source of truth when local storage is unavailable.
@@ -50,7 +57,7 @@ function restoreDailyProgressSnapshot() {
   try {
     const saved = JSON.parse(localStorage.getItem(DAILY_PROGRESS_CACHE_KEY) || 'null');
     if (!saved || saved.date !== appDateKey()) return false;
-    const words = Math.max(0, Math.min(30, Number(saved.words) || 0));
+    const words = normalizedDailyWords(saved.words);
     if (words <= App.dailyWords) return false;
     App.dailyWords = words;
     App.lastCountDate = saved.date;
@@ -61,12 +68,14 @@ function restoreDailyProgressSnapshot() {
 }
 
 function syncDailyProgress() {
-  const target = Math.max(0, Math.min(30, Number(App.dailyWords) || 0));
+  const target = Math.min(DAILY_STREAK_GOAL, normalizedDailyWords(App.dailyWords));
   const today = appDateKey();
+  if (target < DAILY_STREAK_GOAL || __dailyGoalSyncedDate === today) return __dailyIncrementQueue;
   __dailyIncrementQueue = __dailyIncrementQueue
     .then(async () => {
       await Api.call('update-daily-count', { daily_words: target }, { timeoutMs: 4000, keepalive: true });
-      if (target >= 30) await updateStreak();
+      __dailyGoalSyncedDate = today;
+      await updateStreak();
     })
     .catch((e) => ErrorLog.capture(e, { source: 'streak', action: 'sync-daily-count', target, today }));
   return __dailyIncrementQueue;
@@ -84,8 +93,8 @@ function addDailyWord() {
     App.dailyWords = 0;
     App.lastCountDate = today;
   }
-  if (App.dailyWords >= 30) return __dailyIncrementQueue;
-  App.dailyWords = Math.min((Number.isFinite(App.dailyWords) ? App.dailyWords : 0) + 1, 30);
+  if (App.dailyWords >= DAILY_WORDS_DISPLAY_MAX) return __dailyIncrementQueue;
+  App.dailyWords = normalizedDailyWords((Number.isFinite(App.dailyWords) ? App.dailyWords : 0) + 1);
   saveDailyProgressSnapshot();
   updateStreakBanner();
   return syncDailyProgress();
@@ -172,10 +181,10 @@ function updateStreakBanner() {
 
   if (bannerDays) bannerDays.textContent = days;
   if (lbl) lbl.textContent = getDaysLabel(days);
-  if (bannerCount) bannerCount.textContent = cnt + ' / 30 слов';
+  if (bannerCount) bannerCount.textContent = cnt >= DAILY_STREAK_GOAL ? cnt + ' слов сегодня' : cnt + ' / ' + DAILY_STREAK_GOAL + ' слов';
   if (streakFill) streakFill.style.width = pct + '%';
 
-  if (cnt >= 30) {
+  if (cnt >= DAILY_STREAK_GOAL) {
   if (hintEl) hintEl.classList.add('hidden');
     if (doneEl) doneEl.classList.remove('hidden');
   } else {
