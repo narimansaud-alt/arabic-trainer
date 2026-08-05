@@ -3,7 +3,7 @@
 
   var rootId = 'screen-verb-study';
   var endpoint = 'https://arabic-trainer-qutrub.narimansaud.workers.dev/conjugate';
-  var state = { verb: '', forms: null, loading: false, error: '', modal: '', layout: 'list', mode: 'all' };
+  var state = { verb: '', forms: null, loading: false, error: '', modal: '', layout: 'list', tense: 'all', voice: 'all', mood: 'all' };
   var persons = {
     'هُوَ': 'Он', 'هو': 'Он', 'هُمَا': 'Они двое', 'هما': 'Они двое',
     'هُمْ': 'Они', 'هم': 'Они', 'هِيَ': 'Она', 'هي': 'Она',
@@ -43,7 +43,6 @@
     });
   }
   function clean(value) { return String(value || '').replace(/[\u064B-\u065F\u0670]/g, ''); }
-  function modeInfo() { return modes.filter(function (item) { return item[0] === state.mode; })[0] || modes[0]; }
   function personRu(value) { return persons[value] || persons[clean(value)] || 'Лицо'; }
   function groupInfo(name) {
     var value = clean(name);
@@ -57,18 +56,18 @@
     if (value.includes('المجهول')) return ['المضارع المجهول', 'Настоящее, страдательный залог'];
     return ['المضارع المعلوم', 'Настоящее, действительный залог'];
   }
-  function matches(name, mode) {
+  function matches(name) {
     var value = clean(name);
-    if (mode === 'all') return true;
-    if (mode === 'past-active') return value.includes('الماضي') && value.includes('المعلوم');
-    if (mode === 'past-passive') return value.includes('الماضي') && value.includes('المجهول');
-    if (mode === 'present-active') return value.includes('المضارع') && value.includes('المعلوم') && !value.includes('المنصوب') && !value.includes('المجزوم') && !value.includes('المؤكد');
-    if (mode === 'present-passive') return value.includes('المضارع') && value.includes('المجهول');
-    if (mode === 'subjunctive') return value.includes('المنصوب');
-    if (mode === 'jussive') return value.includes('المجزوم');
-    if (mode === 'emphatic') return value.includes('المؤكد') && !value.includes('الأمر');
-    if (mode === 'imperative') return value.includes('الأمر') && !value.includes('المؤكد');
-    return value.includes('الأمر') && value.includes('المؤكد');
+    if (state.tense === 'past' && !value.includes('الماضي')) return false;
+    if (state.tense === 'present' && !value.includes('المضارع')) return false;
+    if (state.tense === 'imperative' && !value.includes('الأمر')) return false;
+    if (state.voice === 'active' && value.includes('المجهول')) return false;
+    if (state.voice === 'passive' && !value.includes('المجهول')) return false;
+    if (state.mood === 'plain' && (value.includes('المنصوب') || value.includes('المجزوم') || value.includes('المؤكد'))) return false;
+    if (state.mood === 'subjunctive' && !value.includes('المنصوب')) return false;
+    if (state.mood === 'jussive' && !value.includes('المجزوم')) return false;
+    if (state.mood === 'emphatic' && !value.includes('المؤكد')) return false;
+    return true;
   }
   function visibleGroups() {
     if (!state.forms) return [];
@@ -84,7 +83,7 @@
         if (rows.length) groups.push({ name: entry[0], rows: rows });
       });
     }
-    return groups.filter(function (group) { return matches(group.name, state.mode); });
+    return groups.filter(function (group) { return matches(group.name); });
   }
   function renderGroup(group) {
     var title = groupInfo(group.name);
@@ -98,14 +97,13 @@
     return '<section class="vs-result-group"><div class="vs-group-heading"><h3 dir="rtl">' + esc(title[0]) + '</h3><p>' + esc(title[1]) + '</p></div>' + content + '</section>';
   }
   function conjugationModal() {
-    var info = modeInfo();
     var groups = visibleGroups();
     return '<div class="vs-modal" role="dialog" aria-modal="true"><div class="vs-modal-sheet"><header class="vs-modal-head"><div><p class="vs-eyebrow">Спряжения глагола</p><h2 class="vs-modal-verb" dir="rtl">' + esc(state.verb) + '</h2></div><button class="vs-icon-button" data-action="close">×</button></header>' +
-      '<div class="vs-help"><strong>Как пользоваться</strong><span>Сначала выберите время или наклонение. «Список» удобен для чтения, «Таблица» — для сравнения лиц.</span></div>' +
-      '<div class="vs-view-switch"><button class="vs-view-button ' + (state.layout === 'list' ? 'active' : '') + '" data-layout="list">Список</button><button class="vs-view-button ' + (state.layout === 'table' ? 'active' : '') + '" data-layout="table">Таблица</button></div>' +
-      '<section class="vs-mode-toolbar"><p><strong dir="rtl">' + esc(info[2]) + '</strong><span>' + esc(info[1]) + '</span></p><small>' + esc(info[3]) + '</small><div class="vs-modal-chips">' + modes.map(function (item) {
-        return '<button class="vs-chip ' + (item[0] === state.mode ? 'active' : '') + '" data-mode="' + item[0] + '">' + esc(item[1]) + '</button>';
-      }).join('') + '</div></section><div class="vs-results">' + (groups.length ? groups.map(renderGroup).join('') : '<div class="vs-empty">Для этого режима Qutrub не вернул формы глагола.</div>') + '</div></div></div>';
+      '<section class="vs-result-workspace"><div class="vs-result-workspace-head"><div><h3>Формы глагола</h3><p>Выберите нужные параметры прямо здесь.</p></div><div class="vs-view-switch"><button class="vs-view-button ' + (state.layout === 'list' ? 'active' : '') + '" data-layout="list">Список</button><button class="vs-view-button ' + (state.layout === 'table' ? 'active' : '') + '" data-layout="table">Таблица</button></div></div>' +
+      '<div class="vs-table-controls"><div class="vs-control-row"><span>Время</span><div><button class="vs-filter ' + (state.tense === 'all' ? 'active' : '') + '" data-filter="tense" data-value="all">Все</button><button class="vs-filter ' + (state.tense === 'past' ? 'active' : '') + '" data-filter="tense" data-value="past">الماضي</button><button class="vs-filter ' + (state.tense === 'present' ? 'active' : '') + '" data-filter="tense" data-value="present">المضارع</button><button class="vs-filter ' + (state.tense === 'imperative' ? 'active' : '') + '" data-filter="tense" data-value="imperative">الأمر</button></div></div>' +
+      '<div class="vs-control-row"><span>Залог</span><div><button class="vs-filter ' + (state.voice === 'all' ? 'active' : '') + '" data-filter="voice" data-value="all">Все</button><button class="vs-filter ' + (state.voice === 'active' ? 'active' : '') + '" data-filter="voice" data-value="active">Действительный</button><button class="vs-filter ' + (state.voice === 'passive' ? 'active' : '') + '" data-filter="voice" data-value="passive">Страдательный</button></div></div>' +
+      '<div class="vs-control-row"><span>Наклонение</span><div><button class="vs-filter ' + (state.mood === 'all' ? 'active' : '') + '" data-filter="mood" data-value="all">Все</button><button class="vs-filter ' + (state.mood === 'plain' ? 'active' : '') + '" data-filter="mood" data-value="plain">Обычное</button><button class="vs-filter ' + (state.mood === 'subjunctive' ? 'active' : '') + '" data-filter="mood" data-value="subjunctive">منصوب</button><button class="vs-filter ' + (state.mood === 'jussive' ? 'active' : '') + '" data-filter="mood" data-value="jussive">مجزوم</button><button class="vs-filter ' + (state.mood === 'emphatic' ? 'active' : '') + '" data-filter="mood" data-value="emphatic">مؤكد</button></div></div></div>' +
+      '<div class="vs-help vs-inline-help"><strong>Подсказка</strong><span>Фильтры влияют только на показ форм ниже: их можно менять в любой момент без нового запроса.</span></div><div class="vs-results">' + (groups.length ? groups.map(renderGroup).join('') : '<div class="vs-empty">Для выбранных параметров Qutrub не вернул формы глагола.</div>') + '</div></section></div></div>';
   }
   function patternsModal() {
     return '<div class="vs-modal" role="dialog" aria-modal="true"><div class="vs-modal-sheet"><header class="vs-modal-head"><div><p class="vs-eyebrow">Краткая справка</p><h2>Породы глаголов — الأوزان</h2></div><button class="vs-icon-button" data-action="close">×</button></header><div class="vs-help"><strong>Как читать формулу</strong><span>ف — первая буква корня, ع — вторая, ل — третья. Формула показывает строение породы, а не перевод конкретного слова.</span></div><div class="vs-pattern-list">' + patterns.map(function (item) {
@@ -120,13 +118,21 @@
     root.innerHTML = '<main class="vs-page"><header class="vs-head"><button class="vs-back" data-action="back">‹</button><div><h1>Спряжение глаголов</h1><p class="vs-sub">Фусха: формы строятся по правилам Qutrub.</p></div></header><section class="vs-card"><label class="vs-label" for="vs-input">Глагол в прошедшем времени</label><div class="vs-search"><input id="vs-input" class="vs-input" value="' + esc(state.verb) + '" placeholder="كَتَبَ" dir="rtl" autocomplete="off"><button class="vs-primary" data-action="conjugate" ' + (state.loading ? 'disabled' : '') + '>' + (state.loading ? 'Строим…' : 'Спрягать') + '</button></div><p class="vs-tip">После нажатия откроются все формы с русским переводом лиц. Внутри можно выбрать время, залог, наклонение и вид.</p></section><section class="vs-card vs-pattern-entry"><div><p class="vs-eyebrow">Справка</p><h2>Породы глаголов</h2><p class="vs-copy">10 моделей фусха: формула, объяснение и два примера с переводом.</p></div><button class="vs-action" data-action="patterns">Открыть породы</button></section></main>' + (state.modal === 'conjugations' ? conjugationModal() : state.modal === 'patterns' ? patternsModal() : '');
     root.querySelectorAll('[data-action]').forEach(function (button) { button.onclick = function () {
       var action = button.dataset.action;
-      if (action === 'back' && window.showScreen) window.showScreen('screen-course');
+      if (action === 'back') {
+        if (window.appNavigateBack) window.appNavigateBack('screen-course');
+        else if (window.showScreen) window.showScreen('screen-course');
+      }
       if (action === 'conjugate') conjugate();
       if (action === 'patterns') { state.modal = 'patterns'; render(); }
       if (action === 'close') { state.modal = ''; render(); }
     }; });
     root.querySelectorAll('[data-layout]').forEach(function (button) { button.onclick = function () { state.layout = button.dataset.layout; render(); }; });
-    root.querySelectorAll('[data-mode]').forEach(function (button) { button.onclick = function () { state.mode = button.dataset.mode; render(); }; });
+    root.querySelectorAll('[data-filter]').forEach(function (button) {
+      button.onclick = function () {
+        state[button.dataset.filter] = button.dataset.value;
+        render();
+      };
+    });
     var input = root.querySelector('#vs-input');
     if (input) input.onkeydown = function (event) { if (event.key === 'Enter') conjugate(); };
   }
@@ -139,7 +145,7 @@
       .then(function (response) { if (!response.ok) throw new Error('Qutrub временно недоступен.'); return response.json(); })
       .then(function (data) {
         if (!data || !data.ok || !data.forms) throw new Error('Не удалось построить формы этого глагола.');
-        state.forms = data.forms; state.verb = data.verb || state.verb; state.mode = 'all'; state.layout = 'list'; state.modal = 'conjugations';
+        state.forms = data.forms; state.verb = data.verb || state.verb; state.tense = 'all'; state.voice = 'all'; state.mood = 'all'; state.layout = 'list'; state.modal = 'conjugations';
       })
       .catch(function (error) { state.forms = null; state.error = error.message || 'Не удалось построить спряжение.'; })
       .finally(function () { state.loading = false; render(); });

@@ -56,3 +56,19 @@
 #screen-verb-study .vs-pattern-examples span{display:block;color:#1e293b;font:22px/1.5 "Noto Naskh Arabic","Amiri",serif;text-align:right}
 #screen-verb-study .vs-pattern-examples small{display:block;margin-top:3px;color:#64748b}
 @media(max-width:560px){#screen-verb-study .vs-pattern-entry{align-items:flex-start;flex-direction:column}#screen-verb-study .vs-pattern-entry .vs-action{width:100%}#screen-verb-study .vs-group-heading{align-items:flex-end;flex-direction:column;gap:4px}#screen-verb-study .vs-group-heading p{align-self:stretch;text-align:left}#screen-verb-study .vs-form-row{grid-template-columns:minmax(102px,.85fr) minmax(128px,1fr)}#screen-verb-study .vs-pattern-examples{grid-template-columns:1fr}}
+
+/* Controls live inside the conjugation workspace */
+#screen-verb-study .vs-result-workspace{padding:14px;border:1px solid #e2e8f0;border-radius:16px;background:#fff}
+#screen-verb-study .vs-result-workspace-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin:2px 2px 16px}
+#screen-verb-study .vs-result-workspace-head h3{margin:0;color:#1e293b;font-size:18px}
+#screen-verb-study .vs-result-workspace-head p{margin:4px 0 0;color:#64748b;font-size:13px;line-height:1.4}
+#screen-verb-study .vs-result-workspace-head .vs-view-switch{width:190px;flex:none;margin:0}
+#screen-verb-study .vs-table-controls{display:grid;gap:10px;padding:14px;margin-bottom:14px;border:1px solid #dce7ef;border-radius:13px;background:#f8fafc}
+#screen-verb-study .vs-control-row{display:grid;grid-template-columns:92px minmax(0,1fr);align-items:center;gap:10px}
+#screen-verb-study .vs-control-row>span{color:#475569;font-size:13px;font-weight:750}
+#screen-verb-study .vs-control-row>div{display:flex;gap:7px;overflow:auto;padding:2px;scrollbar-width:none}
+#screen-verb-study .vs-filter{flex:0 0 auto;min-height:34px;padding:6px 10px;border:1px solid #d3dee7;border-radius:8px;background:#fff;color:#526273;font-family:inherit;font-size:12px;font-weight:700}
+#screen-verb-study .vs-filter.active{border-color:#315d79;background:#315d79;color:#fff;box-shadow:0 3px 10px rgba(49,93,121,.18)}
+#screen-verb-study .vs-inline-help{margin:0 0 14px}
+#screen-verb-study .vs-result-workspace .vs-results{gap:12px}
+@media(max-width:560px){#screen-verb-study .vs-result-workspace{padding:11px}#screen-verb-study .vs-result-workspace-head{flex-direction:column}#screen-verb-study .vs-result-workspace-head .vs-view-switch{width:100%}#screen-verb-study .vs-control-row{grid-template-columns:1fr;gap:6px}#screen-verb-study .vs-control-row>span{padding-left:2px}}

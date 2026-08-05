@@ -41,6 +41,11 @@ function showVolumeScreen(courseName, key) {
   showScreen('screen-volume');
 }
 
+function openCourseSettings() {
+  showScreen('screen-app');
+  switchTab('settings');
+}
+
 async function selectVolume(volumeId) {
   const volumeChanged = Boolean(App.volume && App.volume !== volumeId);
   if (volumeChanged) {
