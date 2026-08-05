@@ -232,6 +232,25 @@ function dictionaryPairStem(value) {
     .filter((word) => word.length >= 3);
 }
 
+const DICTIONARY_EXPLICIT_PLURALS = {
+  'مائة': 'مئات',
+  'مئة': 'مئات',
+  'الف': 'الاف',
+  'مليون': 'ملايين',
+  'مليار': 'مليارات'
+};
+
+function cleanDictionaryArabic(value) {
+  return String(value || '')
+    .replace(/[\u064B-\u065F\u0670ـ\s]/gu, '')
+    .replace(/[إأآ]/gu, 'ا')
+    .replace(/ى/gu, 'ي');
+}
+
+function isExplicitDictionaryPair(singular, plural) {
+  return DICTIONARY_EXPLICIT_PLURALS[cleanDictionaryArabic(singular.ar)] === cleanDictionaryArabic(plural.ar);
+}
+
 function isLikelyDictionaryPair(singular, plural) {
   if (!singular || !plural || singular.lesson !== plural.lesson || singular.ar === plural.ar) return false;
   const left = String(singular.ru || '').toLowerCase().trim();
@@ -259,7 +278,7 @@ function makeDictBookRows(words) {
     if (
       plural &&
       singular.lesson === plural.lesson &&
-      (isDictionaryPair(singular, plural) || isLikelyDictionaryPair(singular, plural))
+      (isDictionaryPair(singular, plural) || isExplicitDictionaryPair(singular, plural) || isLikelyDictionaryPair(singular, plural))
     ) {
       rows.push({ ru: singular.ru, singular: singular.ar, plural: plural.ar });
       index += 1;
