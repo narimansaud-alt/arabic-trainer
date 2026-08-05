@@ -1252,7 +1252,20 @@ function openGrammarTable(type, pushHistory = true) {
     ? window.renderVerbCheatSheet()
     : renderPronounReferenceTable();
   overlay.classList.remove('hidden');
+  overlay.setAttribute('aria-hidden', 'false');
   if (pushHistory) pushAppHistoryState({ appModal: 'grammar-table', table: type, appView: 'rule-lesson', lesson: Settings.rulesLesson });
+}
+
+function closeVerbModal(fromHistory = false) {
+  const overlay = document.getElementById('verb-modal-overlay');
+  if (!overlay) return;
+
+  overlay.classList.add('hidden');
+  overlay.setAttribute('aria-hidden', 'true');
+
+  if (!fromHistory && window.history.state?.appModal === 'grammar-table') {
+    window.history.back();
+  }
 }
 
 function grammarRefTable(headers, rows) {

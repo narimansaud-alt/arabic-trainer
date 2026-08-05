@@ -2585,7 +2585,7 @@ button,input,select,textarea{max-width:100%;min-width:0;}
   background:transparent!important;
 }
 </style>
-<div class="verb-modal-overlay hidden" id="verb-modal-overlay">
+<div class="verb-modal-overlay hidden" id="verb-modal-overlay" aria-hidden="true" onclick="if(event.target===this) closeVerbModal()">
   <div class="verb-modal-box">
     <button class="verb-modal-close" aria-label="Закрыть" onclick="closeVerbModal()">X</button>
     <div class="verb-modal-title" id="verb-modal-title"></div>
@@ -2994,19 +2994,174 @@ button,input,select,textarea{max-width:100%;min-width:0;}
   --lux-gold:#3f6178!important;--lux-gold-soft:#edf3f6!important;--lux-wine:#3f6178!important;--lux-wine-soft:#edf3f6!important;
   --ui-gold:#3f6178!important;--ui-blue:#3f6178!important;--unified-accent:#3f6178!important;--unified-accent-deep:#2c4354!important;--unified-soft:#edf3f6!important;
 }
-html,body{height:auto!important;min-height:100%;overflow-y:auto!important;touch-action:pan-y;}
-#screen-app.screen.active{height:auto!important;min-height:100dvh!important;overflow:visible!important;touch-action:pan-y!important;}
-#screen-app .tab-content.active{height:auto!important;max-height:none!important;overflow:visible!important;touch-action:pan-y!important;}
+html,body{height:100%!important;min-height:0!important;overflow:hidden!important;overscroll-behavior:none!important;}
+body{height:100dvh!important;touch-action:pan-y;}
+.screen.active{
+  height:100dvh!important;
+  min-height:0!important;
+  max-height:100dvh!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-y:contain!important;
+  touch-action:pan-y!important;
+}
+#screen-app.screen.active{
+  padding-bottom:calc(86px + env(safe-area-inset-bottom,0px))!important;
+}
+#screen-app .tab-content.active{
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow:visible!important;
+  touch-action:pan-y!important;
+}
+.verb-modal-overlay{
+  overscroll-behavior:contain!important;
+  touch-action:none!important;
+}
+.verb-modal-box{
+  width:min(calc(100% - 16px),720px)!important;
+  max-height:calc(100dvh - max(16px,env(safe-area-inset-top,0px)) - max(16px,env(safe-area-inset-bottom,0px)))!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain!important;
+  touch-action:pan-y!important;
+  padding:24px 14px max(24px,env(safe-area-inset-bottom,0px))!important;
+}
+.verb-modal-close{
+  z-index:20!important;
+  width:44px!important;
+  height:44px!important;
+  top:8px!important;
+  right:8px!important;
+  border:1px solid #cbd8e0!important;
+  border-radius:8px!important;
+  background:rgba(255,255,255,.96)!important;
+  color:#2c4354!important;
+  font-size:17px!important;
+  font-weight:800!important;
+  pointer-events:auto!important;
+}
+.verb-modal-title{padding-inline:48px!important;line-height:1.35!important;}
+#verb-modal-body{min-width:0;width:100%;}
+#verb-modal-body .grammar-ref-note,
+#verb-modal-body .vr-note{
+  margin:10px 0 16px!important;
+  padding:12px!important;
+  border:1px solid #d7e1e7!important;
+  border-radius:8px!important;
+  background:#f7fafb!important;
+  color:#3f586b!important;
+  font:600 13px/1.65 'Manrope','Segoe UI',sans-serif!important;
+}
+#verb-modal-body .grammar-ref-wrap,
+#verb-modal-body .vr-table-wrap{
+  width:100%!important;
+  max-width:100%!important;
+  overflow-x:hidden!important;
+  border:1px solid #d7e1e7!important;
+  border-radius:8px!important;
+  background:#fff!important;
+}
+#verb-modal-body .grammar-ref-table,
+#verb-modal-body .vr-table{
+  width:100%!important;
+  min-width:0!important;
+  table-layout:fixed!important;
+  border-collapse:collapse!important;
+}
+#verb-modal-body .grammar-ref-table th,
+#verb-modal-body .grammar-ref-table td,
+#verb-modal-body .vr-table th,
+#verb-modal-body .vr-table td{
+  padding:9px 6px!important;
+  border:1px solid #d7e1e7!important;
+  vertical-align:middle!important;
+  overflow-wrap:anywhere!important;
+  word-break:normal!important;
+  text-align:center!important;
+  color:#253746!important;
+  font:600 12px/1.45 'Manrope','Segoe UI',sans-serif!important;
+}
+#verb-modal-body .grammar-ref-table th,
+#verb-modal-body .vr-table th{
+  background:#edf3f6!important;
+  color:#2c4354!important;
+  font-weight:800!important;
+}
+#verb-modal-body .grammar-ref-table th:first-child{width:27%;}
+#verb-modal-body .grammar-ref-table th:nth-child(2){width:22%;}
+#verb-modal-body .grammar-ref-table th:nth-child(3){width:21%;}
+#verb-modal-body .grammar-ref-table th:nth-child(4){width:30%;}
+#verb-modal-body .vr-table th:first-child{width:28%;}
+#verb-modal-body .vr-table th:nth-child(2){width:32%;}
+#verb-modal-body .vr-table th:nth-child(3){width:40%;}
+#verb-modal-body .ar-text,
+#verb-modal-body .vr-ar{
+  display:inline-block!important;
+  direction:rtl!important;
+  unicode-bidi:isolate!important;
+  overflow-wrap:normal!important;
+  word-break:normal!important;
+  font-family:'Noto Naskh Arabic','Amiri',serif!important;
+  font-size:19px!important;
+  line-height:1.7!important;
+  color:#172b3a!important;
+}
+#tab-dict .dict-view-toggle{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:8px!important;
+  margin:0 0 16px!important;
+}
+#tab-dict .dict-view-btn,
+#tab-dict #dict-lesson-row .lb-pill,
+#tab-settings .qty-pill,
+#tab-train .mode-pill,
+#tab-train .answer-check-pill{
+  width:auto!important;
+  min-height:42px!important;
+  padding:9px 12px!important;
+  border:1px solid #cbd8e0!important;
+  border-radius:8px!important;
+  background:rgba(255,255,255,.88)!important;
+  color:#3f586b!important;
+  box-shadow:none!important;
+}
+#tab-dict .dict-view-btn.active,
+#tab-dict #dict-lesson-row .lb-pill.active,
+#tab-settings .qty-pill.active,
+#tab-train .mode-pill.active,
+#tab-train .answer-check-pill.active{
+  border-color:#3f6178!important;
+  background:#3f6178!important;
+  color:#fff!important;
+}
+#tab-dict .dict-view-btn .ui-icon{width:18px;height:18px;}
+#tab-settings .sc{border-color:#d7e1e7!important;box-shadow:0 6px 22px rgba(20,31,40,.045)!important;}
 .app-tab.active,.cc-arrow,.vol-arrow,.rules-home-kicker,.rules-lesson-num,.rules-lesson-open{color:#3f6178!important;}
 .app-tab.active::before,.streak-bar-fill,.quiz-bar-fill,.learn-dot.current{background:#3f6178!important;}
 .btn-primary,.btn-announcement,.btn-check,.btn-res:not(.sec),.btn-start.green{background:#3f6178!important;border-color:#3f6178!important;color:#fff!important;}
 .btn-start.gold,.btn-start.blue,.btn-start.orange,.mode-pill.fast,.mode-pill.fast.active,.lb-pill.gold,.lb-pill.gold.active,.btn-hint{background:#edf3f6!important;border-color:#9dafba!important;color:#2f4d61!important;box-shadow:none!important;}
 .streak-banner,.streak-days{border-color:#d7e1e7!important;box-shadow:0 8px 28px rgba(20,31,40,.05)!important;}
-#tab-book .book-nav-btn,#tab-book .book-format-btn,#tab-rules .rules-back-btn,#tab-rules .rules-open-btn,#tab-rules .rule-detail-actions button,#tab-settings .qty-pill.active{background:#edf3f6!important;border-color:#cbd8e0!important;color:#2f4d61!important;}
+#tab-book .book-nav-btn,#tab-book .book-format-btn,#tab-rules .rules-back-btn,#tab-rules .rules-open-btn,#tab-rules .rule-detail-actions button{background:#edf3f6!important;border-color:#cbd8e0!important;color:#2f4d61!important;}
 .rule-detail-actions.cheat-sheets{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
 .grammar-ref-section-title{margin:18px 0 8px;color:#20384d;font:800 15px/1.4 'Manrope','Segoe UI',sans-serif;}
 .grammar-ref-section-title:first-of-type{margin-top:12px;}
-@media(max-width:480px){.rules-home-title-row{align-items:flex-start;}.rules-verb-badge{font-size:11px;padding:7px 9px;}.rules-verb-badge-ar{font-size:16px;}}
+@media(max-width:480px){
+  .rules-home-title-row{align-items:flex-start;}
+  .rules-verb-badge{font-size:11px;padding:7px 9px;}
+  .rules-verb-badge-ar{font-size:16px;}
+  .verb-modal-box{width:100%!important;border-radius:16px 16px 0 0!important;padding-inline:10px!important;}
+  #verb-modal-body .grammar-ref-table th,
+  #verb-modal-body .grammar-ref-table td{padding:7px 3px!important;font-size:10px!important;}
+  #verb-modal-body .vr-table th,
+  #verb-modal-body .vr-table td{padding:8px 4px!important;font-size:11px!important;}
+  #verb-modal-body .ar-text,
+  #verb-modal-body .vr-ar{font-size:17px!important;line-height:1.75!important;}
+}
 </style>
 <link rel="stylesheet" href="src/verb-rules.css">
 <script src="src/api.js"></script>
