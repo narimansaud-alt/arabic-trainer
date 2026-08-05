@@ -133,36 +133,6 @@ async function checkForAppUpdate() {
   }
 }
 
-let pullRefreshStartY = null;
-let pullRefreshScroller = null;
-
-function findPullRefreshScroller(node) {
-  let current = node instanceof Element ? node : null;
-  while (current && current !== document.body) {
-    const style = window.getComputedStyle(current);
-    if (/(auto|scroll)/.test(style.overflowY) && current.scrollHeight > current.clientHeight + 1) return current;
-    current = current.parentElement;
-  }
-  return document.scrollingElement;
-}
-
-document.addEventListener('touchstart', (event) => {
-  if (event.touches.length !== 1) return;
-  pullRefreshStartY = event.touches[0].clientY;
-  pullRefreshScroller = findPullRefreshScroller(event.target);
-}, { passive: true });
-
-document.addEventListener('touchmove', (event) => {
-  if (event.touches.length !== 1 || pullRefreshStartY == null) return;
-  const pullingDown = event.touches[0].clientY - pullRefreshStartY > 8;
-  const atTop = !pullRefreshScroller || pullRefreshScroller.scrollTop <= 0;
-  if (pullingDown && atTop) event.preventDefault();
-}, { passive: false });
-
-document.addEventListener('touchend', () => {
-  pullRefreshStartY = null;
-  pullRefreshScroller = null;
-}, { passive: true });
 </script>
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
@@ -372,6 +342,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .book-format-btn{padding:6px 9px;border:1px solid #b9d8c3;border-radius:8px;background:#fff;color:var(--green-dark);font-weight:800;text-decoration:none;}
 .rule-list{display:flex;flex-direction:column;gap:14px;}
 .rules-home-head{background:white;border-radius:10px;padding:18px 16px;margin-bottom:12px;box-shadow:0 1px 10px rgba(20,70,45,.06);border:1px solid #edf2ef;}
+.rules-home-title-row{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.rules-verb-badge{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:7px 10px;border:1px solid #d8e2ea;border-radius:8px;background:#f5f8fa;color:#31536f;font:700 12px/1.2 'Manrope','Segoe UI',sans-serif;cursor:pointer;}
+.rules-verb-badge-ar{font-family:'Noto Naskh Arabic','Amiri',serif;font-size:17px;line-height:1;direction:rtl;}
+.rules-verb-badge:active{background:#eaf0f5;transform:translateY(1px);}
 .rules-home-kicker{font-size:11px;font-weight:800;color:var(--green);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;}
 .rules-home-title{font-size:21px;font-weight:900;color:var(--green-dark);line-height:1.25;}
 .rules-home-sub{font-size:13px;color:#69776f;line-height:1.55;margin-top:6px;}
@@ -2370,7 +2344,7 @@ button,input,select,textarea{max-width:100%;min-width:0;}
 <!-- Баннер автообновления -->
 <div id="sw-update-banner" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999;background:#fff;color:#171717;border:1px solid #cfcfcf;padding:12px 20px;border-radius:12px;box-shadow:0 12px 36px rgba(23,23,23,0.16);align-items:center;gap:12px;font-family:inherit;font-size:14px;max-width:90vw;">
   <span><span class="ui-icon"><svg><use href="#ui-icon-refresh"></use></svg></span>Доступно обновление</span>
-  <button onclick="swUpdate()" style="background:#c9a227;color:#fff;border:none;padding:7px 16px;border-radius:8px;cursor:pointer;font-weight:bold;font-size:14px;">Обновить</button>
+  <button onclick="swUpdate()" style="background:#3f6178;color:#fff;border:none;padding:7px 16px;border-radius:8px;cursor:pointer;font-weight:bold;font-size:14px;">Обновить</button>
   <button aria-label="Закрыть" onclick="this.parentElement.style.display='none'" style="background:transparent;color:#68737d;border:none;font-size:15px;cursor:pointer;line-height:1;">X</button>
 </div>
 
@@ -3009,6 +2983,27 @@ button,input,select,textarea{max-width:100%;min-width:0;}
   </div>
 </div>
 
+<style>
+/* Native vertical scrolling: do not intercept touchmove in installed PWA mode. */
+:root{
+  --green:#3f6178!important;--green-dark:#2c4354!important;--green-light:#edf3f6!important;
+  --gold:#3f6178!important;--copper:#3f6178!important;--copper-soft:#edf3f6!important;
+  --control-copper:#3f6178!important;--control-copper-hover:#314b5d!important;
+  --lux-primary:#3f6178!important;--lux-primary-deep:#2c4354!important;--lux-primary-soft:#edf3f6!important;
+  --lux-gold:#3f6178!important;--lux-gold-soft:#edf3f6!important;--lux-wine:#3f6178!important;--lux-wine-soft:#edf3f6!important;
+  --ui-gold:#3f6178!important;--ui-blue:#3f6178!important;--unified-accent:#3f6178!important;--unified-accent-deep:#2c4354!important;--unified-soft:#edf3f6!important;
+}
+html,body{height:auto!important;min-height:100%;overflow-y:auto!important;touch-action:pan-y;}
+#screen-app.screen.active{height:auto!important;min-height:100dvh!important;overflow:visible!important;touch-action:pan-y!important;}
+#screen-app .tab-content.active{height:auto!important;max-height:none!important;overflow:visible!important;touch-action:pan-y!important;}
+.app-tab.active,.cc-arrow,.vol-arrow,.rules-home-kicker,.rules-lesson-num,.rules-lesson-open{color:#3f6178!important;}
+.app-tab.active::before,.streak-bar-fill,.quiz-bar-fill,.learn-dot.current{background:#3f6178!important;}
+.btn-primary,.btn-announcement,.btn-check,.btn-res:not(.sec),.btn-start.green{background:#3f6178!important;border-color:#3f6178!important;color:#fff!important;}
+.btn-start.gold,.btn-start.blue,.btn-start.orange,.mode-pill.fast,.mode-pill.fast.active,.lb-pill.gold,.lb-pill.gold.active,.btn-hint{background:#edf3f6!important;border-color:#9dafba!important;color:#2f4d61!important;box-shadow:none!important;}
+.streak-banner,.streak-days{border-color:#d7e1e7!important;box-shadow:0 8px 28px rgba(20,31,40,.05)!important;}
+#tab-book .book-nav-btn,#tab-book .book-format-btn,#tab-rules .rules-back-btn,#tab-rules .rules-open-btn,#tab-rules .rule-detail-actions button,#tab-settings .qty-pill.active{background:#edf3f6!important;border-color:#cbd8e0!important;color:#2f4d61!important;}
+@media(max-width:480px){.rules-home-title-row{align-items:flex-start;}.rules-verb-badge{font-size:11px;padding:7px 9px;}.rules-verb-badge-ar{font-size:16px;}}
+</style>
 <link rel="stylesheet" href="src/verb-rules.css">
 <script src="src/api.js"></script>
 <script src="src/state.js"></script>

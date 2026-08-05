@@ -1085,8 +1085,7 @@ function formatRuleSections(sections) {
 function renderRulesIndex(cont, grouped) {
   const lessons = Object.keys(grouped).sort(lessonSort);
   cont.innerHTML =
-    '<div class="rules-home-head"><div><div class="rules-home-kicker">Правила курса</div><div class="rules-home-title">Уроки</div><div class="rules-home-sub">Правила, примеры, разборы и таблицы.</div></div></div>' +
-    '<button class="rules-lesson-tile" type="button" onclick="showVerbRules()"><span class="rules-lesson-num">Отдельный справочник</span><span class="rules-lesson-label">Правила глаголов</span><span class="rules-lesson-full-outline"><span class="rules-lesson-preview-row accent-1"><span class="rules-lesson-preview-num">1</span><b class="rules-preview-title">Времена, отрицание и залоги</b></span><span class="rules-lesson-preview-row accent-2"><span class="rules-lesson-preview-num">2</span><b class="rules-preview-title">Виды глаголов и породы I–X</b></span><span class="rules-lesson-preview-row accent-3"><span class="rules-lesson-preview-num">3</span><b class="rules-preview-title">Производные формы и таблицы</b></span></span><span class="rules-lesson-open">Открыть справочник ›</span></button>' +
+    '<div class="rules-home-head"><div class="rules-home-title-row"><div><div class="rules-home-kicker">Правила курса</div><div class="rules-home-title">Уроки</div></div><button class="rules-verb-badge" type="button" onclick="showVerbRules()"><span class="rules-verb-badge-ar" lang="ar" dir="rtl">فِعْلٌ</span><span>Правила глаголов</span></button></div><div class="rules-home-sub">Правила, примеры, разборы и таблицы.</div></div>' +
     '<div class="rules-lesson-grid">' +
     lessons
       .map((lesson) => {
