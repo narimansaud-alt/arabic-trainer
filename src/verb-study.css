@@ -117,3 +117,28 @@
 #screen-verb-study .vs-pattern-top>div{min-width:0}
 #screen-verb-study .vs-pattern-top>div>b{display:block;color:#17324a;font:700 20px/1.45 "Noto Naskh Arabic","Amiri",serif}
 #screen-verb-study .vs-pattern-top>div>small{display:block;margin-top:2px;color:#60768a;font-size:12px;line-height:1.35}
+/* Clear visual hierarchy for the verb-form study guide. */
+#screen-verb-study .vs-pattern-concept{position:relative;border-color:#d8e1eb}
+#screen-verb-study .vs-pattern-concept:not(.vs-pattern-intro)::before{content:"";position:absolute;top:0;left:18px;right:18px;height:3px;border-radius:3px;background:#315d79}
+#screen-verb-study .vs-pattern-intro{background:linear-gradient(135deg,#f6f9fc,#fff)}
+#screen-verb-study .vs-pattern-intro h3{font-size:20px}
+#screen-verb-study .vs-pattern-explain{margin-top:14px!important;padding-top:14px;border-top:1px solid #e4ebf2}
+#screen-verb-study .vs-contrast{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+#screen-verb-study .vs-contrast>div{padding:14px;border:1px solid #e0e8f0;border-radius:11px;background:#f8fafc}
+#screen-verb-study .vs-contrast strong,#screen-verb-study .vs-contrast b,#screen-verb-study .vs-contrast span,#screen-verb-study .vs-contrast small{display:block}
+#screen-verb-study .vs-contrast strong{font-size:18px}
+#screen-verb-study .vs-contrast b{margin:2px 0 7px;color:#24435c;font-size:13px}
+#screen-verb-study .vs-contrast p{margin:0 0 9px;font-size:13px;line-height:1.45}
+#screen-verb-study .vs-contrast span{font:22px/1.65 "Noto Naskh Arabic","Amiri",serif;text-align:right}
+#screen-verb-study .vs-contrast small,#screen-verb-study .vs-example-pairs small{color:#64748b;font-size:12px}
+#screen-verb-study .vs-example-pairs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+#screen-verb-study .vs-example-pairs>div{padding:12px;border-radius:10px;background:#f7f9fc}
+#screen-verb-study .vs-example-pairs span,#screen-verb-study .vs-example-pairs small{display:block}
+#screen-verb-study .vs-example-pairs span{font:21px/1.65 "Noto Naskh Arabic","Amiri",serif;text-align:right}
+#screen-verb-study .vs-derived-grid b{display:block;margin-bottom:5px;color:#29445b;font-size:12px;line-height:1.35}
+#screen-verb-study .vs-derived-grid em{font-style:normal}
+#screen-verb-study .vs-matrix-divider{display:grid;gap:4px;margin:8px 0 2px;padding:18px;border:1px solid #ccd9e5;border-radius:14px;background:#eff5f9;text-align:center}
+#screen-verb-study .vs-matrix-divider span{color:#315d79;font-size:11px;font-weight:800;letter-spacing:.08em}
+#screen-verb-study .vs-matrix-divider strong{color:#1e3348;font-size:18px}
+#screen-verb-study .vs-matrix-divider small{color:#64748b;font-size:13px}
+@media(max-width:440px){#screen-verb-study .vs-contrast,#screen-verb-study .vs-example-pairs{grid-template-columns:1fr}}
