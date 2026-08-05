@@ -36,9 +36,14 @@ if('serviceWorker' in navigator){
       });
     };
 
-    const onControllerChange = ()=>{
+    const onControllerChange = async ()=>{
       if(!refreshing){
         refreshing=true;
+        try {
+          if(typeof window.flushDailyProgressBeforeUpdate === 'function') await window.flushDailyProgressBeforeUpdate();
+        } catch (_) {
+          // The local snapshot written by the progress layer remains available after reload.
+        }
         window.location.reload();
       }
     };
@@ -99,8 +104,10 @@ async function checkForAppUpdate() {
   }
   const button = document.getElementById('btn-check-app-update');
   if (button) button.disabled = true;
-  setAppUpdateStatus('Проверяем наличие новой версии…');
+  setAppUpdateStatus('Сохраняем текущий прогресс…');
   try {
+    if (typeof window.flushDailyProgressBeforeUpdate === 'function') await window.flushDailyProgressBeforeUpdate();
+    setAppUpdateStatus('Проверяем наличие новой версии…');
     const registration = await navigator.serviceWorker.getRegistration();
     if (!registration) {
       setAppUpdateStatus('Сервис обновлений будет доступен после следующего запуска приложения.', true);

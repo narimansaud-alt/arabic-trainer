@@ -34,9 +34,12 @@ const DAILY_PROGRESS_CACHE_KEY = 'arabic_daily_progress_v1';
 
 function saveDailyProgressSnapshot() {
   try {
+    const date = appDateKey();
+    const saved = JSON.parse(localStorage.getItem(DAILY_PROGRESS_CACHE_KEY) || 'null');
+    const previous = saved && saved.date === date ? Math.max(0, Math.min(30, Number(saved.words) || 0)) : 0;
     localStorage.setItem(DAILY_PROGRESS_CACHE_KEY, JSON.stringify({
-      date: appDateKey(),
-      words: Math.max(0, Math.min(30, Number(App.dailyWords) || 0))
+      date,
+      words: Math.max(previous, Math.max(0, Math.min(30, Number(App.dailyWords) || 0)))
     }));
   } catch (_) {
     // The server remains the source of truth when local storage is unavailable.
@@ -68,6 +71,12 @@ function syncDailyProgress() {
     .catch((e) => ErrorLog.capture(e, { source: 'streak', action: 'sync-daily-count', target, today }));
   return __dailyIncrementQueue;
 }
+
+window.flushDailyProgressBeforeUpdate = async function flushDailyProgressBeforeUpdate() {
+  saveDailyProgressSnapshot();
+  if (!App.username || !App.dailyWords) return;
+  await syncDailyProgress();
+};
 
 function addDailyWord() {
   const today = appDateKey();

@@ -1,4 +1,4 @@
-const CACHE = 'arabic-v20260805-progress';
+const CACHE = 'arabic-v20260805-progress-2';
 const FILES = [
   './',
   './index.html',
