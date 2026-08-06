@@ -318,9 +318,9 @@ function renderDictBook(words, lesson) {
         (w) =>
           '<tr><td>' +
           esc(w.ru) +
-          '</td><td class="dict-book-ar dict-book-plural" dir="rtl">' +
+          '</td><td class="dict-book-ar dict-book-plural" dir="rtl" lang="ar">' +
           (w.plural ? esc(w.plural) : '<span class="dict-book-dash">—</span>') +
-          '</td><td class="dict-book-ar" dir="rtl">' +
+          '</td><td class="dict-book-ar" dir="rtl" lang="ar">' +
           esc(w.singular) +
           '</td></tr>'
       )
