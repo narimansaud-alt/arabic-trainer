@@ -2783,6 +2783,27 @@ button,input,select,textarea{max-width:100%;min-width:0;}
   font-size:15px;
   line-height:1.65;
 }
+#tab-rules .rule-source-ar{
+  display:grid;
+  gap:8px;
+  direction:rtl!important;
+  unicode-bidi:isolate!important;
+  text-align:right!important;
+  font-family:var(--ui-font-ar)!important;
+  font-size:clamp(21px,5.2vw,30px)!important;
+  font-weight:850!important;
+  line-height:1.95!important;
+  color:#24556a!important;
+}
+#tab-rules .rule-source-line{
+  padding:7px 10px;
+  border-radius:10px;
+  background:rgba(255,255,255,.68);
+}
+#tab-rules .rule-source-line:nth-child(4n+1){color:#24556a!important;}
+#tab-rules .rule-source-line:nth-child(4n+2){color:#2755a3!important;}
+#tab-rules .rule-source-line:nth-child(4n+3){color:#1f7a4f!important;}
+#tab-rules .rule-source-line:nth-child(4n+4){color:#7c3aed!important;}
 #tab-rules .rule-check-card{
   background:#fffaf3;
   border-color:#f0dfc3;

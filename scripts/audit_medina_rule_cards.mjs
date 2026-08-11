@@ -11,6 +11,7 @@ if (!SUPA_URL || !SUPA_ANON_KEY) {
 const COURSES = [
   'Мединский курс (Том 1)',
   'Мединский курс (Том 2)',
+  'Мединский курс (Том 3)',
 ];
 
 function countBy(rows, key) {
@@ -88,7 +89,7 @@ for (const course of COURSES) {
       .slice(0, 50),
     lessonSamples: Object.fromEntries(
       uniqSorted(rows.map((row) => row.lesson_number))
-        .filter((lesson) => ['1', '6', '17', '21', '23', '31'].includes(lesson))
+        .filter((lesson) => ['1', '6', '10', '11', '15', '17', '21', '23', '31'].includes(lesson))
         .map((lesson) => [
           lesson,
           rows
