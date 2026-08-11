@@ -9,11 +9,14 @@
 /backups/
 /docs/
 /node_modules/
+/output/
+/preview/
 /scripts/
 /services/
 /supabase/
 /tmp/
 /AGENTS.md
+/ara.traineddata
 /.gitignore
 /build.sh
 /wrangler.jsonc

@@ -2824,6 +2824,63 @@ button,input,select,textarea{max-width:100%;min-width:0;}
   #tab-rules .rule-example-card{padding:13px;}
   #tab-rules .rule-study-text{font-size:15px;line-height:1.75;}
 }
+#tab-rules .rule-subpanel:has(.rule-study){
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
+}
+#tab-rules .rule-subpanel:has(.rule-study) > .rule-subpanel-head{display:none!important;}
+#tab-rules .rule-subpanel:has(.rule-study) > .rule-subpanel-body{padding:0!important;}
+#tab-rules .rule-subpanel:has(.rule-study) .rule-subpanel-content{padding:0!important;}
+#tab-rules .rule-card:has(.rule-study){
+  border-color:#e5edf2!important;
+  background:#fff!important;
+  box-shadow:0 6px 22px rgba(31,54,73,.045)!important;
+}
+#tab-rules .rule-card:has(.rule-study) .rule-card-body{padding:0 14px 18px!important;}
+#tab-rules .rule-study{gap:12px;}
+#tab-rules .rule-study-card,
+#tab-rules .rule-check-card{
+  border-radius:12px!important;
+  box-shadow:none!important;
+}
+#tab-rules .rule-study-text .ar-term,
+#tab-rules .rule-study-text .ar-inline,
+#tab-rules .rule-study li .ar-term,
+#tab-rules .rule-study li .ar-inline,
+#tab-rules .rule-check-card .ar-term,
+#tab-rules .rule-check-card .ar-inline,
+#tab-rules .rule-term-ru .ar-term,
+#tab-rules .rule-term-ru .ar-inline,
+#tab-rules .rule-example-ru .ar-term,
+#tab-rules .rule-example-ru .ar-inline{
+  display:inline-block!important;
+  padding:0 .12em!important;
+  margin-inline:.04em!important;
+  border-radius:6px!important;
+  font-family:var(--ui-font-ar)!important;
+  font-size:1.22em!important;
+  font-weight:900!important;
+  line-height:1.65!important;
+  background:rgba(255,255,255,.55)!important;
+  text-shadow:0 .2px 0 currentColor!important;
+}
+#tab-rules .ar-tone-particle{color:#1d4ed8!important;}
+#tab-rules .ar-tone-subject{color:#16834f!important;}
+#tab-rules .ar-tone-predicate{color:#b65f09!important;}
+#tab-rules .ar-tone-verb{color:#6d36b5!important;}
+#tab-rules .ar-tone-nasb{color:#c2410c!important;}
+#tab-rules .ar-tone-jarr{color:#2563eb!important;}
+#tab-rules .ar-tone-raf{color:#0f766e!important;}
+#tab-rules .ar-tone-jazm{color:#7c3aed!important;}
+#tab-rules .ar-tone-structure{color:#82760c!important;}
+#tab-rules .ar-tone-default{color:#246076!important;}
+@media(max-width:620px){
+  #tab-rules .rule-card:has(.rule-study) .rule-card-body{padding:0 11px 16px!important;}
+  #tab-rules .rule-study{gap:11px;}
+}
 </style>
 <div class="verb-modal-overlay hidden" id="verb-modal-overlay" aria-hidden="true" onclick="if(event.target===this) closeVerbModal()">
   <div class="verb-modal-box">

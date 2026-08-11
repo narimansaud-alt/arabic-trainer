@@ -465,13 +465,38 @@ function sanitizeRuleHtml(value) {
   return template.innerHTML;
 }
 
+function normalizeArabicForTone(value) {
+  return String(value || '')
+    .replace(/[\u064B-\u065F\u0670]/g, '')
+    .replace(/[إأآا]/g, 'ا')
+    .replace(/[ىي]/g, 'ي')
+    .replace(/[ة]/g, 'ه')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function arabicToneClass(value) {
+  const key = normalizeArabicForTone(value);
+  if (!key) return '';
+  if (/(?:^| )(?:ان|انها|انك|انكم|انهم|اننا|لكن|لكنها|كان|كانت|ليس|ليست|لعل|ليت|ما|لا|لم|لما|لن|هل|بل|ام|نعم|بلي|حرف)(?: |$)/u.test(key)) return ' ar-tone-particle';
+  if (/(?:مبتدا|اسم|مسند اليه|الفاعل)(?: |$)|(?:^| )فاعل(?: |$)/u.test(key)) return ' ar-tone-subject';
+  if (/(?:خبر|مسند)(?: |$)/u.test(key)) return ' ar-tone-predicate';
+  if (/(?:مفعول|منصوب|نصب|تمييز|حال|ظرف)(?: |$)/u.test(key)) return ' ar-tone-nasb';
+  if (/(?:مجرور|جر|مضاف اليه|حرف جر)(?: |$)/u.test(key)) return ' ar-tone-jarr';
+  if (/(?:مرفوع|رفع|ضمه|دامه)(?: |$)/u.test(key)) return ' ar-tone-raf';
+  if (/(?:مجزوم|جزم|سكون)(?: |$)/u.test(key)) return ' ar-tone-jazm';
+  if (/(?:فعل|ماض|مضارع|امر|يفعل|ذهب|قال|كتب|يكتب)(?: |$)/u.test(key)) return ' ar-tone-verb';
+  if (/(?:نعت|منعوت|صفه|مضاف|اضافه|موصوف|اسماء الخمسه)(?: |$)/u.test(key)) return ' ar-tone-structure';
+  return ' ar-tone-default';
+}
+
 function wrapArabic(text) {
   const groups = [];
   const protectedText = sanitizeRuleHtml(text).replace(
     /(\(\s*)([\u0600-\u06FF]+(?:\s+[\u0600-\u06FF]+)*)(\s*\))/gu,
     (_, opening, phrase, closing) => {
       const token = '@@ARABIC_GROUP_' + groups.length + '@@';
-      groups.push('<span class="ar-inline" lang="ar" dir="rtl">' + opening + phrase + closing + '</span>');
+      groups.push('<span class="ar-inline' + arabicToneClass(phrase) + '" lang="ar" dir="rtl">' + opening + phrase + closing + '</span>');
       return token;
     }
   );
@@ -481,7 +506,7 @@ function wrapArabic(text) {
         phrase.length <= 34 && phrase.trim().split(/\s+/).length <= 4 && !/[،؛؟.!]/.test(phrase);
       const isSentence = phrase.trim().split(/\s+/).length > 4 || /[،؛؟.!]/.test(phrase);
       const className = isSentence ? 'ar-sentence' : isShortTerm ? 'ar-term' : 'ar-text';
-      return '<span class="' + className + '" lang="ar" dir="rtl">' + phrase + '</span>';
+      return '<span class="' + className + arabicToneClass(phrase) + '" lang="ar" dir="rtl">' + phrase + '</span>';
     })
     .replace(/@@ARABIC_GROUP_(\d+)@@/g, (_, index) => groups[Number(index)] || '');
 }
