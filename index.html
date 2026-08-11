@@ -2633,6 +2633,7 @@ button,input,select,textarea{max-width:100%;min-width:0;}
   unicode-bidi:isolate!important;
   font-family:var(--ui-font-ar)!important;
   color:#24556a!important;
+  font-weight:900!important;
   letter-spacing:0!important;
   text-align:right!important;
   overflow-wrap:normal!important;
@@ -2667,6 +2668,7 @@ button,input,select,textarea{max-width:100%;min-width:0;}
   font-size:clamp(26px,6.4vw,36px)!important;
   line-height:1.75!important;
   color:#24556a!important;
+  font-weight:900!important;
   letter-spacing:0!important;
 }
 #tab-rules .rule-title-ru{
@@ -2835,11 +2837,13 @@ button,input,select,textarea{max-width:100%;min-width:0;}
 #tab-rules .rule-subpanel:has(.rule-study) > .rule-subpanel-body{padding:0!important;}
 #tab-rules .rule-subpanel:has(.rule-study) .rule-subpanel-content{padding:0!important;}
 #tab-rules .rule-card:has(.rule-study){
-  border-color:#e5edf2!important;
-  background:#fff!important;
-  box-shadow:0 6px 22px rgba(31,54,73,.045)!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  overflow:visible!important;
 }
-#tab-rules .rule-card:has(.rule-study) .rule-card-body{padding:0 14px 18px!important;}
+#tab-rules .rule-card:has(.rule-study) .rule-card-body{padding:0 0 18px!important;}
 #tab-rules .rule-study{gap:12px;}
 #tab-rules .rule-study-card,
 #tab-rules .rule-check-card{
@@ -2877,8 +2881,48 @@ button,input,select,textarea{max-width:100%;min-width:0;}
 #tab-rules .ar-tone-jazm{color:#7c3aed!important;}
 #tab-rules .ar-tone-structure{color:#82760c!important;}
 #tab-rules .ar-tone-default{color:#246076!important;}
+#tab-rules .rule-study .ar-tone-particle,
+#tab-rules .rule-check-card .ar-tone-particle,
+#tab-rules .rule-example-ru .ar-tone-particle,
+#tab-rules .rule-term-ru .ar-tone-particle{color:#1d4ed8!important;}
+#tab-rules .rule-study .ar-tone-subject,
+#tab-rules .rule-check-card .ar-tone-subject,
+#tab-rules .rule-example-ru .ar-tone-subject,
+#tab-rules .rule-term-ru .ar-tone-subject{color:#16834f!important;}
+#tab-rules .rule-study .ar-tone-predicate,
+#tab-rules .rule-check-card .ar-tone-predicate,
+#tab-rules .rule-example-ru .ar-tone-predicate,
+#tab-rules .rule-term-ru .ar-tone-predicate{color:#b65f09!important;}
+#tab-rules .rule-study .ar-tone-verb,
+#tab-rules .rule-check-card .ar-tone-verb,
+#tab-rules .rule-example-ru .ar-tone-verb,
+#tab-rules .rule-term-ru .ar-tone-verb{color:#6d36b5!important;}
+#tab-rules .rule-study .ar-tone-nasb,
+#tab-rules .rule-check-card .ar-tone-nasb,
+#tab-rules .rule-example-ru .ar-tone-nasb,
+#tab-rules .rule-term-ru .ar-tone-nasb{color:#c2410c!important;}
+#tab-rules .rule-study .ar-tone-jarr,
+#tab-rules .rule-check-card .ar-tone-jarr,
+#tab-rules .rule-example-ru .ar-tone-jarr,
+#tab-rules .rule-term-ru .ar-tone-jarr{color:#2563eb!important;}
+#tab-rules .rule-study .ar-tone-raf,
+#tab-rules .rule-check-card .ar-tone-raf,
+#tab-rules .rule-example-ru .ar-tone-raf,
+#tab-rules .rule-term-ru .ar-tone-raf{color:#0f766e!important;}
+#tab-rules .rule-study .ar-tone-jazm,
+#tab-rules .rule-check-card .ar-tone-jazm,
+#tab-rules .rule-example-ru .ar-tone-jazm,
+#tab-rules .rule-term-ru .ar-tone-jazm{color:#7c3aed!important;}
+#tab-rules .rule-study .ar-tone-structure,
+#tab-rules .rule-check-card .ar-tone-structure,
+#tab-rules .rule-example-ru .ar-tone-structure,
+#tab-rules .rule-term-ru .ar-tone-structure{color:#82760c!important;}
+#tab-rules .rule-study .ar-tone-default,
+#tab-rules .rule-check-card .ar-tone-default,
+#tab-rules .rule-example-ru .ar-tone-default,
+#tab-rules .rule-term-ru .ar-tone-default{color:#246076!important;}
 @media(max-width:620px){
-  #tab-rules .rule-card:has(.rule-study) .rule-card-body{padding:0 11px 16px!important;}
+  #tab-rules .rule-card:has(.rule-study) .rule-card-body{padding:0 0 16px!important;}
   #tab-rules .rule-study{gap:11px;}
 }
 </style>
