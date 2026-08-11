@@ -4,7 +4,6 @@ const FILES = [
   './index.html',
   './medina-premium-icon-512.png',
   './medina-premium-icon-192.png',
-  './manifest.json?v=6',
   './manifest.json',
   './assets/fonts/local-fonts.css?v=7',
   './assets/fonts/ui-font-01.woff2',
@@ -37,7 +36,6 @@ const FILES = [
 
 const SHOULD_NETWORK_FIRST = [
   './manifest.json',
-  './manifest.json?v=6',
   './medina-premium-icon-512.png',
   './medina-premium-icon-512.png?v=6',
   './medina-premium-icon-192.png',

@@ -5,7 +5,7 @@
 <title>Мединский курс</title>
 <meta name="theme-color" content="#ffffff">
 <meta name="mobile-web-app-capable" content="yes">
-<link rel="manifest" href="./manifest.json?v=6">
+<link rel="manifest" href="./manifest.json">
 <link href="./assets/fonts/local-fonts.css?v=7" rel="stylesheet">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -2594,6 +2594,235 @@ button,input,select,textarea{max-width:100%;min-width:0;}
   border:0!important;
   padding:0!important;
   background:transparent!important;
+}
+#tab-rules .rule-study{
+  display:grid;
+  gap:14px;
+}
+#tab-rules .rule-study-card,
+#tab-rules .rule-meaning-card,
+#tab-rules .rule-example-card,
+#tab-rules .rule-check-card{
+  min-width:0;
+  border:1px solid #dfe8ee;
+  border-radius:14px;
+  background:#fff;
+  box-shadow:0 8px 22px rgba(31,54,73,.045);
+  overflow:hidden;
+}
+#tab-rules .rule-study-card{background:linear-gradient(145deg,#f7fbfd,#fff);}
+#tab-rules .rule-card-kicker{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  margin:0 0 9px;
+  padding:5px 9px;
+  border-radius:999px;
+  background:#eef6f8;
+  color:#315d79;
+  font:800 11px/1.2 'Manrope',sans-serif;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+#tab-rules .rule-study-card,
+#tab-rules .rule-check-card{padding:16px;}
+#tab-rules .rule-main-ar,
+#tab-rules .rule-example-ar,
+#tab-rules .rule-term-ar{
+  direction:rtl!important;
+  unicode-bidi:isolate!important;
+  font-family:var(--ui-font-ar)!important;
+  color:#24556a!important;
+  letter-spacing:0!important;
+  text-align:right!important;
+  overflow-wrap:normal!important;
+  word-break:normal!important;
+}
+#tab-rules .rule-main-ar{
+  display:block;
+  margin:2px 0 9px;
+  font-size:clamp(29px,7vw,42px)!important;
+  line-height:1.85!important;
+}
+#tab-rules .rule-title .ar-term,
+#tab-rules .rule-title .ar-inline,
+#tab-rules .rule-outline-title-text .ar-term,
+#tab-rules .rules-preview-title .ar-term{
+  font-family:var(--ui-font-ar)!important;
+  font-size:1.18em!important;
+  line-height:1.8!important;
+  color:#24556a!important;
+}
+#tab-rules .rule-title-stack{
+  display:grid;
+  gap:3px;
+  min-width:0;
+}
+#tab-rules .rule-title-ar{
+  display:block!important;
+  direction:rtl!important;
+  unicode-bidi:isolate!important;
+  text-align:right!important;
+  font-family:var(--ui-font-ar)!important;
+  font-size:clamp(26px,6.4vw,36px)!important;
+  line-height:1.75!important;
+  color:#24556a!important;
+  letter-spacing:0!important;
+}
+#tab-rules .rule-title-ru{
+  display:block;
+  color:#263640;
+  font-family:'Manrope','Segoe UI',sans-serif!important;
+  font-size:clamp(15px,4vw,18px)!important;
+  font-weight:750!important;
+  line-height:1.55!important;
+}
+#tab-rules .rule-title-ar .ar-term,
+#tab-rules .rule-title-ar .ar-inline,
+#tab-rules .rule-title-ar .ar-text,
+#tab-rules .rule-title-ar .ar-sentence{
+  display:inline!important;
+  font-family:inherit!important;
+  font-size:inherit!important;
+  font-weight:inherit!important;
+  line-height:inherit!important;
+  color:inherit!important;
+  background:transparent!important;
+  border:0!important;
+  padding:0!important;
+  margin:0!important;
+}
+#tab-rules .rule-title-ru .ar-term,
+#tab-rules .rule-title-ru .ar-inline,
+#tab-rules .rule-title-ru .ar-text,
+#tab-rules .rule-title-ru .ar-sentence{
+  font-size:1.18em!important;
+}
+#tab-rules .rule-study-text{
+  color:#2e4250;
+  font-size:16px;
+  line-height:1.8;
+}
+#tab-rules .rule-meaning-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+#tab-rules .rule-meaning-card{padding:13px;background:#fbfcfd;}
+#tab-rules .rule-meaning-card.rule-term-particle,
+#tab-rules .rule-example-card.rule-term-particle{
+  background:#f3f7ff;
+  border-color:#cfdcf8;
+}
+#tab-rules .rule-term-particle .rule-term-ar,
+#tab-rules .rule-example-card.rule-term-particle .rule-example-ar{color:#2755a3!important;}
+#tab-rules .rule-meaning-card.rule-term-subject,
+#tab-rules .rule-example-card.rule-term-subject{
+  background:#f2fbf7;
+  border-color:#ccebdd;
+}
+#tab-rules .rule-term-subject .rule-term-ar,
+#tab-rules .rule-example-card.rule-term-subject .rule-example-ar{color:#1f7a4f!important;}
+#tab-rules .rule-meaning-card.rule-term-predicate,
+#tab-rules .rule-example-card.rule-term-predicate{
+  background:#fff7ed;
+  border-color:#f0d3aa;
+}
+#tab-rules .rule-term-predicate .rule-term-ar,
+#tab-rules .rule-example-card.rule-term-predicate .rule-example-ar{color:#a05a12!important;}
+#tab-rules .rule-meaning-card.rule-term-role{
+  background:#fff1f4;
+  border-color:#f2c9d2;
+}
+#tab-rules .rule-term-role .rule-term-ar{color:#ad3150!important;}
+#tab-rules .rule-meaning-card.rule-term-verb,
+#tab-rules .rule-example-card.rule-term-verb{
+  background:#f5f1ff;
+  border-color:#d9cdf7;
+}
+#tab-rules .rule-term-verb .rule-term-ar,
+#tab-rules .rule-example-card.rule-term-verb .rule-example-ar{color:#6540a8!important;}
+#tab-rules .rule-meaning-card.rule-term-raf,
+#tab-rules .rule-meaning-card.rule-term-nasb,
+#tab-rules .rule-meaning-card.rule-term-jarr,
+#tab-rules .rule-meaning-card.rule-term-jazm{
+  background:#f7fafc;
+}
+#tab-rules .rule-term-raf .rule-term-ar{color:#0f766e!important;}
+#tab-rules .rule-term-nasb .rule-term-ar{color:#b45309!important;}
+#tab-rules .rule-term-jarr .rule-term-ar{color:#2563eb!important;}
+#tab-rules .rule-term-jazm .rule-term-ar{color:#7c3aed!important;}
+#tab-rules .rule-meaning-card.rule-term-structure{
+  background:#f8f7ed;
+  border-color:#e3ddb2;
+}
+#tab-rules .rule-term-structure .rule-term-ar{color:#74700f!important;}
+#tab-rules .rule-term-ar{
+  display:block;
+  margin-bottom:5px;
+  font-size:clamp(23px,5.8vw,32px)!important;
+  line-height:1.75!important;
+}
+#tab-rules .rule-term-ru{
+  color:#3f5564;
+  font-size:14px;
+  line-height:1.6;
+}
+#tab-rules .rule-example-list{display:grid;gap:10px;}
+#tab-rules .rule-example-card{padding:14px;background:#f8fbfc;}
+#tab-rules .rule-example-ar{
+  display:block;
+  margin-bottom:7px;
+  font-size:clamp(25px,6.4vw,36px)!important;
+  line-height:1.9!important;
+}
+#tab-rules .rule-example-ru{
+  color:#304553;
+  font-size:15px;
+  line-height:1.65;
+}
+#tab-rules .rule-check-card{
+  background:#fffaf3;
+  border-color:#f0dfc3;
+}
+#tab-rules .rule-check-card b{color:#8a5a17;}
+#tab-rules .rule-study ol,
+#tab-rules .rule-study ul{margin:8px 0 0;padding-left:22px;}
+#tab-rules .rule-study li+li{margin-top:6px;}
+#tab-rules .rule-subpanel-content .rule-study p{margin:0;}
+#tab-rules .rule-study .ar-term,
+#tab-rules .rule-study .ar-inline,
+#tab-rules .rule-study .ar-text,
+#tab-rules .rule-study .ar-sentence,
+#tab-rules .rule-main-ar .ar-term,
+#tab-rules .rule-main-ar .ar-inline,
+#tab-rules .rule-main-ar .ar-text,
+#tab-rules .rule-main-ar .ar-sentence,
+#tab-rules .rule-example-ar .ar-term,
+#tab-rules .rule-example-ar .ar-inline,
+#tab-rules .rule-example-ar .ar-text,
+#tab-rules .rule-example-ar .ar-sentence,
+#tab-rules .rule-term-ar .ar-term,
+#tab-rules .rule-term-ar .ar-inline,
+#tab-rules .rule-term-ar .ar-text,
+#tab-rules .rule-term-ar .ar-sentence{
+  display:inline!important;
+  font-family:inherit!important;
+  font-size:inherit!important;
+  font-weight:inherit!important;
+  line-height:inherit!important;
+  color:inherit!important;
+  background:transparent!important;
+  border:0!important;
+  padding:0!important;
+  margin:0!important;
+  white-space:normal!important;
+}
+@media(max-width:620px){
+  #tab-rules .rule-meaning-grid{grid-template-columns:1fr;}
+  #tab-rules .rule-study-card,#tab-rules .rule-check-card{padding:14px;}
+  #tab-rules .rule-example-card{padding:13px;}
+  #tab-rules .rule-study-text{font-size:15px;line-height:1.75;}
 }
 </style>
 <div class="verb-modal-overlay hidden" id="verb-modal-overlay" aria-hidden="true" onclick="if(event.target===this) closeVerbModal()">

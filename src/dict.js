@@ -471,7 +471,7 @@ function wrapArabic(text) {
     /(\(\s*)([\u0600-\u06FF]+(?:\s+[\u0600-\u06FF]+)*)(\s*\))/gu,
     (_, opening, phrase, closing) => {
       const token = '@@ARABIC_GROUP_' + groups.length + '@@';
-      groups.push('<span class="ar-inline" dir="rtl">' + opening + phrase + closing + '</span>');
+      groups.push('<span class="ar-inline" lang="ar" dir="rtl">' + opening + phrase + closing + '</span>');
       return token;
     }
   );
@@ -481,7 +481,7 @@ function wrapArabic(text) {
         phrase.length <= 34 && phrase.trim().split(/\s+/).length <= 4 && !/[،؛؟.!]/.test(phrase);
       const isSentence = phrase.trim().split(/\s+/).length > 4 || /[،؛؟.!]/.test(phrase);
       const className = isSentence ? 'ar-sentence' : isShortTerm ? 'ar-term' : 'ar-text';
-      return '<span class="' + className + '" dir="rtl">' + phrase + '</span>';
+      return '<span class="' + className + '" lang="ar" dir="rtl">' + phrase + '</span>';
     })
     .replace(/@@ARABIC_GROUP_(\d+)@@/g, (_, index) => groups[Number(index)] || '');
 }
@@ -752,6 +752,21 @@ function lessonOutline(items) {
         '</b></button>'
     )
     .join('');
+}
+
+function formatRuleTitle(title) {
+  const raw = String(title || '').trim();
+  const match = raw.match(/^(.+?)\s*\((.+)\)$/u);
+  if (match && /[\u0600-\u06FF]/u.test(match[1])) {
+    return (
+      '<span class="rule-title-stack"><span class="rule-title-ar" lang="ar" dir="rtl">' +
+      wrapArabic(esc(match[1].trim())) +
+      '</span><span class="rule-title-ru">(' +
+      wrapArabic(esc(match[2].trim())) +
+      ')</span></span>'
+    );
+  }
+  return wrapArabic(esc(raw));
 }
 
 function openRuleCardById(id, skipHistory = false) {
@@ -1107,7 +1122,7 @@ function renderRuleCards(items, openCards) {
         '"><div class="rule-card-head"><span class="rule-index">' +
         (i + 1) +
         '</span><span class="rule-title-wrap"><span class="rule-title">' +
-        wrapArabic(esc(r.title)) +
+        formatRuleTitle(r.title) +
         '</span><span class="rule-preview">' +
         wrapArabic(esc(rulePreview(r))) +
         '</span></span></div><div class="rule-card-body"><div class="rule-content">' +
