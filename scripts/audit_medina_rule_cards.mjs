@@ -77,6 +77,100 @@ function findUnbalancedTags(value) {
   });
 }
 
+function stripHtml(value) {
+  return String(value || '')
+    .replace(/<br\s*\/?>/giu, ' ')
+    .replace(/<[^>]+>/gu, ' ')
+    .replace(/&nbsp;/giu, ' ')
+    .replace(/&lt;/giu, '<')
+    .replace(/&gt;/giu, '>')
+    .replace(/&amp;/giu, '&')
+    .replace(/\s+/gu, ' ')
+    .trim();
+}
+
+function hasArabic(value) {
+  return /\p{Script_Extensions=Arabic}/u.test(String(value || ''));
+}
+
+function hasCyrillic(value) {
+  return /\p{Script=Cyrillic}/u.test(String(value || ''));
+}
+
+function findTableTranslationGaps(rows) {
+  const headers = [];
+  const bodyRows = [];
+  const structuralCells = [];
+  const structuralHeader = /кто|значен|термин|роль|форма|местоим|падеж|состояни|показатель|исполнитель|вид|категор|род и число|лицо/u;
+  for (const row of rows) {
+    let tableIndex = 0;
+    for (const table of String(row.content || '').matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/giu)) {
+      tableIndex += 1;
+      const trMatches = [...table[0].matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/giu)];
+      const headerTexts = trMatches.length
+        ? [...trMatches[0][1].matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/giu)].map((cell) => stripHtml(cell[1]).toLowerCase())
+        : [];
+      trMatches.forEach((tr, rowIndex) => {
+        const cells = [...tr[1].matchAll(/<(th|td)\b[^>]*>([\s\S]*?)<\/\1>/giu)];
+        const plainCells = cells.map((cell) => stripHtml(cell[2]));
+        if (cells.some((cell) => cell[1].toLowerCase() === 'th')) {
+          plainCells.forEach((cell, cellIndex) => {
+            if (hasArabic(cell) && !hasCyrillic(cell)) {
+              headers.push({
+                rule: `${row.lesson_number}.${row.sort_order} ${row.title}`,
+                table: tableIndex,
+                column: cellIndex + 1,
+                text: cell,
+              });
+            }
+          });
+          return;
+        }
+        const plainRow = plainCells.join(' ');
+        if (hasArabic(plainRow) && !hasCyrillic(plainRow)) {
+          bodyRows.push({
+            rule: `${row.lesson_number}.${row.sort_order} ${row.title}`,
+            table: tableIndex,
+            row: rowIndex + 1,
+            text: plainRow,
+          });
+        }
+        plainCells.forEach((cell, cellIndex) => {
+          if (
+            hasArabic(cell) &&
+            !hasCyrillic(cell) &&
+            structuralHeader.test(headerTexts[cellIndex] || '')
+          ) {
+            structuralCells.push({
+              rule: `${row.lesson_number}.${row.sort_order} ${row.title}`,
+              table: tableIndex,
+              row: rowIndex + 1,
+              column: cellIndex + 1,
+              text: cell,
+            });
+          }
+        });
+      });
+    }
+  }
+  return { headers, bodyRows, structuralCells };
+}
+
+function findArabicExampleCardsWithoutRussian(rows) {
+  const findings = [];
+  for (const row of rows) {
+    for (const card of String(row.content || '').matchAll(/<div\b[^>]*class="[^"]*rule-example-card[^"]*"[^>]*>([\s\S]*?)<\/div>/giu)) {
+      if (/rule-example-ar/u.test(card[0]) && !/rule-example-ru/u.test(card[0])) {
+        findings.push({
+          rule: `${row.lesson_number}.${row.sort_order} ${row.title}`,
+          text: stripHtml(card[1]),
+        });
+      }
+    }
+  }
+  return findings;
+}
+
 async function fetchRules(course) {
   const qs = new URLSearchParams({
     select: 'id,lesson_number,title,content,sort_order,rule_kind,summary,rule_ar',
@@ -137,6 +231,18 @@ for (const course of COURSES) {
       return { lesson, actual, expected };
     })
     .filter((entry) => entry.actual.join(',') !== entry.expected.join(','));
+  const tableTranslationGaps = findTableTranslationGaps(rows);
+  const arabicExamplesWithoutRussian = findArabicExampleCardsWithoutRussian(rows);
+  const invalidConnectedWasl = rows
+    .filter((row) => /←[^<\n]{0,80}اَلْـ/u.test(String(row.content || '')))
+    .map((row) => `${row.lesson_number}.${row.sort_order} ${row.title}`);
+  const validConnectedWasl = rows
+    .filter((row) =>
+      row.lesson_number === '12' &&
+      Number(row.sort_order) === 5 &&
+      /ذَهَبَتْ \+ اَلْـ ← ذَهَبَتِ الْـ/u.test(String(row.content || ''))
+    )
+    .map((row) => `${row.lesson_number}.${row.sort_order} ${row.title}`);
   const report = {
     course,
     rows: rows.length,
@@ -153,6 +259,10 @@ for (const course of COURSES) {
     unvocalizedRuleAr,
     unbalancedMarkup,
     sortOrderGaps,
+    tableTranslationGaps,
+    arabicExamplesWithoutRussian,
+    invalidConnectedWasl,
+    validConnectedWasl,
     fallbackCount: fallbackTerms.length,
     fallbackTerms: Object.entries(fallbackCounts)
       .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
@@ -174,4 +284,19 @@ for (const course of COURSES) {
     ),
   };
   console.log(JSON.stringify(report, null, 2));
+
+  const isBookOne = course === ALL_COURSES[0];
+  if (
+    isBookOne &&
+    (
+      tableTranslationGaps.headers.length > 0 ||
+      tableTranslationGaps.bodyRows.length > 0 ||
+      tableTranslationGaps.structuralCells.length > 0 ||
+      arabicExamplesWithoutRussian.length > 0 ||
+      invalidConnectedWasl.length > 0 ||
+      validConnectedWasl.length !== 1
+    )
+  ) {
+    process.exitCode = 1;
+  }
 }
