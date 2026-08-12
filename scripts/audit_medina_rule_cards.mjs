@@ -8,12 +8,20 @@ if (!SUPA_URL || !SUPA_ANON_KEY) {
   throw new Error('Supabase public configuration was not found in src/api.js');
 }
 
-const COURSES = [
+const ALL_COURSES = [
   'Мединский курс (Том 1)',
   'Мединский курс (Том 2)',
   'Мединский курс (Том 3)',
   'Мединский курс (Том 4)',
 ];
+const requestedVolume = String(process.argv[2] || '').trim();
+const COURSES = requestedVolume
+  ? ALL_COURSES.filter((course) => course.endsWith(`(Том ${requestedVolume})`))
+  : ALL_COURSES;
+
+if (!COURSES.length) {
+  throw new Error(`Unknown Medina course volume: ${requestedVolume}`);
+}
 
 function countBy(rows, key) {
   const out = {};
@@ -43,9 +51,35 @@ function uniqSorted(values) {
   return [...new Set(values)].sort((a, b) => a.localeCompare(b));
 }
 
+function findUnvocalizedArabicWords(value) {
+  const words = String(value || '').match(/[\p{Script_Extensions=Arabic}ـ]+/gu) || [];
+  return uniqSorted(
+    words.filter((word) => {
+      const letters = word.match(/\p{Letter}/gu) || [];
+      return letters.length > 1 && !/\p{Mark}/u.test(word);
+    })
+  );
+}
+
+function findDuplicateArabicMarks(value) {
+  return uniqSorted(
+    [...String(value || '').matchAll(/([\u064b-\u0652\u0670])\1/gu)].map((match) => match[0])
+  );
+}
+
+function findUnbalancedTags(value) {
+  const html = String(value || '');
+  const tags = ['div', 'span', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'p'];
+  return tags.filter((tag) => {
+    const opens = html.match(new RegExp(`<${tag}\\b`, 'giu'))?.length || 0;
+    const closes = html.match(new RegExp(`</${tag}>`, 'giu'))?.length || 0;
+    return opens !== closes;
+  });
+}
+
 async function fetchRules(course) {
   const qs = new URLSearchParams({
-    select: 'lesson_number,title,content,sort_order,rule_kind,summary',
+    select: 'id,lesson_number,title,content,sort_order,rule_kind,summary,rule_ar',
     course_name: `eq.${course}`,
     order: 'lesson_number.asc,sort_order.asc,id.asc',
   });
@@ -69,6 +103,40 @@ for (const course of COURSES) {
   const fallbackCounts = {};
   for (const term of fallbackTerms) fallbackCounts[term] = (fallbackCounts[term] || 0) + 1;
   const lessonCounts = countBy(rows, 'lesson_number');
+  const malformedPunctuation = rows
+    .filter((row) => /؟\s*\.|\.\s*؟|[،؛]\s*\./u.test(`${row.rule_ar || ''}\n${row.content || ''}`))
+    .map((row) => `${row.lesson_number}.${row.sort_order} ${row.title}`);
+  const unbalancedMarkup = rows
+    .map((row) => ({
+      rule: `${row.lesson_number}.${row.sort_order} ${row.title}`,
+      tags: findUnbalancedTags(row.content),
+    }))
+    .filter((entry) => entry.tags.length > 0);
+  const duplicateArabicMarks = rows
+    .map((row) => ({
+      rule: `${row.lesson_number}.${row.sort_order} ${row.title}`,
+      marks: findDuplicateArabicMarks(`${row.title}\n${row.rule_ar || ''}\n${row.content || ''}`),
+    }))
+    .filter((entry) => entry.marks.length > 0);
+  const missingRuleAr = rows
+    .filter((row) => !String(row.rule_ar || '').trim())
+    .map((row) => `${row.lesson_number}.${row.sort_order} ${row.title}`);
+  const unvocalizedRuleAr = rows
+    .map((row) => ({
+      rule: `${row.lesson_number}.${row.sort_order} ${row.title}`,
+      words: findUnvocalizedArabicWords(row.rule_ar),
+    }))
+    .filter((entry) => entry.words.length > 0);
+  const sortOrderGaps = Object.entries(lessonCounts)
+    .map(([lesson, count]) => {
+      const actual = rows
+        .filter((row) => row.lesson_number === lesson)
+        .map((row) => Number(row.sort_order))
+        .sort((a, b) => a - b);
+      const expected = Array.from({ length: count }, (_, index) => index + 1);
+      return { lesson, actual, expected };
+    })
+    .filter((entry) => entry.actual.join(',') !== entry.expected.join(','));
   const report = {
     course,
     rows: rows.length,
@@ -79,6 +147,12 @@ for (const course of COURSES) {
     mojibake: /Рќ|Рђ|вЂ|Щ‡|Ш§/u.test(text),
     importTrash: /Обязательные требования|Внутренняя структура/u.test(text),
     doubleHarakat: /الْخَبَرُُ|الْمُبْتَدَأُُ|إِنََّّ|كَانََ/u.test(text),
+    duplicateArabicMarks,
+    malformedPunctuation,
+    missingRuleAr,
+    unvocalizedRuleAr,
+    unbalancedMarkup,
+    sortOrderGaps,
     fallbackCount: fallbackTerms.length,
     fallbackTerms: Object.entries(fallbackCounts)
       .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))

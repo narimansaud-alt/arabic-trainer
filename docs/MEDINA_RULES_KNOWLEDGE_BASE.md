@@ -34,9 +34,9 @@ This file preserves the owner’s working instructions for Medina-course rule wo
 - После каждого урока составлять краткий отчёт: какие страницы прочитаны, какие правила найдены, что уже было в приложении, что добавлено, исправлено или перенесено и какие элементы оставлены без изменений.
 - После краткого отчёта продолжать следующий урок самостоятельно, не запрашивая отдельного разрешения, если нет объективной блокировки или спорного решения, которое невозможно подтвердить источником.
 
-## Current priority
+## Book 1 controlling workflow — completed 2026-08-12
 
-Start with **Мединский курс (Том 1)** and verify the app rules strictly lesson by lesson against the **Arabic sharh**.
+The completed **Мединский курс (Том 1)** verification followed this strict lesson-by-lesson workflow against the **Arabic sharh**.
 
 Required order:
 
@@ -82,9 +82,9 @@ The supplied Russian translation and the additional teacher explanations remain 
 - Do not invent unreadable source text. If a source place is objectively unreadable, mark it rather than guessing.
 - After each lesson fix, run the Medina rules audit before committing/deploying.
 
-## Known Book 1 lesson 14 issue to revisit later
+## Resolved Book 1 lesson 14 issue
 
-During a preliminary check, lesson 14 of Book 1 showed discrepancies against the Arabic sharh. Do not apply this out of order. Revisit when the sequential workflow reaches lesson 14.
+During a preliminary check, lesson 14 of Book 1 showed discrepancies against the Arabic sharh. They were resolved when the sequential workflow reached lesson 14; the details below are retained as an audit record.
 
 Findings to remember:
 
@@ -97,3 +97,16 @@ Findings to remember:
 - The current app lesson 14 had an unrelated `نَعْتُ الْمُضَافِ الْمَعْرِفَةِ` card.
 - The current app had `ذَهَبْتُمْ وَذَهَبْنَا`, but the sharh lesson is about second-person past forms, not `ذَهَبْنَا`.
 - Some “Как применять” helper text in that lesson was copied from unrelated rule templates and must be corrected when lesson 14 is reached.
+
+## Book 1 sequential audit progress — 2026-08-12
+
+- Lessons **1–23 are complete**. Every lesson was read from its first line through its final continuation, corrected through tracked migrations, applied to Supabase, and read back for verification.
+- Verified PDF page boundaries: L1 3–4; L2 5; L3 6–7; L4 8; L5 9; L6 10; L7 11; L8 12; L9 13; L10 14–15; L11 16; L12 17–18; L13 19–22; L14 23–25; L15 26–27; L16 28; L17 29; L18 30–31; L19 32; L20 32; L21 33–34; L22 35–36; L23 36.
+- The preliminary lesson 14 issue above is resolved: PDF pages 23–25 now produce exactly five source-backed cards; the unrelated `نَعْتُ الْمُضَافِ الْمَعْرِفَةِ` card was removed.
+- Lesson 15 boundaries are PDF pages 26–27. Its verified blocks are detached pronouns, the four forms of `كَافُ الْمُخَاطَبِ`, subject endings attached to the past verb, and `قَبْلَ وَبَعْدَ`.
+- The sharh combines lessons **16 and 17** under one heading on PDF pages 28–29. Page 28 contains `الْمُبْتَدَأُ وَالْخَبَرُ` and is stored under lesson 16; page 29 contains indication to non-rational plurals plus the complete plural-word list and is stored under lesson 17.
+- Lessons **16–17** have been corrected, applied to Supabase, and read back with their private source rows. Two duplicated or non-source-backed generated cards were removed.
+- The sharh combines lessons **19 and 20** on PDF page 32 and lessons **22 and 23** on PDF pages 35–36; the rules are stored under the lesson matching the actual subsection content.
+- Final Book 1 state: **70 public rule cards across 23 lessons** and **147 private provenance rows**. Every card has a non-empty, fully vocalized `rule_ar` and at least one separate verbatim `source_text` row. Public roles cannot read `rule_sources`.
+- Final automated checks found no missing `rule_ar`, missing sources, invalid page ranges, duplicate source ordering, malformed punctuation, duplicate Arabic marks, mojibake, unbalanced markup, lesson sort gaps, or titles missing Russian meanings.
+- Production and local UI QA covered lessons 1, 14, 18, 21, 22, and 23. Cards and tables have no unhandled horizontal overflow; main Arabic rules render at 42 px on desktop / 29 px on mobile, examples at 36 px / 25 px, table Arabic at 24 px / 20 px, and Arabic in compact card labels at 18 px.
