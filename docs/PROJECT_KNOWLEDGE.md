@@ -47,6 +47,12 @@ Authentication decision:
 
 ## Application content
 
+### Medina rules verification workflow
+
+- Owner-requested Medina rules workflow is stored in `docs/MEDINA_RULES_KNOWLEDGE_BASE.md`.
+- Before changing Medina rule content, read that file in addition to this project knowledge file.
+- Current active workflow: verify **Мединский курс (Том 1)** lesson by lesson against the Arabic sharh, starting from lesson 1, reporting briefly after each lesson before moving to the next.
+
 ### Medina volume 1
 
 - Canonical course name: `Мединский курс (Том 1)`
