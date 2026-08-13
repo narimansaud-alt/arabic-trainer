@@ -1,6 +1,6 @@
 # Arabic Trainer project knowledge
 
-Last updated: 2026-08-13 (final Books 1-3 QA)
+Last updated: 2026-08-14 (dictionary plural translations and pairing QA)
 
 ## Production and repositories
 
@@ -75,8 +75,11 @@ Authentication decision:
 
 - Verified database state on 2026-08-04: 602 words covering lessons 1-22.
 - Lesson 23 has no separate "new words" block in the supplied book, so no speculative lesson 23 vocabulary was added.
-- Table pairing includes explicit singular/plural or singular/collective pairs for demonstratives and pronouns.
-- Canonical pairing logic is in `src/dict.js`.
+- Canonical pairing logic is in `src/dict.js`. Books 1-2 use Arabic form checks plus exact, source-verified irregular exceptions; the former broad Russian-similarity fallback was removed because it joined unrelated adjacent entries.
+- On 2026-08-14, all 199 Book 3 plural metadata rows received Russian meanings agreeing with the displayed Arabic number in list mode. Eight residual Book 1-2 plural labels were refined in migration `supabase/migrations/20260814060000_fix_dictionary_russian_plural_meanings.sql`.
+- The pairing correction removed exactly 13 false table pairs while retaining every previously displayed valid pair: 1 in Book 1 and 12 in Book 2.
+- Pre-release screen QA covered all 69 dictionary lessons in Books 1-3, both list/table modes, and desktop/mobile widths (276 rendered states). No RTL, clipping, overflow, small-Arabic, blank-translation, browser-error, or known-false-pair findings remained.
+- Recoverable pre-change export: `.local/backups/dictionaries-before-russian-plurals-20260813.json` (machine-local and intentionally ignored by Git).
 - Active volume 3 dictionary import protocol: `docs/MEDINA_BOOK3_DICTIONARY_TASK.md`. Its controlling source is the lesson photographs in `C:\Users\user\Desktop\Мединский курс\Третий том\Фото словарь`; `C:\Users\user\Downloads\Облако Mail.zip` is a byte-identical control copy. Work must proceed lesson by lesson, with source-only extraction, a complete correction log, Supabase verification and screen verification of both dictionary modes before advancing.
 - The volume 3 dictionary task is additive project context. It does not supersede or delete any previously stored Medina rules tasks or audit records.
 
