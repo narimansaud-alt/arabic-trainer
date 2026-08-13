@@ -1,6 +1,6 @@
 # Arabic Trainer project knowledge
 
-Last updated: 2026-08-04
+Last updated: 2026-08-13
 
 ## Production and repositories
 
@@ -51,13 +51,22 @@ Authentication decision:
 
 - Owner-requested Medina rules workflow is stored in `docs/MEDINA_RULES_KNOWLEDGE_BASE.md`.
 - Before changing Medina rule content, read that file in addition to this project knowledge file.
-- Current active workflow: verify **Мединский курс (Том 1)** lesson by lesson against the Arabic sharh, starting from lesson 1, reporting briefly after each lesson before moving to the next.
+- Current workflow status: Books 1, 2 and 3 are complete. Book 3 has 89 source-backed cards across 17 lessons and passed the complete data/provenance and 34-screen desktop/mobile audit. Do not begin Book 4 without a new explicit permission from the owner.
+
+### Medina volume 3
+
+- Canonical course name: `Мединский курс (Том 3)`.
+- Controlling source: `Sharkh_Medinskiy_3.pdf`, PDF pages 3–73 for lesson content.
+- Lessons: 1–17.
+- Final rule base: 89 cards, 89 private verbatim source rows, 206 responsive tables and 50 Qur'anic display blocks.
+- Final audit report: `docs/MEDINA_RULES_BOOK3_FINAL_AUDIT_20260813.md`.
+- All local data/provenance, desktop/mobile lesson-screen and Qur'anic-display audits passed with zero findings.
 
 ### Medina volume 1
 
 - Canonical course name: `Мединский курс (Том 1)`
 - Lessons: 1-23
-- Final rule base: 76 rule records across all 23 lessons.
+- Final rule base: 70 rule records across all 23 lessons (confirmed from live Supabase on 2026-08-13).
 - Source rule archive migration: `supabase/migrations/20260804160000_replace_tom1_rules_archive.sql`
 - `مَا/مَنْ` correction migration: `supabase/migrations/20260804180000_fix_ma_man_rule.sql`
 

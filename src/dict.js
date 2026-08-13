@@ -490,6 +490,61 @@ function arabicToneClass(value) {
   return ' ar-tone-default';
 }
 
+function groupArabicExpressionSpans(html) {
+  const template = document.createElement('template');
+  template.innerHTML = html;
+  const arabicPattern = /[\u0600-\u06FF]/u;
+  const operatorPattern = /^\s*(?:[+←→↔=×÷/:]\s*)+$/u;
+  const isArabicSpan = (node) =>
+    node &&
+    node.nodeType === 1 &&
+    node.matches('[lang="ar"], [dir="rtl"], .ar-term, .ar-inline, .ar-text, .ar-sentence') &&
+    arabicPattern.test(node.textContent || '');
+  const isOperator = (node) =>
+    node && node.nodeType === 3 && operatorPattern.test(node.nodeValue || '');
+
+  const parents = Array.from(template.content.querySelectorAll('*')).reverse();
+  parents.push(template.content);
+  parents.forEach((parent) => {
+    if (parent.nodeType === 1 && parent.classList.contains('ar-expression')) return;
+    let index = 0;
+    while (index < parent.childNodes.length) {
+      const children = Array.from(parent.childNodes);
+      if (!isArabicSpan(children[index])) {
+        index += 1;
+        continue;
+      }
+
+      const sequence = [children[index]];
+      let cursor = index + 1;
+      while (
+        cursor + 1 < children.length &&
+        isOperator(children[cursor]) &&
+        isArabicSpan(children[cursor + 1])
+      ) {
+        sequence.push(children[cursor], children[cursor + 1]);
+        cursor += 2;
+      }
+
+      if (sequence.length < 3) {
+        index += 1;
+        continue;
+      }
+
+      const wrapper = document.createElement('span');
+      wrapper.className = 'ar-expression';
+      wrapper.lang = 'ar';
+      wrapper.dir = 'rtl';
+      parent.insertBefore(wrapper, sequence[0]);
+      sequence.forEach((node) => wrapper.appendChild(node));
+      index += 1;
+    }
+  });
+  Array.from(template.content.querySelectorAll('[lang="ar"], [dir="rtl"], .ar-term, .ar-inline, .ar-text, .ar-sentence, .rule-example-ar, .rule-table-ar, .rule-main-ar')).forEach((node) => {
+    if (/[﴿﴾]/u.test(node.textContent || '')) node.classList.add('rule-quran-ar');
+  });
+  return template.innerHTML;
+}
 function wrapArabic(text) {
   const groups = [];
   const protectedText = sanitizeRuleHtml(text).replace(
@@ -500,7 +555,7 @@ function wrapArabic(text) {
       return token;
     }
   );
-  return protectedText
+  const wrappedText = protectedText
     .replace(/[\u0600-\u06FF]+(?:\s+[\u0600-\u06FF]+)*/gu, (phrase) => {
       const isShortTerm =
         phrase.length <= 34 && phrase.trim().split(/\s+/).length <= 4 && !/[،؛؟.!]/.test(phrase);
@@ -509,6 +564,7 @@ function wrapArabic(text) {
       return '<span class="' + className + arabicToneClass(phrase) + '" lang="ar" dir="rtl">' + phrase + '</span>';
     })
     .replace(/@@ARABIC_GROUP_(\d+)@@/g, (_, index) => groups[Number(index)] || '');
+  return groupArabicExpressionSpans(wrappedText);
 }
 
 function togglePw(id, btn) {
@@ -754,7 +810,7 @@ function lessonPreviewList(items) {
         '"><span class="rules-lesson-preview-num">' +
         (i + 1) +
         '</span><b class="rules-preview-title">' +
-        wrapArabic(esc(r.title)) +
+        formatRuleTitle(r.title) +
         '</b></span>'
     )
     .join('');
@@ -773,7 +829,7 @@ function lessonOutline(items) {
         '"><span>' +
         (i + 1) +
         '</span><b class="rule-outline-title-text">' +
-        wrapArabic(esc(r.title)) +
+        formatRuleTitle(r.title) +
         '</b></button>'
     )
     .join('');
@@ -1336,6 +1392,7 @@ function renderRules() {
   else renderRulesSearch(cont, grouped, q);
 
   cont.querySelectorAll('.rule-content table').forEach((t) => {
+    if (t.closest('.tbl-wrap')) return;
     const w = document.createElement('div');
     w.className = 'tbl-wrap';
     t.parentNode.insertBefore(w, t);
