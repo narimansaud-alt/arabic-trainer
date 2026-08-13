@@ -18,6 +18,15 @@ This file preserves the owner’s working instructions for Medina-course rule wo
 - During each volume audit verify that all cards and tables use the application palette; Arabic is large, bold, readable, and semantically colored by grammatical role; every Arabic heading/term has a Russian meaning where required; and wide tables scroll inside their card on mobile without widening the page.
 - Only after Book 2 passes its complete source/data/screen audit may work begin on Book 3. Book 3 is now complete; Book 4 must not begin without a new explicit permission from the owner.
 
+### Final Books 1-3 QA checkpoint - 2026-08-13
+
+- The full final QA is complete for Books 1-3: **307 cards, 71 lessons, 526 private verbatim source rows, 411 responsive tables and 55 Qur'anic display fragments**.
+- All **213 rendered lesson states** (every lesson at desktop, tablet and mobile widths) passed with zero findings and zero browser errors.
+- All **55/55 Qur'anic fragments** are literal substrings of the official QPC Uthmanic Hafs corpus. They use the locally stored official `Uthmanic Hafs` font, render black, centered and RTL, and do not inherit grammar-role colors.
+- Final guarded migrations: `20260814010000_final_qa_book1_confirmed_corrections.sql`, `20260814020000_final_qa_book2_confirmed_corrections.sql`, `20260814030000_final_qa_book3_confirmed_corrections.sql`, and `20260814040000_standardize_quran_qpc_hafs.sql`.
+- Reproducible live health command: `node scripts/verify_rules_health.mjs`.
+- Combined retained report: `docs/MEDINA_RULES_FINAL_QA_20260813.md`.
+- **Book 4 remains untouched and must not be started without a new explicit instruction from the owner.**
 ### Current execution checkpoint — 2026-08-13
 
 - Book 1 is complete.
@@ -25,7 +34,7 @@ This file preserves the owner’s working instructions for Medina-course rule wo
 - Book 2 complete screen audit passed on desktop and mobile for all 31 lessons with zero findings.
 - Lesson 12 has no corresponding rule block in the 62-page sharh; its source support is correctly retained only from the 80-page sharh.
 - Book 3 is complete: 89 source-backed cards across 17 lessons and 89 separate private verbatim source rows from `Sharkh_Medinskiy_3.pdf`.
-- The complete Book 3 data/provenance and desktop/mobile screen audits passed with zero findings.
+- The complete Book 3 data/provenance and desktop/tablet/mobile screen audits passed with zero findings.
 - Book 4 has not been started and must not be started without a new explicit permission from the owner.
 
 ### Book 3 sequential audit progress — 2026-08-13
@@ -51,7 +60,7 @@ This file preserves the owner’s working instructions for Medina-course rule wo
 - Lesson **16** is complete against PDF pages **65–68**: **6 cards, 6 source rows, 14 wrapped tables and 1 Qur'anic citation**. It covers bare/augmented verbs, the six triliteral patterns, classes of augmented triliteral, `فَعَّلَ` and derivatives, non-triliteral derivatives and quadriliteral imperfect prefixes.
 - Lesson **17** is complete against PDF pages **68–73**: **9 cards, 9 source rows, 19 wrapped tables and 5 Qur'anic citations**. It covers `أَفْعَلَ` and derivatives, `أَعْطَى`, `أَصْبَحَ`, `أَوْشَكَ`, `وَلَوْ`, initial lām, indefinite `مَا`, deletion of hamza in `ٱبْنٌ`, and the final i'rāb. The author's closing prayer was preserved as closing source material and was not turned into a grammar rule.
 - Final Book 3 state: **89 cards, 89 private source rows, 206 wrapped tables and 50 Qur'anic display blocks**. There are no missing harakat, translations, sources, invalid pages, duplicate order values, malformed tables, mojibake, source/public mixing or unclear placeholders.
-- All **34 complete lesson screens** (17 desktop and 17 mobile) passed with zero findings. All 50 Qur'anic blocks display at **48 px desktop / 35 px mobile**, centered, bold, RTL and without clipping.
+- All **51 complete lesson screen states** (17 desktop, 17 tablet and 17 mobile) passed with zero findings. All 50 Qur'anic blocks display in the official local QPC Uthmanic Hafs font, black, centered, RTL and without clipping.
 - Full retained report: `docs/MEDINA_RULES_BOOK3_FINAL_AUDIT_20260813.md`.
 - Current stop point: Book 3 is complete. Do not open or process Book 4 without the owner's new explicit permission.
 

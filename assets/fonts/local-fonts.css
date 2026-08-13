@@ -1,3 +1,11 @@
+/* Official QPC Uthmanic Hafs font used for Qur'anic verses. */
+@font-face {
+  font-family: 'Uthmanic Hafs';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(./UthmanicHafs1Ver18.woff2) format('woff2');
+}
 /* cyrillic-ext */
 @font-face {
   font-family: 'Manrope';

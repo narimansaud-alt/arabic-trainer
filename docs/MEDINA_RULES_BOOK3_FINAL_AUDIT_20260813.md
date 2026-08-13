@@ -29,13 +29,30 @@
 | 16 | 65–68 | 6 | 14 | 1 | Bare/augmented verbs, six triliteral patterns, `فَعَّلَ` and derivatives, non-triliteral derivatives, quadriliteral prefixes. |
 | 17 | 68–73 | 9 | 19 | 5 | `أَفْعَلَ`, `أَعْطَى`, `أَصْبَحَ`, `أَوْشَكَ`, `وَلَوْ`, initial lām, indefinite `مَا`, hamza of `ٱبْنٌ`, final i'rāb. |
 
+## Quantitative result
+
+**Проверено уроков:** 17
+**Проверено правил:** 89
+**Исправлено уроков:** 11
+**Исправлено правил/карточек:** 24
+**Исправлено RTL-проблем:** 0
+**Исправлено ошибок арабского текста:** 1
+**Исправлено харакатов:** 1
+**Проверено аятов:** 50
+**Исправлено аятов:** 50
+**Исправлено проблем со шрифтами:** 1 общий компонент аятов
+**Исправлено проблем с цветами:** 1 общий компонент аятов
+**Исправлено проблем с размерами:** 1 общий компонент аятов
+**Исправлено локальных проблем дизайна:** 0
+**Исправлено локальных технических проблем:** 0
+**Оставлено на ручную проверку:** 0
 ## Final audit
 
 - 89 cards, 17 lessons, 89 separate private verbatim source rows, 206 responsive tables and 50 Qur'anic blocks.
 - Zero missing `rule_ar`, Russian title meanings, public harakat, source rows or valid pages.
 - Zero duplicate lesson/source order, malformed HTML, unwrapped tables, mojibake, source/public mixing or unclear placeholders.
-- All 34 complete lesson screens passed on desktop and mobile.
-- All 50 Qur'anic blocks passed at 48 px desktop / 35 px mobile: bold, centered, RTL, source brackets retained and no clipping.
+- All 51 complete lesson-screen states passed on desktop, tablet and mobile.
+- All 50 Qur'anic blocks exactly match the official QPC Uthmanic Hafs corpus and use the local `Uthmanic Hafs` font: black, centered, RTL, source brackets retained and no clipping.
 
 ## Author's closing formula
 

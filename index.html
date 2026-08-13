@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#ffffff">
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="./manifest.json">
-<link href="./assets/fonts/local-fonts.css?v=7" rel="stylesheet">
+<link href="./assets/fonts/local-fonts.css?v=8" rel="stylesheet">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Мединский курс">
@@ -3777,21 +3777,34 @@ button:not(:disabled):active,[role="button"]:not([aria-disabled="true"]):active,
   border-inline-start:4px solid #b4862e!important;
   border-radius:12px!important;
   background:linear-gradient(135deg,#fffdf7 0%,#f7fbf8 100%)!important;
-  color:#205a47!important;
-  font-family:var(--ui-font-ar)!important;
-  font-size:clamp(35px,7vw,48px)!important;
-  font-weight:900!important;
-  line-height:1.9!important;
+  color:#000!important;
+  font-family:'Uthmanic Hafs',var(--ui-font-ar),serif!important;
+  font-size:clamp(36px,7vw,50px)!important;
+  font-weight:400!important;
+  line-height:2.05!important;
   text-align:center!important;
   direction:rtl!important;
   unicode-bidi:isolate!important;
+  font-variant-ligatures:normal!important;
+  text-rendering:optimizeLegibility!important;
   white-space:normal!important;
   word-break:normal!important;
   overflow-wrap:normal!important;
 }
+#tab-rules .rule-list .rule-card .rule-content .rule-quran-ar,
+#tab-rules .rule-list .rule-card .rule-content .rule-quran-ar *{
+  color:#000!important;
+  font-weight:400!important;
+}
+#tab-rules .rule-list .rule-card .rule-content .rule-quran-ar{
+  font-family:'Uthmanic Hafs',var(--ui-font-ar),serif!important;
+}
+#tab-rules .rule-list .rule-card .rule-content .rule-quran-ar *{
+  font-family:inherit!important;
+}
 @media(max-width:560px){
   #tab-rules .rule-quran-ar,
-  #tab-rules .rule-study .tbl-wrap td .rule-table-ar.rule-quran-ar{font-size:35px!important;line-height:1.85!important;padding:10px 12px!important;}
+  #tab-rules .rule-study .tbl-wrap td .rule-table-ar.rule-quran-ar{font-size:36px!important;line-height:2!important;padding:10px 12px!important;}
 }
 </style>
 <script src="src/api.js"></script>

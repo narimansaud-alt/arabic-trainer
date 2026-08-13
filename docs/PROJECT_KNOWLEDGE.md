@@ -1,6 +1,6 @@
 # Arabic Trainer project knowledge
 
-Last updated: 2026-08-13
+Last updated: 2026-08-13 (final Books 1-3 QA)
 
 ## Production and repositories
 
@@ -51,7 +51,8 @@ Authentication decision:
 
 - Owner-requested Medina rules workflow is stored in `docs/MEDINA_RULES_KNOWLEDGE_BASE.md`.
 - Before changing Medina rule content, read that file in addition to this project knowledge file.
-- Current workflow status: Books 1, 2 and 3 are complete. Book 3 has 89 source-backed cards across 17 lessons and passed the complete data/provenance and 34-screen desktop/mobile audit. Do not begin Book 4 without a new explicit permission from the owner.
+- Current workflow status: Books 1, 2 and 3 are complete: 307 cards, 71 lessons and 526 private verbatim source rows. The final source/data/code audit and all 213 desktop/tablet/mobile lesson-screen states passed. All 55 displayed Qur'anic fragments exactly match the official QPC Uthmanic Hafs corpus and use the local Madinah-mushaf font. Do not begin Book 4 without a new explicit permission from the owner.
+- Combined final report: `docs/MEDINA_RULES_FINAL_QA_20260813.md`.
 
 ### Medina volume 3
 
@@ -60,7 +61,7 @@ Authentication decision:
 - Lessons: 1–17.
 - Final rule base: 89 cards, 89 private verbatim source rows, 206 responsive tables and 50 Qur'anic display blocks.
 - Final audit report: `docs/MEDINA_RULES_BOOK3_FINAL_AUDIT_20260813.md`.
-- All local data/provenance, desktop/mobile lesson-screen and Qur'anic-display audits passed with zero findings.
+- All local data/provenance and desktop/tablet/mobile lesson-screen audits passed with zero findings. All 50 Book 3 Qur'anic fragments are exact QPC Uthmanic Hafs substrings and render in the local `Uthmanic Hafs` font.
 
 ### Medina volume 1
 
