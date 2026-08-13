@@ -74,9 +74,16 @@ async function loadDict() {
   words.forEach((r) => {
     const k = r.lesson_number;
     if (!Dict.byLesson[k]) Dict.byLesson[k] = [];
-    Dict.byLesson[k].push({ ar: r.word_ar, ru: r.word_ru, lesson: k });
+    const word = {
+      ar: r.word_ar,
+      ru: r.word_ru,
+      lesson: k,
+      dictionaryRow: r.dictionary_row == null ? null : Number(r.dictionary_row),
+      dictionaryForm: r.dictionary_form || '',
+    };
+    Dict.byLesson[k].push(word);
     lessons.add(k);
-    Dict.allWords.push({ ar: r.word_ar, ru: r.word_ru, lesson: k });
+    Dict.allWords.push(word);
   });
 
   if (cloudStatus) cloudStatus.textContent = 'Загружено: ' + Dict.allWords.length + ' слов';
@@ -293,6 +300,22 @@ function makeDictBookRows(words) {
   for (let index = 0; index < words.length; index += 1) {
     const singular = words[index];
     const plural = words[index + 1];
+    const hasSourceRow = Number.isInteger(singular.dictionaryRow) && singular.dictionaryRow > 0;
+    if (hasSourceRow) {
+      const hasSourcePlural =
+        singular.dictionaryForm === 'singular' &&
+        plural &&
+        plural.lesson === singular.lesson &&
+        plural.dictionaryRow === singular.dictionaryRow &&
+        plural.dictionaryForm === 'plural';
+      if (singular.dictionaryForm === 'plural') {
+        rows.push({ ru: singular.ru, singular: '', plural: singular.ar });
+      } else {
+        rows.push({ ru: singular.ru, singular: singular.ar, plural: hasSourcePlural ? plural.ar : '' });
+      }
+      if (hasSourcePlural) index += 1;
+      continue;
+    }
     if (
       plural &&
       singular.lesson === plural.lesson &&
@@ -321,7 +344,7 @@ function renderDictBook(words, lesson) {
           '</td><td class="dict-book-ar dict-book-plural" dir="rtl" lang="ar">' +
           (w.plural ? esc(w.plural) : '<span class="dict-book-dash">—</span>') +
           '</td><td class="dict-book-ar" dir="rtl" lang="ar">' +
-          esc(w.singular) +
+          (w.singular ? esc(w.singular) : '<span class="dict-book-dash">—</span>') +
           '</td></tr>'
       )
       .join('') +

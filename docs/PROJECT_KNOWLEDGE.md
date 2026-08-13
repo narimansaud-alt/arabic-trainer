@@ -77,6 +77,8 @@ Authentication decision:
 - Lesson 23 has no separate "new words" block in the supplied book, so no speculative lesson 23 vocabulary was added.
 - Table pairing includes explicit singular/plural or singular/collective pairs for demonstratives and pronouns.
 - Canonical pairing logic is in `src/dict.js`.
+- Active volume 3 dictionary import protocol: `docs/MEDINA_BOOK3_DICTIONARY_TASK.md`. Its controlling source is the lesson photographs in `C:\Users\user\Desktop\Мединский курс\Третий том\Фото словарь`; `C:\Users\user\Downloads\Облако Mail.zip` is a byte-identical control copy. Work must proceed lesson by lesson, with source-only extraction, a complete correction log, Supabase verification and screen verification of both dictionary modes before advancing.
+- The volume 3 dictionary task is additive project context. It does not supersede or delete any previously stored Medina rules tasks or audit records.
 
 ### Book
 
