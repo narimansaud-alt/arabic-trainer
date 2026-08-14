@@ -89,6 +89,7 @@ Authentication decision:
 - Recoverable pre-change export: `.local/backups/dictionaries-before-russian-plurals-20260813.json` (machine-local and intentionally ignored by Git).
 - Active volume 3 dictionary import protocol: `docs/MEDINA_BOOK3_DICTIONARY_TASK.md`. Its controlling source is the lesson photographs in `C:\Users\user\Desktop\Мединский курс\Третий том\Фото словарь`; `C:\Users\user\Downloads\Облако Mail.zip` is a byte-identical control copy. Work must proceed lesson by lesson, with source-only extraction, a complete correction log, Supabase verification and screen verification of both dictionary modes before advancing.
 - The volume 3 dictionary task is additive project context. It does not supersede or delete any previously stored Medina rules tasks or audit records.
+- Volume 4 dictionary lesson 1 is sourced from the seven owner-supplied photographs of printed pages 154–160. Although the photographed heading says lesson 18, the owner explicitly mapped that complete block to application lesson 1. The verified result is 90 source rows and 109 displayed forms, including 19 singular/plural pairs with separate Russian plural meanings. Progress and the correction log are in `docs/MEDINA_BOOK4_DICTIONARY_PROGRESS.md`; migration: `supabase/migrations/20260814080000_import_book4_dictionary_lesson01.sql`.
 
 ### Book
 
