@@ -16,7 +16,7 @@ async function updateStreak() {
     const { streak, max_streak } = await Api.call('update-streak', {
       username: App.username,
       password: App.password,
-    }, { timeoutMs: 4000 });
+    }, { timeoutMs: 7000 });
     App.streak = streak;
     App.maxStreak = max_streak;
   } catch (e) {
@@ -80,7 +80,7 @@ function syncDailyProgress() {
   if (target <= __dailyLastSyncedWords) return __dailyIncrementQueue;
   __dailyIncrementQueue = __dailyIncrementQueue
     .then(async () => {
-      const result = await Api.call('update-daily-count', { daily_words: target }, { timeoutMs: 4000, keepalive: true });
+      const result = await Api.call('update-daily-count', { daily_words: target }, { timeoutMs: 7000, keepalive: true });
       const savedWords = normalizedDailyWords(result?.daily_words ?? target);
       __dailyLastSyncedWords = Math.max(__dailyLastSyncedWords, savedWords);
       if (savedWords >= DAILY_STREAK_GOAL && __dailyGoalSyncedDate !== today) {
@@ -155,7 +155,7 @@ async function loadLeaderboardCacheBy(sortBy) {
     .limit(200);
   let timeoutId = 0;
   const timeoutPromise = new Promise((_, reject) => {
-    timeoutId = setTimeout(() => reject(new Error('leaderboard-timeout')), 3000);
+    timeoutId = setTimeout(() => reject(new Error('leaderboard-timeout')), 7000);
   });
   let rows = [];
   try {

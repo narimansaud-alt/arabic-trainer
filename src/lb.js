@@ -1,7 +1,7 @@
 // lb.js — leaderboard tab. All reads here are public/non-sensitive
 // (the `leaderboard` view exposes no password data, kept in sync with
 // `users` by a database trigger — see the schema migration).
-const LB_QUERY_TIMEOUT_MS = 5000;
+const LB_QUERY_TIMEOUT_MS = 7000;
 
 function lbQueryErrorMessage() {
   return 'Сейчас данные рейтинга недоступны. Проверьте интернет и попробуйте позже.';

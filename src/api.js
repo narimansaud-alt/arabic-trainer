@@ -15,6 +15,7 @@ const db = createClient(SUPA_URL, SUPA_ANON_KEY, { auth: { persistSession: false
 
 const ErrorLog = {
   recent: new Set(),
+  reportedErrors: new WeakSet(),
   queueKey: 'arabic_error_queue_v1',
   flushing: false,
 
@@ -121,6 +122,10 @@ const ErrorLog = {
 
   async capture(error, meta = {}) {
     try {
+      const trackable = error !== null && (typeof error === 'object' || typeof error === 'function');
+      if (trackable && this.reportedErrors.has(error)) return;
+      if (trackable) this.reportedErrors.add(error);
+
       const message = error?.message || String(error || 'Unknown error');
       const signature = [meta?.source || 'unknown', meta?.action || '', message].join('|').slice(0, 300);
       if (this.recent.has(signature)) return;
@@ -193,11 +198,13 @@ const Api = {
     } catch (e) {
       clearTimeout(timeoutId);
       if (e?.name === 'AbortError') {
-        ErrorLog.capture(e, { source: 'api-timeout', action });
-        throw new ApiError(`Request timeout (${timeoutMs}ms).`, 0);
+        const error = new ApiError(`Request timeout (${timeoutMs}ms).`, 0);
+        ErrorLog.capture(error, { source: 'api-timeout', action });
+        throw error;
       }
-      ErrorLog.capture(e, { source: 'api-network', action });
-      throw new ApiError('Сеть недоступна. Проверьте подключение.', 0);
+      const error = new ApiError('Сеть недоступна. Проверьте подключение.', 0);
+      ErrorLog.capture(error, { source: 'api-network', action });
+      throw error;
     }
     clearTimeout(timeoutId);
 
@@ -208,12 +215,13 @@ const Api = {
         if (typeof resetApp === 'function') resetApp();
         if (typeof showScreen === 'function') showScreen('screen-login');
       }
-      ErrorLog.capture(new ApiError(errorMessage, res?.status || 0), {
+      const error = new ApiError(errorMessage, res?.status || 0);
+      ErrorLog.capture(error, {
         source: 'api-response',
         action,
         status: res?.status,
       });
-      throw new ApiError(errorMessage, res?.status || 0);
+      throw error;
     }
 
     return data;

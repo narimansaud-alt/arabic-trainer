@@ -1,6 +1,6 @@
 # Arabic Trainer project knowledge
 
-Last updated: 2026-08-14 (dictionary plural translations and pairing QA)
+Last updated: 2026-08-14 (dictionary QA, stable PWA identity, and network resilience)
 
 ## Production and repositories
 
@@ -13,6 +13,13 @@ Last updated: 2026-08-14 (dictionary plural translations and pairing QA)
 - Hosting: Cloudflare, automatic deployment from `main`
 - Cloudflare Worker/assets configuration: `wrangler.jsonc`
 - Build step: `build.sh` replaces `__BUILD_HASH__` in `sw.js` with the Cloudflare commit hash so the PWA cache updates after deployment.
+
+Stable PWA identity:
+
+- Keep `manifest.json` `id` equal to `./`.
+- Keep the full manifest name unchanged at the value enforced by the release check; changing it makes Android show an installed-app rename prompt.
+- Keep short_name unchanged; it is the compact launcher label.
+- `scripts/release-check.mjs` enforces these values before release.
 
 Current release history:
 

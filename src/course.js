@@ -74,7 +74,7 @@ async function selectVolume(volumeId) {
     await Promise.all([
       withTimeout(loadDict(), 6000, 'load-dict'),
       withTimeout(loadRulesAll(), 6000, 'load-rules'),
-      withTimeout(updateStreak(false), 2000, 'update-streak'),
+      updateStreak(false),
     ]);
   } catch (e) {
     ErrorLog.capture(e, { source: 'course', action: 'select-volume-hydrate' });

@@ -1,21 +1,6 @@
 // main.js — settings, PWA install, lifecycle, and app bootstrap.
 // This is the last script loaded; everything else must already be defined.
 
-window.addEventListener('error', (e) => {
-  ErrorLog.capture(e.error || e.message, {
-    source: 'window-error',
-    filename: e.filename,
-    lineno: e.lineno,
-    colno: e.colno,
-  });
-});
-
-window.addEventListener('unhandledrejection', (e) => {
-  ErrorLog.capture(e.reason || 'Unhandled promise rejection', {
-    source: 'unhandledrejection',
-  });
-});
-
 function setMode(m, btn) {
   Settings.mode = m;
   document.querySelectorAll('#mode-btns .mode-pill').forEach((b) => b.classList.remove('active'));
@@ -125,7 +110,7 @@ function withTimeout(promise, timeoutMs, label) {
 async function bootstrapApp() {
   let ok = false;
   try {
-    ok = await withTimeout(tryAutoLogin(), 4500, 'auto-login');
+    ok = await tryAutoLogin();
   } catch (e) {
     ErrorLog.capture(e, { source: 'app-bootstrap', phase: 'auto-login' });
   }
@@ -271,7 +256,7 @@ window.addEventListener('load', async () => {
   loadQty();
   checkMidnightReset();
   try {
-    await withTimeout(bootstrapApp(), 10000, 'app-bootstrap');
+    await bootstrapApp();
   } catch (e) {
     ErrorLog.capture(e, { source: 'app-bootstrap' });
     showScreen('screen-login');

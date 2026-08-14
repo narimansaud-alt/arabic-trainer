@@ -8,6 +8,7 @@
 
 const SESSION_STORAGE_KEY = 'arabic_session';
 const LEGACY_AUTH_STORAGE_KEY = 'arabic_auth';
+const AUTH_REQUEST_TIMEOUT_MS = 7000;
 
 let loginMode = 'login';
 let __authInFlight = false;
@@ -68,7 +69,11 @@ function clearStoredAuth() {
 }
 
 async function hydrateAfterAuth() {
-  await loadUserStats();
+  try {
+    await loadUserStats();
+  } catch (e) {
+    ErrorLog.capture(e, { source: 'auth', action: 'hydrate-user-stats' });
+  }
   checkAnnouncement().catch(() => {});
 }
 
@@ -95,7 +100,7 @@ async function doLogin() {
   setMsg('Загрузка...');
   __authInFlight = true;
   try {
-    const { user, session_token } = await Api.call('login', { username: un, password: pw }, { timeoutMs: 7000 });
+    const { user, session_token } = await Api.call('login', { username: un, password: pw }, { timeoutMs: AUTH_REQUEST_TIMEOUT_MS });
     const safeUser = user || {};
     applyLoggedInUser(un, safeUser, pw, session_token || null);
     saveSessionToken(un, session_token || null, pw);
@@ -126,7 +131,7 @@ async function doRegister() {
   setMsg('Регистрируемся...');
   __authInFlight = true;
   try {
-    const { user, session_token } = await Api.call('register', { username: un, password: pw }, { timeoutMs: 7000 });
+    const { user, session_token } = await Api.call('register', { username: un, password: pw }, { timeoutMs: AUTH_REQUEST_TIMEOUT_MS });
     setMsg('Готово! Пройдём...', 'ok');
     const safeUser = user && Object.keys(user).length ? user : createGuestState();
     applyLoggedInUser(un, safeUser, pw, session_token || null);
@@ -177,7 +182,7 @@ async function tryAutoLogin() {
         } catch (e) {
           ErrorLog.capture(e, { source: 'auth', action: 'read-password-fallback' });
         }
-        const state = await Api.call('get-state', { username, session_token: token }, { timeoutMs: 3500 });
+        const state = await Api.call('get-state', { username, session_token: token }, { timeoutMs: AUTH_REQUEST_TIMEOUT_MS });
         const user = (state || {}).user || {};
         applyLoggedInUser(username, user, fallbackPassword, token);
         await loadUserStats(state);
@@ -185,8 +190,9 @@ async function tryAutoLogin() {
         return true;
       }
     } catch (e) {
-      clearSessionToken();
       ErrorLog.capture(e, { source: 'auth', action: 'auto-login-session' });
+      if (e?.status === 0) return false;
+      clearSessionToken();
     }
   }
 
@@ -205,15 +211,14 @@ async function tryAutoLogin() {
     if (!username || !password) {
       throw new Error('invalid-legacy-session-payload');
     }
-    const { user, session_token } = await Api.call('login', { username, password }, { timeoutMs: 3500 });
+    const { user, session_token } = await Api.call('login', { username, password }, { timeoutMs: AUTH_REQUEST_TIMEOUT_MS });
     applyLoggedInUser(username, user, password, session_token || null);
     saveSessionToken(username, session_token || null, password);
-    await loadUserStats();
-    checkAnnouncement().catch(() => {});
+    await hydrateAfterAuth();
     return true;
   } catch (e) {
-    clearStoredAuth();
     ErrorLog.capture(e, { source: 'auth', action: 'auto-login-legacy' });
+    if (e?.status !== 0) clearStoredAuth();
     return false;
   }
 }
@@ -223,7 +228,7 @@ async function loadUserStats(state) {
   const payload = {
     username: App.username,
   };
-  const response = state || (await Api.call('get-state', payload, { timeoutMs: 3500 }));
+  const response = state || (await Api.call('get-state', payload, { timeoutMs: AUTH_REQUEST_TIMEOUT_MS }));
   const user = response?.user || {};
   const wordStats = Array.isArray(response?.wordStats) ? response.wordStats : [];
 
