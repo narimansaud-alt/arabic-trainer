@@ -20,6 +20,10 @@ const App = {
   maxStreak: 0,
   dailyWords: 0,
   lastCountDate: null,
+  dailyGoalMinutes: 10,
+  dailyGoalSelected: false,
+  dailyGoalsCompleted: 0,
+  lastDailyGoalDate: null,
 
   // local caches
   favorites: [],
@@ -163,6 +167,11 @@ function resetApp() {
   App.maxStreak = 0;
   App.dailyWords = 0;
   App.lastCountDate = null;
+  App.dailyGoalMinutes = 10;
+  App.dailyGoalSelected = false;
+  App.dailyGoalsCompleted = 0;
+  App.lastDailyGoalDate = null;
   App.favorites = [];
   App.wordStats = {};
 }
+  if (typeof resetDailyGoalState === 'function') resetDailyGoalState();

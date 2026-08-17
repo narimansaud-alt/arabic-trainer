@@ -8,15 +8,26 @@ let queue = [],
   qi = 0,
   curWord = null,
   activeMode = 'ar-ru';
+let quizMode = 'review',
+  sessionOnlyFavorites = false,
+  sessionInitialWords = [],
+  dailyQuizTasks = [],
+  currentDailyTask = null,
+  dailyQuizReplay = false;
 let roundScore = 0,
   roundWords = [],
   roundWrong = [],
+  roundAttemptedWords = [],
+  roundUserAnswers = {},
   roundCorrect = 0,
   roundAttempts = 0;
 let sessionIntervalRaised = new Set();
 let hstack = [],
   hidx = -1,
   isHist = false;
+let sessionFailedWords = new Set();
+let sessionDailyCounted = new Set();
+let lastSession = null;
 let timerInt = null,
   pauseTmo = null,
   timeLeft = 7,
@@ -55,6 +66,26 @@ function quizGetEl(id, required = false) {
   if (el) return el;
   return required ? null : quizGetEl._noop;
 }
+
+function registerQuizAttempt(word, answer = '') {
+  roundAttempts++;
+  if (word?.ar && !roundAttemptedWords.some((item) => item.ar === word.ar)) {
+    roundAttemptedWords.push({ ar: word.ar, ru: word.ru });
+  }
+  if (word?.ar && answer) roundUserAnswers[word.ar] = String(answer);
+  ErrorLog.invariant(roundAttempts >= roundCorrect, 'quiz-correct-count-exceeds-attempts', {
+    source: 'quiz-state',
+    mode: quizMode,
+    attempts: roundAttempts,
+    correct: roundCorrect,
+  });
+}
+
+function countCompletedWordOnce(ar) {
+  if (!ar || sessionDailyCounted.has(ar)) return;
+  sessionDailyCounted.add(ar);
+  addDailyWord();
+}
 // SPACED REPETITION
 function getDue() {
   const now = new Date().toISOString();
@@ -70,14 +101,28 @@ function getNextReview(level, ok) {
   return d.toISOString();
 }
 async function updateWordLevel(ar, ok) {
-  roundAttempts++;
   if (!ok) setWordFavoriteLocal(ar, true);
   const s = App.wordStats[ar] || {};
   const cur = s.level || 1;
-  const nl = ok ? Math.min(cur + 1, 5) : Math.max(cur - 1, 1);
-  const reviewLevel = ok && sessionIntervalRaised.has(ar) ? cur : nl;
-  const nr = getNextReview(reviewLevel, ok);
-  if (ok) sessionIntervalRaised.add(ar);
+  const alreadyChanged = sessionIntervalRaised.has(ar);
+  let nl = cur;
+  let nr = s.next || null;
+  if (ok) {
+    if (!alreadyChanged && !sessionFailedWords.has(ar)) {
+      nl = Math.min(cur + 1, 5);
+      nr = getNextReview(nl, true);
+      sessionIntervalRaised.add(ar);
+    } else if (!nr) {
+      nr = getNextReview(cur, true);
+    }
+  } else {
+    sessionFailedWords.add(ar);
+    if (!alreadyChanged) {
+      nl = Math.max(cur - 1, 1);
+      sessionIntervalRaised.add(ar);
+    }
+    nr = getNextReview(nl, false);
+  }
   App.wordStats[ar] = { ...s, level: nl, next: nr, seen: (s.seen || 0) + 1 };
   try {
     await Api.call('update-word-stat', {
@@ -125,9 +170,20 @@ function resetQuizState() {
   roundScore = 0;
   roundWords = [];
   roundWrong = [];
+  roundAttemptedWords = [];
+  roundUserAnswers = {};
   roundCorrect = 0;
   roundAttempts = 0;
   sessionIntervalRaised = new Set();
+  sessionFailedWords = new Set();
+  sessionDailyCounted = new Set();
+  quizMode = Settings.mode;
+  sessionOnlyFavorites = false;
+  sessionInitialWords = [];
+  dailyQuizTasks = [];
+  currentDailyTask = null;
+  dailyQuizReplay = false;
+  lastSession = null;
   if (typeof learnCards !== 'undefined') learnCards = [];
   if (typeof learnDoneWords !== 'undefined') learnDoneWords = [];
   if (typeof learnCardIdx !== 'undefined') learnCardIdx = 0;
@@ -153,25 +209,33 @@ function startQuiz(onlyFav) {
   if (!words) return;
   if (onlyFav) words = words.filter((w) => App.favorites.includes(w.ar));
   if (!words.length) return alert(onlyFav ? 'Нет трудных слов в выбранных уроках' : 'Слова не найдены');
-  const effectiveMode = onlyFav ? 'learn' : Settings.mode;
+  const effectiveMode = Settings.mode;
   const limit = effectiveMode === 'fast' ? Settings.qtyFast : Settings.qtyNormal;
   initQuiz(getSmartQueue(words, limit), effectiveMode, onlyFav);
 }
 
-function initQuiz(words, effectiveMode, isFav) {
+function initQuiz(words, effectiveMode, isFav, options = {}) {
   if (!words.length) {
     alert('Нет слов для тренировки');
     return;
   }
-  if (effectiveMode && effectiveMode !== Settings.mode) Settings.mode = effectiveMode;
-  queue = words;
+  quizMode = ['learn', 'type-ar', 'review', 'mix', 'fast', 'daily'].includes(effectiveMode) ? effectiveMode : Settings.mode;
+  sessionOnlyFavorites = Boolean(isFav);
+  sessionInitialWords = words.map((word) => ({ ar: word.ar, ru: word.ru }));
+  dailyQuizTasks = Array.isArray(options.dailyTasks) ? options.dailyTasks : [];
+  dailyQuizReplay = Boolean(options.dailyReplay);
+  queue = sessionInitialWords;
   qi = 0;
   roundScore = 0;
   roundWords = [...words];
   roundWrong = [];
+  roundAttemptedWords = [];
+  roundUserAnswers = {};
   roundCorrect = 0;
   roundAttempts = 0;
   sessionIntervalRaised = new Set();
+  sessionFailedWords = new Set();
+  sessionDailyCounted = new Set();
   hstack = [];
   hidx = -1;
   isHist = false;
@@ -186,18 +250,20 @@ function initQuiz(words, effectiveMode, isFav) {
     review: 'Обычное повторение',
     mix: 'Микс',
     fast: 'Быстрое повторение',
+    daily: 'Задание дня',
   };
+  lastSession = { kind: quizMode === 'daily' ? 'daily' : 'regular', words: sessionInitialWords, mode: quizMode, isFav: sessionOnlyFavorites, dailyTasks: dailyQuizTasks };
   const qModeEl = quizGetEl('q-mode');
-  if (qModeEl) qModeEl.textContent = isFav ? 'Избранные слова' : mNames[Settings.mode] || Settings.mode;
+  if (qModeEl) qModeEl.textContent = isFav ? `Трудные слова · ${mNames[quizMode] || quizMode}` : mNames[quizMode] || quizMode;
   const fastStats = quizGetEl('fast-stats');
-  if (fastStats) fastStats.classList.toggle('hidden', Settings.mode !== 'fast');
+  if (fastStats) fastStats.classList.toggle('hidden', quizMode !== 'fast');
   const fastLeader = quizGetEl('fast-leader');
-  if (fastLeader) fastLeader.classList.toggle('hidden', Settings.mode !== 'fast');
-  if (Settings.mode === 'fast') {
+  if (fastLeader) fastLeader.classList.toggle('hidden', quizMode !== 'fast');
+  if (quizMode === 'fast') {
     updFastUI();
     loadFastLeader().catch(() => {});
   }
-  if (Settings.mode === 'learn') {
+  if (quizMode === 'learn') {
     initLearnQueue(words);
     saveProgress();
     showScreen('screen-quiz');
@@ -224,14 +290,19 @@ function nextWord(inc) {
     return;
   }
 
-  if (Settings.mode === 'fast') {
+  currentDailyTask = quizMode === 'daily' ? dailyQuizTasks[qi] || null : null;
+  if (currentDailyTask) {
+    activeMode = currentDailyTask.mode;
+    const modeLabel = quizGetEl('q-mode');
+    if (modeLabel && typeof dailyTaskLabel === 'function') modeLabel.textContent = dailyTaskLabel(currentDailyTask);
+  } else if (quizMode === 'fast') {
     activeMode = 'ru-ar-fast';
-  } else if (Settings.mode === 'mix') {
+  } else if (quizMode === 'mix') {
     activeMode = ['ar-ru', 'ru-ar', 'type-ar'][Math.floor(Math.random() * 3)];
-  } else if (Settings.mode === 'review') {
+  } else if (quizMode === 'review') {
     activeMode = ['ar-ru', 'ru-ar'][Math.floor(Math.random() * 2)];
   } else {
-    activeMode = Settings.mode;
+    activeMode = quizMode;
   }
 
   if (inc) {
@@ -271,7 +342,17 @@ function renderQ() {
 
   quizGetEl('word-card').style.minHeight = '100px';
 
-  if (activeMode === 'type-ar') {
+  if (activeMode === 'intro') {
+    quizGetEl('word-card').style.minHeight = '140px';
+    quizGetEl('word-display').innerHTML = `
+      <div style="width:100%">
+        <div class="learn-intro-ar">${esc(curWord.ar)}</div>
+        <div class="learn-intro-ru">${esc(curWord.ru)}</div>
+        <div class="learn-intro-hint">Прочитайте слово и перевод, затем продолжайте.</div>
+      </div>`;
+    quizGetEl('btn-next').classList.remove('hidden');
+    quizGetEl('btn-next').textContent = 'Запомнил, дальше →';
+  } else if (activeMode === 'type-ar') {
     hintCount = 0;
     quizGetEl('word-display').innerHTML = `<div class="w-ru">${esc(curWord.ru)}</div>`;
     typeArea.classList.remove('hidden');
@@ -334,6 +415,8 @@ function genOpts(correct, key) {
 }
 
 async function handleAns(btn, ok, correct, isAr) {
+  registerQuizAttempt(curWord, btn?.textContent || '');
+  if (currentDailyTask && typeof markDailyGoalTaskCompleted === 'function') markDailyGoalTaskCompleted(currentDailyTask, dailyQuizReplay);
   document.querySelectorAll('.opt').forEach((b) => (b.disabled = true));
   const fb = quizGetEl('feedback');
   if (ok) {
@@ -347,7 +430,7 @@ async function handleAns(btn, ok, correct, isAr) {
     fb.textContent = 'Правильно' + (pts ? ' +' + pts : '');
     if (pts) logPts(pts);
     updateWordLevel(curWord.ar, true);
-    addDailyWord();
+    countCompletedWordOnce(curWord.ar);
     if (qi >= queue.length - 1) clearProgress();
     pauseTmo = setTimeout(() => nextWord(true), 800);
   } else {
@@ -397,11 +480,13 @@ function showHint() {
 
 function checkTyped() {
   if (isHist) return;
-  if (Settings.mode === 'learn') {
+  if (quizMode === 'learn') {
     checkTypedLearn();
     return;
   }
   const val = quizGetEl('type-input').value.trim();
+  registerQuizAttempt(curWord, val);
+  if (currentDailyTask && typeof markDailyGoalTaskCompleted === 'function') markDailyGoalTaskCompleted(currentDailyTask, dailyQuizReplay);
   const fb = quizGetEl('feedback');
   quizGetEl('type-input').disabled = true;
   const hintBtn = quizGetEl('btn-hint');
@@ -417,14 +502,14 @@ function checkTyped() {
     roundCorrect++;
     if (pts > 0) logPts(pts);
     updateWordLevel(curWord.ar, true);
-    addDailyWord();
+    countCompletedWordOnce(curWord.ar);
     if (qi >= queue.length - 1) clearProgress();
     pauseTmo = setTimeout(() => nextWord(true), 800);
   } else {
     fb.className = 'feedback err';
     fb.innerHTML =
       'Ошибка. Правильно: <span class="answer-ar" dir="rtl">' + esc(curWord.ar) + '</span>';
-    curWord.userAnswer = val;
+    roundUserAnswers[curWord.ar] = val;
     updateWordLevel(curWord.ar, false);
     if (!roundWrong.find((w) => w.ar === curWord.ar)) roundWrong.push(curWord);
     quizGetEl('btn-next').classList.remove('hidden');
@@ -482,6 +567,8 @@ function updFastUI() {
 }
 
 async function handleFast(btn, ok, correct, isTimeout) {
+  registerQuizAttempt(curWord, btn?.textContent || (isTimeout ? '[время истекло]' : ''));
+  if (currentDailyTask && typeof markDailyGoalTaskCompleted === 'function') markDailyGoalTaskCompleted(currentDailyTask, dailyQuizReplay);
   clearTimers();
   document.querySelectorAll('.opt').forEach((b) => {
     b.disabled = true;
@@ -491,14 +578,16 @@ async function handleFast(btn, ok, correct, isTimeout) {
   updateWordLevel(curWord.ar, ok);
   const fb = quizGetEl('feedback');
   if (ok) {
+    roundCorrect++;
     fastWords++;
     bestStreak = Math.max(bestStreak, fastWords);
     updFastUI();
     fb.className = 'feedback ok';
     fb.textContent = 'Серия: ' + fastWords;
-    addDailyWord();
+    countCompletedWordOnce(curWord.ar);
     pauseTmo = setTimeout(() => nextWord(true), 700);
   } else {
+    if (!roundWrong.find((word) => word.ar === curWord.ar)) roundWrong.push({ ar: curWord.ar, ru: curWord.ru });
     lives--;
     updFastUI();
     fb.className = 'feedback err';
@@ -524,12 +613,17 @@ async function handleFast(btn, ok, correct, isTimeout) {
 
 function goNext() {
   clearTimers();
-  if (Settings.mode === 'fast' && lives <= 0) {
+  if (quizMode === 'fast' && lives <= 0) {
     finishQuiz();
     return;
   }
-  if (Settings.mode === 'learn') {
+  if (quizMode === 'learn') {
     goNextLearn();
+    return;
+  }
+  if (activeMode === 'intro') {
+    if (currentDailyTask && typeof markDailyGoalTaskCompleted === 'function') markDailyGoalTaskCompleted(currentDailyTask, dailyQuizReplay);
+    nextWord(true);
     return;
   }
   nextWord(true);
@@ -556,7 +650,7 @@ function saveProgress() {
     }
   };
 
-  if (Settings.mode === 'learn') {
+  if (quizMode === 'learn') {
     if (!learnCards.length) return;
     writeProgress({
       isLearn: true,
@@ -568,9 +662,16 @@ function saveProgress() {
       roundWrong,
       roundCorrect,
       roundAttempts,
+      roundAttemptedWords,
+      roundUserAnswers,
+      sessionInitialWords,
+      sessionOnlyFavorites,
+      sessionIntervalRaised: [...sessionIntervalRaised],
+      sessionFailedWords: [...sessionFailedWords],
+      sessionDailyCounted: [...sessionDailyCounted],
       username: App.username,
       answerCheck: Settings.answerCheck,
-      mode: Settings.mode,
+      mode: quizMode,
       volume: App.volume,
     });
     return;
@@ -584,14 +685,24 @@ function saveProgress() {
     roundWrong,
     roundCorrect,
     roundAttempts,
+    roundAttemptedWords,
+    roundUserAnswers,
+    roundWords,
+    sessionInitialWords,
+    sessionOnlyFavorites,
+    sessionIntervalRaised: [...sessionIntervalRaised],
+    sessionFailedWords: [...sessionFailedWords],
+    sessionDailyCounted: [...sessionDailyCounted],
     username: App.username,
     answerCheck: Settings.answerCheck,
-    mode: Settings.mode,
+    mode: quizMode,
     activeMode,
     volume: App.volume,
     lives,
     fastWords,
     bestStreak,
+    dailyTasks: dailyQuizTasks,
+    dailyReplay: dailyQuizReplay,
   });
 }
 function clearProgress() {
@@ -613,6 +724,53 @@ function toSafeWordList(items, fallback = []) {
       w.ru.trim()
   );
   return clean.length ? clean : fallback;
+}
+
+function toSafeLearnCardList(items) {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((card) => {
+      const word = toSafeWordList([card?.w], [])[0];
+      const stage = clampNum(card?.stage, -1, 0, 4);
+      if (!word || stage < 0) return null;
+      return { w: word, stage, key: typeof card.key === 'string' && card.key ? card.key : word.ar };
+    })
+    .filter(Boolean);
+}
+
+function toSafeDailyTaskList(items) {
+  if (!Array.isArray(items)) return [];
+  const validCategories = new Set(['new', 'review', 'typing']);
+  const validModes = new Set(['intro', 'ar-ru', 'ru-ar', 'type-ar']);
+  return items
+    .map((task, index) => {
+      const word = toSafeWordList([task?.word], [])[0];
+      if (!word || !validCategories.has(task?.category) || !validModes.has(task?.mode)) return null;
+      const clean = {
+        id: typeof task.id === 'string' && task.id ? task.id : `${task.category}-${index}`,
+        category: task.category,
+        ordinal: clampNum(task.ordinal, index + 1, 1, 10000),
+        mode: task.mode,
+        word,
+        done: Boolean(task.done),
+      };
+      if (task.__counted) clean.__counted = true;
+      return clean;
+    })
+    .filter(Boolean);
+}
+
+function toSafeAnswerMap(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([key, answer]) => typeof key === 'string' && key && typeof answer === 'string')
+      .slice(0, 1000)
+  );
+}
+
+function toSafeStringSet(value) {
+  return new Set(Array.isArray(value) ? value.filter((item) => typeof item === 'string' && item).slice(0, 10000) : []);
 }
 
 function clampNum(value, fallback = 0, min = 0, max = Number.MAX_SAFE_INTEGER) {
@@ -643,22 +801,26 @@ async function restoreProgress(options = {}) {
       clearProgress();
       return false;
     }
+    if (p.volume && !findVolumeById(p.volume)) {
+      clearProgress();
+      return false;
+    }
+    if (p.volume && App.volume && p.volume !== App.volume) {
+      return false;
+    }
     const mNames = {
       learn: 'Учить новые слова',
       'type-ar': 'Арабский ввод',
       review: 'Обычное повторение',
       mix: 'Микс',
       fast: 'Быстрое повторение',
+      daily: 'Задание дня',
     };
     if (p.isLearn) {
-      const safeLearnCards = toSafeWordList(p.learnCards, []);
+      const safeLearnCards = toSafeLearnCardList(p.learnCards);
       const safeLearnDoneWords = toSafeWordList(p.learnDoneWords, []);
       const safeRoundWords = toSafeWordList(p.roundWords, []);
       const safeLearnCardIdx = clampNum(p.learnCardIdx, 0, 0, Math.max(0, safeLearnCards.length - 1));
-      if (p.volume && !findVolumeById(p.volume)) {
-        clearProgress();
-        return false;
-      }
       if (!safeLearnCards.length) {
         clearProgress();
         return false;
@@ -669,7 +831,10 @@ async function restoreProgress(options = {}) {
         clearProgress();
         return false;
       }
+      quizMode = 'learn';
       Settings.mode = 'learn';
+      sessionOnlyFavorites = Boolean(p.sessionOnlyFavorites);
+      sessionInitialWords = toSafeWordList(p.sessionInitialWords, safeRoundWords);
       learnCards = safeLearnCards;
       learnCardIdx = safeLearnCardIdx;
       learnDoneWords = safeLearnDoneWords;
@@ -678,9 +843,18 @@ async function restoreProgress(options = {}) {
       roundWrong = toSafeWordList(p.roundWrong, []);
       roundCorrect = clampNum(p.roundCorrect, 0);
       roundAttempts = clampNum(p.roundAttempts, 0);
+      roundAttemptedWords = toSafeWordList(p.roundAttemptedWords, []);
+      roundUserAnswers = toSafeAnswerMap(p.roundUserAnswers);
+      sessionIntervalRaised = toSafeStringSet(p.sessionIntervalRaised);
+      sessionFailedWords = toSafeStringSet(p.sessionFailedWords);
+      sessionDailyCounted = toSafeStringSet(p.sessionDailyCounted);
+      dailyQuizTasks = [];
+      currentDailyTask = null;
+      dailyQuizReplay = false;
       Settings.answerCheck = p.answerCheck === 'strict' ? 'strict' : 'learning';
       updateAnswerCheckUI();
       if (p.volume) App.volume = p.volume;
+      lastSession = { kind: 'regular', words: sessionInitialWords, mode: 'learn', isFav: sessionOnlyFavorites, dailyTasks: [] };
       quizGetEl('q-mode').textContent = mNames.learn;
       quizGetEl('fast-stats').classList.add('hidden');
       quizGetEl('fast-leader').classList.add('hidden');
@@ -694,10 +868,6 @@ async function restoreProgress(options = {}) {
       clearProgress();
       return false;
     }
-    if (p.volume && !findVolumeById(p.volume)) {
-      clearProgress();
-      return false;
-    }
     if (!skipPrompt && !confirm('Продолжить незавершённый урок (' + safeQueuePos + '/' + safeQueue.length + ' слов, +' + clampNum(p.roundScore, 0) + ' очков)?')) {
       clearProgress();
       return false;
@@ -705,22 +875,38 @@ async function restoreProgress(options = {}) {
     queue = safeQueue;
     qi = safeQueuePos;
     roundScore = clampNum(p.roundScore, 0);
-    roundWords = safeQueue;
+    roundWords = toSafeWordList(p.roundWords, safeQueue);
     roundWrong = toSafeWordList(p.roundWrong, []);
+    roundAttemptedWords = toSafeWordList(p.roundAttemptedWords, []);
+    roundUserAnswers = toSafeAnswerMap(p.roundUserAnswers);
     roundCorrect = clampNum(p.roundCorrect, 0);
     roundAttempts = clampNum(p.roundAttempts, 0);
+    sessionIntervalRaised = toSafeStringSet(p.sessionIntervalRaised);
+    sessionFailedWords = toSafeStringSet(p.sessionFailedWords);
+    sessionDailyCounted = toSafeStringSet(p.sessionDailyCounted);
     Settings.answerCheck = p.answerCheck === 'strict' ? 'strict' : 'learning';
     updateAnswerCheckUI();
-    Settings.mode = ['learn', 'type-ar', 'review', 'mix', 'fast'].includes(p.mode) ? p.mode : Settings.mode;
+    quizMode = ['type-ar', 'review', 'mix', 'fast', 'daily'].includes(p.mode) ? p.mode : Settings.mode;
+    if (quizMode !== 'daily') Settings.mode = quizMode;
+    sessionOnlyFavorites = Boolean(p.sessionOnlyFavorites);
+    sessionInitialWords = toSafeWordList(p.sessionInitialWords, safeQueue);
+    dailyQuizTasks = quizMode === 'daily' ? toSafeDailyTaskList(p.dailyTasks) : [];
+    if (quizMode === 'daily' && dailyQuizTasks.length !== safeQueue.length) {
+      clearProgress();
+      return false;
+    }
+    dailyQuizReplay = quizMode === 'daily' && Boolean(p.dailyReplay);
+    currentDailyTask = quizMode === 'daily' ? dailyQuizTasks[qi] || null : null;
     lives = clampNum(p.lives, 3, 0, 3);
     fastWords = clampNum(p.fastWords, 0, 0, 10000);
     bestStreak = clampNum(p.bestStreak, 0, 0, 10000);
     if (p.volume) App.volume = p.volume;
     learnPhase = 'test';
-    quizGetEl('q-mode').textContent = mNames[Settings.mode] || Settings.mode;
-    quizGetEl('fast-stats').classList.toggle('hidden', Settings.mode !== 'fast');
-    quizGetEl('fast-leader').classList.toggle('hidden', Settings.mode !== 'fast');
-    if (Settings.mode === 'fast') {
+    lastSession = { kind: quizMode === 'daily' ? 'daily' : 'regular', words: sessionInitialWords, mode: quizMode, isFav: sessionOnlyFavorites, dailyTasks: dailyQuizTasks };
+    quizGetEl('q-mode').textContent = currentDailyTask && typeof dailyTaskLabel === 'function' ? dailyTaskLabel(currentDailyTask) : mNames[quizMode] || quizMode;
+    quizGetEl('fast-stats').classList.toggle('hidden', quizMode !== 'fast');
+    quizGetEl('fast-leader').classList.toggle('hidden', quizMode !== 'fast');
+    if (quizMode === 'fast') {
       updFastUI();
       loadFastLeader().catch(() => {});
     }
@@ -729,15 +915,17 @@ async function restoreProgress(options = {}) {
       clearProgress();
       return false;
     }
-    const hasSavedMode = ['ar-ru', 'ru-ar', 'type-ar', 'ru-ar-fast'].includes(p.activeMode);
+    const hasSavedMode = ['intro', 'ar-ru', 'ru-ar', 'type-ar', 'ru-ar-fast'].includes(p.activeMode);
     const fallbackMode =
-      Settings.mode === 'fast'
+      currentDailyTask
+        ? currentDailyTask.mode
+        : quizMode === 'fast'
         ? 'ru-ar-fast'
-        : Settings.mode === 'mix'
+        : quizMode === 'mix'
         ? ['ar-ru', 'ru-ar', 'type-ar'][Math.floor(Math.random() * 3)]
-        : Settings.mode === 'review'
+        : quizMode === 'review'
         ? ['ar-ru', 'ru-ar'][Math.floor(Math.random() * 2)]
-        : Settings.mode;
+        : quizMode;
     activeMode = hasSavedMode ? p.activeMode : fallbackMode;
     hstack = [{ w: curWord, am: activeMode, idx: qi, phase: learnPhase }];
     hidx = 0;
@@ -756,10 +944,11 @@ async function restoreProgress(options = {}) {
 async function finishQuiz() {
   clearTimers();
   clearProgress();
-  queue = [];
-  learnCards = [];
-  learnCardIdx = 0;
-  if (Settings.mode === 'fast' && fastWords > (App.survivalRecord || 0)) {
+  const completedMode = quizMode;
+  const resultWords = completedMode === 'fast' ? toSafeWordList(roundAttemptedWords, []) : toSafeWordList(roundWords, []);
+  const resultTotal = completedMode === 'fast' ? roundAttempts : resultWords.length;
+  if (completedMode === 'daily' && typeof flushDailyGoalProgress === 'function') await flushDailyGoalProgress();
+  if (completedMode === 'fast' && fastWords > (App.survivalRecord || 0)) {
     App.survivalRecord = fastWords;
     try {
       await Api.call('update-survival-record', { username: App.username, password: App.password, survival_record: fastWords });
@@ -768,16 +957,17 @@ async function finishQuiz() {
     }
   }
   quizGetEl('r-pts').textContent = roundScore;
-  quizGetEl('r-total').textContent = roundWords.length;
+  quizGetEl('r-total').textContent = resultTotal;
   quizGetEl('r-correct').textContent = roundCorrect;
   const attemptsEl = quizGetEl('r-attempts');
   if (attemptsEl) attemptsEl.textContent = roundAttempts;
-  setIconLabel(quizGetEl('res-title'), Settings.mode === 'fast' ? 'bolt' : 'success', Settings.mode === 'fast' ? 'Быстрое повторение завершено' : 'Урок завершён');
+  const resultTitle = completedMode === 'fast' ? 'Быстрое повторение завершено' : completedMode === 'daily' ? 'Задание дня завершено' : 'Урок завершён';
+  setIconLabel(quizGetEl('res-title'), completedMode === 'fast' ? 'bolt' : 'success', resultTitle);
   const box = quizGetEl('res-word-list');
   const wrongArs = new Set(roundWrong.map((w) => w.ar));
-  const wrongItems = roundWords.filter((w) => wrongArs.has(w.ar));
-  const correctItems = roundWords.filter((w) => !wrongArs.has(w.ar));
-  let html = '<div class="wl-hdr">Слова урока — ' + roundWords.length + '</div>';
+  const wrongItems = resultWords.filter((w) => wrongArs.has(w.ar));
+  const correctItems = resultWords.filter((w) => !wrongArs.has(w.ar));
+  let html = '<div class="wl-hdr">Слова тренировки — ' + resultWords.length + '</div>';
   if (wrongItems.length) {
     html +=
       '<div style="padding:8px 14px;font-size:11px;font-weight:700;color:var(--red);background:#fff5f5;text-transform:uppercase;letter-spacing:0.5px;">Ошибки — ' +
@@ -785,7 +975,8 @@ async function finishQuiz() {
       ' слов</div>';
     html += wrongItems
       .map((w) => {
-        const typed = w.userAnswer ? '<div style="font-size:12px;color:#888;margin-top:4px;">Вы вводили: <b>' + esc(w.userAnswer) + '</b></div>' : '';
+        const userAnswer = roundUserAnswers[w.ar];
+        const typed = userAnswer ? '<div style="font-size:12px;color:#888;margin-top:4px;">Вы вводили: <b>' + esc(userAnswer) + '</b></div>' : '';
         return `<div class="wl-item" style="background:#fff5f5;border-left:3px solid var(--red);"><div><span class="wl-ar">${esc(w.ar)}</span><span class="wl-ru">${esc(w.ru)}</span>${typed}</div></div>`;
       })
       .join('');
@@ -798,14 +989,36 @@ async function finishQuiz() {
     html += correctItems.map((w) => `<div class="wl-item"><span class="wl-ar">${esc(w.ar)}</span><span class="wl-ru">${esc(w.ru)}</span></div>`).join('');
   }
   box.innerHTML = html;
+  ErrorLog.invariant(roundCorrect <= roundAttempts, 'quiz-result-correct-count-exceeds-attempts', {
+    source: 'quiz-results',
+    mode: completedMode,
+    attempts: roundAttempts,
+    correct: roundCorrect,
+  });
+  queue = [];
+  learnCards = [];
+  learnCardIdx = 0;
+  currentDailyTask = null;
   showScreen('screen-results');
 }
 function backToMenu() {
   showScreen('screen-app');
   switchTab('train');
+  if (typeof renderDailyGoal === 'function') renderDailyGoal();
 }
 function restartQuiz() {
-  startQuiz(false);
+  const previous = lastSession;
+  if (!previous || !Array.isArray(previous.words) || !previous.words.length) {
+    startQuiz(false);
+    return;
+  }
+  if (previous.kind === 'daily') {
+    const tasks = toSafeDailyTaskList(previous.dailyTasks).map((task) => ({ ...task, word: { ...task.word }, done: false, __counted: false }));
+    if (!tasks.length) return startDailyGoal();
+    initQuiz(tasks.map((task) => ({ ...task.word })), 'daily', false, { dailyTasks: tasks, dailyReplay: true });
+    return;
+  }
+  initQuiz(previous.words.map((word) => ({ ...word })), previous.mode, previous.isFav);
 }
 
 // FAVORITES / SCORING

@@ -83,6 +83,9 @@ function createGuestState() {
     survival_record: 0,
     streak: 0,
     max_streak: 0,
+    daily_goal_minutes: 10,
+    daily_goals_completed: 0,
+    daily_goal_selected_at: null,
   };
 }
 
@@ -158,6 +161,10 @@ function applyLoggedInUser(username, user, password = null, sessionToken = null)
   App.survivalRecord = user.survival_record || 0;
   App.streak = user.streak || 0;
   App.maxStreak = user.max_streak || 0;
+  App.dailyGoalMinutes = Number(user.daily_goal_minutes) || 10;
+  App.dailyGoalSelected = Boolean(user.daily_goal_selected_at);
+  App.dailyGoalsCompleted = Number(user.daily_goals_completed) || 0;
+  App.lastDailyGoalDate = user.last_daily_goal_date || null;
 }
 
 async function tryAutoLogin() {
@@ -242,6 +249,10 @@ async function loadUserStats(state) {
   App.streak = user.streak || 0;
   App.maxStreak = user.max_streak || 0;
 
+  App.dailyGoalMinutes = Number(user.daily_goal_minutes) || 10;
+  App.dailyGoalSelected = Boolean(user.daily_goal_selected_at);
+  App.dailyGoalsCompleted = Number(user.daily_goals_completed) || 0;
+  App.lastDailyGoalDate = user.last_daily_goal_date || null;
   const today = appDateKey();
   const storedDate = user.last_count_date ? String(user.last_count_date).split('T')[0] : null;
   if (storedDate === today) {

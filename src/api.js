@@ -8,7 +8,12 @@
 const SUPA_URL = 'https://vkdfthrvsafjmcmfcdic.supabase.co';
 const SUPA_ANON_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZrZGZ0aHJ2c2Fmam1jbWZjZGljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyMDc0NDEsImV4cCI6MjA5Nzc4MzQ0MX0.fzj0WRXkl6j1cVKmEOr2ZCBjtATDAbeL220MqKQ6uB0';
-const API_URL = SUPA_URL + '/functions/v1/api';
+const API_URL = SUPA_URL + '/functions/v1/api-v2';
+const API_HEADERS = Object.freeze({
+  'Content-Type': 'application/json',
+  apikey: SUPA_ANON_KEY,
+  Authorization: 'Bearer ' + SUPA_ANON_KEY,
+});
 
 const { createClient } = supabase;
 const db = createClient(SUPA_URL, SUPA_ANON_KEY, { auth: { persistSession: false } });
@@ -50,6 +55,10 @@ const ErrorLog = {
       message: this.scrub(message),
       stack: this.scrub(error?.stack || null),
       source: meta?.source || 'client',
+      kind: meta?.kind || 'error',
+      severity: meta?.severity || 'error',
+      fingerprint: meta?.fingerprint || null,
+      occurred_at: new Date().toISOString(),
       url: location.href,
       user_agent: navigator.userAgent,
       app_version: document.documentElement.dataset.build || 'web',
@@ -92,7 +101,7 @@ const ErrorLog = {
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: API_HEADERS,
         keepalive: true,
         signal: controller.signal,
         body: JSON.stringify(payload),
@@ -133,6 +142,7 @@ const ErrorLog = {
       setTimeout(() => this.recent.delete(signature), 30000);
 
       const payload = this.buildPayload(error, meta);
+      payload.fingerprint = payload.fingerprint || signature;
       try {
         await this.send(payload);
         void this.flush();
@@ -142,6 +152,23 @@ const ErrorLog = {
     } catch {
       // Logging must never block app flow.
     }
+  },
+
+  diagnostic(code, meta = {}, severity = 'warning') {
+    const safeCode = String(code || 'unknown-diagnostic').slice(0, 160);
+    return this.capture(new Error(safeCode), {
+      ...meta,
+      source: meta.source || 'client-diagnostic',
+      kind: meta.kind || 'diagnostic',
+      severity,
+      fingerprint: [meta.source || 'client-diagnostic', safeCode].join('|'),
+    });
+  },
+
+  invariant(condition, code, meta = {}) {
+    if (condition) return true;
+    void this.diagnostic(code, { ...meta, kind: 'invariant' }, 'error');
+    return false;
   },
 };
 
@@ -184,7 +211,7 @@ const Api = {
     try {
       res = await fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: API_HEADERS,
         keepalive: options.keepalive === true,
         signal: controller.signal,
         body: JSON.stringify(body),
@@ -199,11 +226,11 @@ const Api = {
       clearTimeout(timeoutId);
       if (e?.name === 'AbortError') {
         const error = new ApiError(`Request timeout (${timeoutMs}ms).`, 0);
-        ErrorLog.capture(error, { source: 'api-timeout', action });
+        ErrorLog.capture(error, { source: 'api-timeout', action, kind: 'api', severity: 'warning' });
         throw error;
       }
       const error = new ApiError('Сеть недоступна. Проверьте подключение.', 0);
-      ErrorLog.capture(error, { source: 'api-network', action });
+      ErrorLog.capture(error, { source: 'api-network', action, kind: 'api', severity: 'warning' });
       throw error;
     }
     clearTimeout(timeoutId);
@@ -216,10 +243,13 @@ const Api = {
         if (typeof showScreen === 'function') showScreen('screen-login');
       }
       const error = new ApiError(errorMessage, res?.status || 0);
+      const expectedAuthInput = ['login', 'register'].includes(action) && [400, 401, 409].includes(res?.status || 0);
       ErrorLog.capture(error, {
         source: 'api-response',
         action,
         status: res?.status,
+        kind: 'api',
+        severity: expectedAuthInput ? 'info' : 'error',
       });
       throw error;
     }
@@ -255,16 +285,28 @@ function renderFavoriteButton(btn, active) {
 }
 
 window.addEventListener('error', (event) => {
+  if (event.target && event.target !== window) {
+    const target = event.target;
+    ErrorLog.capture(new Error('Resource failed to load'), {
+      source: 'resource-load',
+      kind: 'resource',
+      severity: 'error',
+      tag: target.tagName || null,
+      resource: target.currentSrc || target.src || target.href || null,
+    });
+    return;
+  }
   ErrorLog.capture(event.error || new Error(event.message || 'Window error'), {
     source: 'window-error',
+    kind: 'error',
     file: event.filename,
     line: event.lineno,
     column: event.colno,
   });
-});
+}, true);
 window.addEventListener('unhandledrejection', (event) => {
   const reason = event.reason instanceof Error ? event.reason : new Error(String(event.reason || 'Unhandled promise rejection'));
-  ErrorLog.capture(reason, { source: 'unhandled-rejection' });
+  ErrorLog.capture(reason, { source: 'unhandled-rejection', kind: 'unhandled-rejection' });
 });
 (window.__earlyAppErrors || []).forEach(entry => ErrorLog.capture(entry.error, entry.meta));
 window.__earlyAppErrors = [];
@@ -273,3 +315,49 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') void ErrorLog.flush();
 });
 setTimeout(() => void ErrorLog.flush(), 1200);
+
+async function checkPwaDiagnostics() {
+  try {
+    const response = await fetch('./manifest.json?diagnostic=' + Date.now(), { cache: 'no-store' });
+    if (!response.ok) throw new Error('manifest-http-' + response.status);
+    const manifest = await response.json();
+    const expectedName = 'Мединский курс и глаголы';
+    ErrorLog.invariant(manifest.id === './', 'pwa-manifest-id-mismatch', {
+      source: 'pwa-identity',
+      kind: 'pwa',
+      manifest_id: manifest.id,
+    });
+    ErrorLog.invariant(manifest.name === expectedName, 'pwa-manifest-name-mismatch', {
+      source: 'pwa-identity',
+      kind: 'pwa',
+      manifest_name: manifest.name,
+      expected_name: expectedName,
+    });
+    ErrorLog.invariant(manifest.short_name === expectedName, 'pwa-manifest-short-name-mismatch', {
+      source: 'pwa-identity',
+      kind: 'pwa',
+      manifest_short_name: manifest.short_name,
+      expected_name: expectedName,
+    });
+    ErrorLog.invariant(manifest.name === manifest.short_name, 'pwa-manifest-name-split', {
+      source: 'pwa-identity',
+      kind: 'pwa',
+      manifest_name: manifest.name,
+      manifest_short_name: manifest.short_name,
+    });
+    if ('serviceWorker' in navigator) {
+      const registration = await navigator.serviceWorker.getRegistration();
+      const standalone = window.matchMedia?.('(display-mode: standalone)')?.matches || navigator.standalone === true;
+      if (standalone) {
+        ErrorLog.invariant(Boolean(registration), 'pwa-standalone-without-registration', {
+          source: 'pwa-service-worker',
+          kind: 'pwa',
+        });
+      }
+    }
+  } catch (error) {
+    ErrorLog.capture(error, { source: 'pwa-diagnostics', kind: 'pwa', severity: 'warning' });
+  }
+}
+
+setTimeout(() => void checkPwaDiagnostics(), 3500);

@@ -8,32 +8,17 @@
 
 async function updateStreak() {
   const restoredDailyProgress = restoreDailyProgressSnapshot();
-  if (!App.username) {
-    updateUI();
-    return;
-  }
-  try {
-    const { streak, max_streak } = await Api.call('update-streak', {
-      username: App.username,
-      password: App.password,
-    }, { timeoutMs: 7000 });
-    App.streak = streak;
-    App.maxStreak = max_streak;
-  } catch (e) {
-    ErrorLog.capture(e, { source: 'streak', action: 'update-streak' });
+  if (restoredDailyProgress) void syncDailyProgress();
+  if (App.username && App.volume && typeof loadDailyGoal === 'function') {
+    await loadDailyGoal();
   }
   updateUI();
-  if (restoredDailyProgress) {
-    updateStreakBanner();
-    void syncDailyProgress();
-  }
+  updateStreakBanner();
 }
 
 let __dailyIncrementQueue = Promise.resolve();
 const DAILY_PROGRESS_CACHE_KEY = 'arabic_daily_progress_v1';
-const DAILY_STREAK_GOAL = 30;
 const DAILY_WORDS_DISPLAY_MAX = 9999;
-let __dailyGoalSyncedDate = null;
 let __dailyLastSyncedDate = null;
 let __dailyLastSyncedWords = 0;
 
@@ -83,10 +68,6 @@ function syncDailyProgress() {
       const result = await Api.call('update-daily-count', { daily_words: target }, { timeoutMs: 7000, keepalive: true });
       const savedWords = normalizedDailyWords(result?.daily_words ?? target);
       __dailyLastSyncedWords = Math.max(__dailyLastSyncedWords, savedWords);
-      if (savedWords >= DAILY_STREAK_GOAL && __dailyGoalSyncedDate !== today) {
-        __dailyGoalSyncedDate = today;
-        await updateStreak();
-      }
     })
     .catch((e) => ErrorLog.capture(e, { source: 'streak', action: 'sync-daily-count', target, today }));
   return __dailyIncrementQueue;
@@ -94,8 +75,8 @@ function syncDailyProgress() {
 
 window.flushDailyProgressBeforeUpdate = async function flushDailyProgressBeforeUpdate() {
   saveDailyProgressSnapshot();
-  if (!App.username || !App.dailyWords) return;
-  await syncDailyProgress();
+  if (App.username && App.dailyWords) await syncDailyProgress();
+  if (typeof flushDailyGoalProgress === 'function') await flushDailyGoalProgress();
 };
 
 function addDailyWord() {
@@ -138,6 +119,10 @@ let __leaderboardStreakCache = {
   ts: 0,
   rows: null,
 };
+const __leaderboardInflight = {
+  score: null,
+  streak: null,
+};
 const __LEADERBOARD_CACHE_MS = 25000;
 
 async function loadLeaderboardCacheBy(sortBy) {
@@ -148,61 +133,84 @@ async function loadLeaderboardCacheBy(sortBy) {
     return store.rows;
   }
 
-  const queryPromise = db
-    .from('leaderboard')
-    .select('nickname,total_score,streak')
-    .order(sortBy, { ascending: false })
-    .limit(200);
-  let timeoutId = 0;
-  const timeoutPromise = new Promise((_, reject) => {
-    timeoutId = setTimeout(() => reject(new Error('leaderboard-timeout')), 7000);
-  });
-  let rows = [];
-  try {
-    const result = await Promise.race([queryPromise, timeoutPromise]);
-    const data = result?.data;
-    const error = result?.error;
-    if (error) throw error;
-    rows = data && data.length ? data : [];
-  } catch (e) {
-    ErrorLog.capture(e, { source: 'streak', action: 'leaderboard-cache', sortBy });
-    rows = store.rows || [];
-  } finally {
-    clearTimeout(timeoutId);
-  }
+  const inflightKey = isStreakSort ? 'streak' : 'score';
+  if (__leaderboardInflight[inflightKey]) return __leaderboardInflight[inflightKey];
 
-  if (isStreakSort) {
-    __leaderboardStreakCache = { ts: now, rows };
-  } else {
-    __leaderboardScoreCache = { ts: now, rows };
+  const request = (async () => {
+    const queryPromise = db
+      .from('leaderboard')
+      .select('nickname,total_score,streak')
+      .order(sortBy, { ascending: false })
+      .limit(200);
+    let timeoutId = 0;
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error('leaderboard-timeout')), 10000);
+    });
+    let rows = [];
+    try {
+      const result = await Promise.race([queryPromise, timeoutPromise]);
+      const data = result?.data;
+      const error = result?.error;
+      if (error) throw error;
+      rows = data && data.length ? data : [];
+    } catch (e) {
+      ErrorLog.capture(e, { source: 'streak', action: 'leaderboard-cache', sortBy });
+      rows = store.rows || [];
+    } finally {
+      clearTimeout(timeoutId);
+    }
+
+    if (isStreakSort) {
+      __leaderboardStreakCache = { ts: Date.now(), rows };
+    } else {
+      __leaderboardScoreCache = { ts: Date.now(), rows };
+    }
+    return rows;
+  })();
+
+  __leaderboardInflight[inflightKey] = request;
+  try {
+    return await request;
+  } finally {
+    __leaderboardInflight[inflightKey] = null;
   }
-  return rows;
 }
 
 function updateStreakBanner() {
+  if (typeof DailyGoalState !== 'undefined' && DailyGoalState.row && typeof renderDailyGoal === 'function') {
+    renderDailyGoal();
+    return;
+  }
   const days = App.streak || 0;
-  const cnt = App.dailyWords || 0;
-  const pct = Math.min((cnt / 30) * 100, 100);
+  const total = (Number(App.dailyGoalMinutes) || 10) * 2;
   const bannerDays = document.getElementById('banner-days');
   const bannerCount = document.getElementById('banner-today-count');
   const streakFill = document.getElementById('streak-bar-fill');
   const hintEl = document.getElementById('banner-hint');
   const doneEl = document.getElementById('streak-done');
   const lbl = document.getElementById('banner-days-label');
-
+  const progressStart = document.getElementById('daily-progress-start');
+  const progressGoal = document.getElementById('daily-progress-goal');
+  const targets = typeof dailyGoalTargets === 'function' ? dailyGoalTargets(App.dailyGoalMinutes) : null;
   if (bannerDays) bannerDays.textContent = days;
   if (lbl) lbl.textContent = getDaysLabel(days);
-  if (bannerCount) bannerCount.textContent = cnt >= DAILY_STREAK_GOAL ? cnt + ' слов сегодня' : cnt + ' / ' + DAILY_STREAK_GOAL + ' слов';
-  if (streakFill) streakFill.style.width = pct + '%';
-
-  if (cnt >= DAILY_STREAK_GOAL) {
-  if (hintEl) hintEl.classList.add('hidden');
-    if (doneEl) doneEl.classList.remove('hidden');
-  } else {
-    if (hintEl) hintEl.classList.remove('hidden');
-    if (doneEl) doneEl.classList.add('hidden');
+  if (bannerCount) bannerCount.textContent = '0 / ' + total + ' заданий';
+  if (progressStart) progressStart.textContent = '0 заданий';
+  if (progressGoal) progressGoal.textContent = 'Цель: ' + total + ' заданий';
+  if (targets) {
+    const newEl = document.getElementById('daily-new-progress');
+    const reviewEl = document.getElementById('daily-review-progress');
+    const typingEl = document.getElementById('daily-typing-progress');
+    if (newEl) newEl.textContent = '0 / ' + targets.new_target;
+    if (reviewEl) reviewEl.textContent = '0 / ' + targets.review_target;
+    if (typingEl) typingEl.textContent = '0 / ' + targets.typing_target;
   }
-
+  if (streakFill) streakFill.style.width = '0%';
+  if (hintEl) {
+    hintEl.classList.remove('hidden');
+    hintEl.textContent = 'Задание дня загрузится после выбора тома.';
+  }
+  if (doneEl) doneEl.classList.add('hidden');
   loadStreakRank();
 }
 

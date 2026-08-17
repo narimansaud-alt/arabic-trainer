@@ -24,7 +24,7 @@
 //     that requires zero password resets.
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import bcrypt from "bcryptjs";
+import bcrypt from "npm:bcryptjs@3.0.2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -214,10 +214,18 @@ function scrubLogValue(value: unknown): unknown {
 
 async function logClientError(body: Record<string, unknown>, req: Request) {
   const context = typeof body.context === "object" && body.context !== null ? scrubLogValue(body.context) : null;
+  const allowedKinds = new Set(["error", "unhandled-rejection", "resource", "api", "invariant", "pwa", "diagnostic"]);
+  const allowedSeverities = new Set(["info", "warning", "error", "fatal"]);
+  const kind = typeof body.kind === "string" && allowedKinds.has(body.kind) ? body.kind : "error";
+  const severity = typeof body.severity === "string" && allowedSeverities.has(body.severity) ? body.severity : "error";
   const { error } = await db.from("app_error_log").insert({
     username: shortText(body.username, 32),
     source: shortText(body.source, 80),
     message: shortText(body.message, 1000) || "Unknown client error",
+    kind,
+    severity,
+    fingerprint: shortText(body.fingerprint, 300),
+    occurred_at: shortText(body.occurred_at, 80),
     stack: shortText(body.stack, 4000),
     url: shortText(body.url, 1000),
     user_agent: shortText(body.user_agent, 1000),
@@ -315,6 +323,59 @@ Deno.serve(async (req: Request) => {
             return json({ ok: true, user: stripSecrets(user), wordStats: stats || [] });
           }
 
+          case "get-daily-goal": {
+            const courseName = typeof body.course_name === "string" ? body.course_name.slice(0, 64) : "";
+            if (!/^Мединский курс \(Том [1-4]\)$/.test(courseName)) return badRequest("Unsupported course");
+            const { data, error } = await db.rpc("ensure_user_daily_goal", {
+              p_username: username,
+              p_course_name: courseName,
+            });
+            if (error) return badRequest(error.message);
+            const refreshed = await getUserByUsername(username);
+            return json({
+              ok: true,
+              goal: data,
+              daily_goal_minutes: Number(refreshed?.daily_goal_minutes || 10),
+              daily_goal_selected_at: refreshed?.daily_goal_selected_at || null,
+              daily_goals_completed: Number(refreshed?.daily_goals_completed || 0),
+            });
+          }
+
+          case "set-daily-goal-minutes": {
+            const minutes = body.minutes;
+            if (!isIntegerInRange(minutes, 5, 30) || ![5, 10, 20, 25, 30].includes(minutes)) {
+              return badRequest("Unsupported daily goal");
+            }
+            const { data, error } = await db.rpc("set_user_daily_goal_minutes", {
+              p_username: username,
+              p_minutes: minutes,
+            });
+            if (error) return badRequest(error.message);
+            return json({ ok: true, ...(data as Record<string, unknown>) });
+          }
+
+          case "sync-daily-goal-progress": {
+            const courseName = typeof body.course_name === "string" ? body.course_name.slice(0, 64) : "";
+            if (!/^Мединский курс \(Том [1-4]\)$/.test(courseName)) return badRequest("Unsupported course");
+            const newCompleted = body.new_completed;
+            const reviewCompleted = body.review_completed;
+            const typingCompleted = body.typing_completed;
+            if (
+              !isIntegerInRange(newCompleted, 0, 1000000) ||
+              !isIntegerInRange(reviewCompleted, 0, 1000000) ||
+              !isIntegerInRange(typingCompleted, 0, 1000000)
+            ) return badRequest("Daily goal progress invalid");
+            const { data, error } = await db.rpc("sync_user_daily_goal_progress", {
+              p_username: username,
+              p_course_name: courseName,
+              p_new_completed: newCompleted,
+              p_review_completed: reviewCompleted,
+              p_typing_completed: typingCompleted,
+            });
+            if (error) return badRequest(error.message);
+            return json({ ok: true, ...(data as Record<string, unknown>) });
+          }
+
       case "update-word-stat": {
             const wordAr = body.word_ar;
             if (typeof wordAr !== "string" || !wordAr) return badRequest("word_ar required");
@@ -397,25 +458,10 @@ Deno.serve(async (req: Request) => {
           }
 
           case "update-streak": {
-            // Server recomputes streak from last_activity rather than
-            // trusting a client-supplied streak number directly, to
-            // avoid letting a tampered client award itself days.
-            const today = moscowDateKey();
-            if (user.last_count_date !== today || Number(user.daily_words || 0) < DAILY_STREAK_GOAL) {
-              return json({ ok: true, streak: Number(user.streak || 0), max_streak: Number(user.max_streak || 0), unchanged: true });
-            }
-            const last = user.last_activity as string | null;
-            let streak = (user.streak as number) || 0;
-            if (last !== today) {
-              streak = last === moscowDateKey(-1) ? streak + 1 : 1;
-            }
-            const maxStreak = Math.max(streak, (user.max_streak as number) || 0);
-            const { error } = await db
-              .from("users")
-              .update({ streak, last_activity: today, max_streak: maxStreak })
-              .eq("username", username);
-            if (error) return badRequest(error.message);
-            return json({ ok: true, streak, max_streak: maxStreak });
+            // Compatibility endpoint for older clients. A streak is now
+            // awarded only by sync_user_daily_goal_progress after the full plan.
+            const refreshed = await getUserByUsername(username);
+            return json({ ok: true, streak: Number(refreshed?.streak || 0), max_streak: Number(refreshed?.max_streak || 0), unchanged: true });
           }
 
           case "update-daily-count": {
@@ -447,6 +493,8 @@ Deno.serve(async (req: Request) => {
       username: shortText(body.username, 32),
       source: "edge-function",
       message: shortText(error.message, 1000) || "Internal error",
+      kind: "error",
+      severity: "fatal",
       stack: shortText(error.stack, 4000),
       context: scrubLogValue({ action }),
       client_ip: shortText(req.headers.get("cf-connecting-ip") || req.headers.get("x-forwarded-for"), 80),

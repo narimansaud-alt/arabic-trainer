@@ -31,6 +31,7 @@ const FILES = [
   './src/verb-rules.js',
   './src/quiz.js',
   './src/learn.js',
+  './src/daily.js',
   './src/main.js',
   './books/ar_01_Lessons_in_Arabic_Language.pdf',
 ];
@@ -59,6 +60,7 @@ const APP_SHELL_NETWORK_FIRST = [
   './src/verb-rules.js',
   './src/quiz.js',
   './src/learn.js',
+  './src/daily.js',
   './src/main.js'
 ];
 

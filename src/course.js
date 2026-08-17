@@ -2,6 +2,7 @@
 
 function goToCourse() {
   updateStreakBanner();
+  if (typeof maybePromptDailyGoalChoice === 'function' && maybePromptDailyGoalChoice()) return;
   showVolumeScreen('Мединский курс', 'med');
 }
 
@@ -40,6 +41,7 @@ function showVolumeScreen(courseName, key) {
 function openCourseSettings() {
   showScreen('screen-app');
   switchTab('settings');
+  if (typeof updateDailyGoalSettingsUI === 'function') updateDailyGoalSettingsUI();
 }
 
 async function selectVolume(volumeId) {
@@ -72,10 +74,11 @@ async function selectVolume(volumeId) {
   showScreen('screen-app');
   try {
     await Promise.all([
-      withTimeout(loadDict(), 6000, 'load-dict'),
-      withTimeout(loadRulesAll(), 6000, 'load-rules'),
-      updateStreak(false),
+      withTimeout(loadDict(), 12000, 'load-dict'),
+      withTimeout(loadRulesAll(), 12000, 'load-rules'),
     ]);
+    if (typeof loadDailyGoal === 'function') await loadDailyGoal();
+    if (typeof restoreProgress === 'function') await restoreProgress();
   } catch (e) {
     ErrorLog.capture(e, { source: 'course', action: 'select-volume-hydrate' });
   }

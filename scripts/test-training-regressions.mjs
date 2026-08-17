@@ -40,7 +40,11 @@ const context = {
   App: { username: 'tester', password: null, favorites: [], wordStats: {} },
   Dict: { allWords: [], byLesson: {} },
   Api: { async call(action, payload) { apiCalls.push({ action, payload }); return {}; } },
-  ErrorLog: { capture(error) { throw error; } },
+  ErrorLog: {
+    capture(error) { throw error; },
+    invariant(condition, code) { assert.equal(condition, true, code); return condition; },
+    diagnostic() {},
+  },
   localStorage: { getItem() { return null; }, setItem() {} },
   window: { addEventListener() {}, scrollTo() {} },
   document: {
@@ -106,6 +110,13 @@ context.App.wordStats = {
 context.startQuiz(false);
 assert.equal(alerts.length, 0, 'review must not show the old no-due-words blocker');
 assert.deepEqual(Array.from(vm.runInContext('queue.map((word) => word.ar)', context)), ['أَوَّلٌ', 'ثَانٍ'], 'review must include already completed words');
+context.Settings.mode = 'type-ar';
+context.App.favorites = ['ثَانٍ'];
+context.startQuiz(true);
+assert.equal(vm.runInContext('quizMode', context), 'type-ar', 'difficult-only training must preserve the selected mode');
+assert.equal(vm.runInContext('sessionOnlyFavorites', context), true, 'difficult-only filter must be retained for replay');
+assert.deepEqual(Array.from(vm.runInContext('queue.map((word) => word.ar)', context)), ['ثَانٍ'], 'difficult-only training must contain only marked words');
+
 
 apiCalls.length = 0;
 context.App.favorites = [];
@@ -125,8 +136,46 @@ assert.deepEqual(context.App.favorites, ['صَعْبٌ'], 'the star button must 
 assert.equal(apiCalls.at(-1)?.payload.is_favorite, true, 'manual addition must be persisted');
 
 assert.match(learnSource, /updateWordLevel\(card\.key, false\)/u, 'learn mode errors must use the shared difficult-word path');
+context.App.wordStats = { 'ثَابِتٌ': { level: 1, seen: 0, next: null } };
+vm.runInContext('sessionIntervalRaised = new Set(); sessionFailedWords = new Set();', context);
+await context.updateWordLevel('ثَابِتٌ', true);
+await context.updateWordLevel('ثَابِتٌ', true);
+assert.equal(context.App.wordStats['ثَابِتٌ'].level, 2, 'one session may raise the SRS interval only once per word');
+
+const restoredCards = vm.runInContext(
+  "toSafeLearnCardList([{w:{ar:'عِلْمٌ',ru:'знание'},stage:3,key:'عِلْمٌ'}])",
+  context
+);
+assert.equal(restoredCards.length, 1, 'saved learn cards with nested words must be restorable');
+assert.equal(restoredCards[0].stage, 3, 'the learn stage must survive restoration');
+assert.equal(restoredCards[0].key, 'عِلْمٌ', 'the learn card key must survive restoration');
+
+vm.runInContext(`
+  quizMode = 'fast';
+  currentDailyTask = null;
+  roundAttempts = 0;
+  roundCorrect = 0;
+  roundWrong = [];
+  roundAttemptedWords = [];
+  roundUserAnswers = {};
+  lives = 3;
+  fastWords = 0;
+  curWord = { ar: 'سَرِيعٌ', ru: 'быстрый' };
+`, context);
+await context.handleFast(fakeElement(), true, 'سَرِيعٌ', false);
+vm.runInContext("curWord = { ar: 'بَطِيءٌ', ru: 'медленный' };", context);
+await context.handleFast(fakeElement(), false, 'بَطِيءٌ', false);
+assert.equal(vm.runInContext('roundAttempts', context), 2, 'fast mode must count every answered card');
+assert.equal(vm.runInContext('roundCorrect', context), 1, 'fast mode must count correct answers');
+assert.deepEqual(Array.from(vm.runInContext('roundWrong.map((word) => word.ar)', context)), ['بَطِيءٌ'], 'fast mode must retain wrong answers');
+
 assert.match(quizSource, /updateWordLevel\(curWord\.ar, false\)/u, 'quiz errors must use the shared difficult-word path');
 assert.match(htmlSource, /id="star-btn"[^>]+onclick="toggleStar\(\)"/u, 'the manual difficult-word button must remain in the quiz card');
 assert.match(htmlSource, /id="type-format-hint"/u, 'the writing mode must contain the format hint');
 
+assert.match(learnSource, /btnNext\.classList\.remove\('hidden'\)[\s\S]*setTimeout\(\(\) => nextLearnCard\(\), 3000\)/u, 'a wrong learn answer must always expose a continuation path');
+assert.doesNotMatch(quizSource + learnSource, /\b(?:curWord|w)\.userAnswer\b/u, 'answers must not mutate shared dictionary word objects');
+assert.match(quizSource, /completedMode === 'fast' \? toSafeWordList\(roundAttemptedWords/u, 'early fast results must include attempted words only');
+assert.match(quizSource, /initQuiz\(previous\.words\.map[\s\S]*previous\.mode, previous\.isFav\)/u, 'repeat must preserve the previous mode and difficult-only filter');
+assert.match(quizSource, /mode: quizMode/u, 'saved progress must store the effective session mode');
 console.log('Training regression tests passed.');

@@ -78,8 +78,9 @@ function nextLearnCard() {
 
 function learnStageAdvance(ok) {
   const card = curLearnCard;
+  const completedWord = ok && card.stage >= LEARN_STAGE_COUNT - 1;
   if (ok) {
-    if (card.stage >= LEARN_STAGE_COUNT - 1) {
+    if (completedWord) {
       learnDoneWords.push(card.w);
       roundCorrect++;
       learnRemoveAndMaybeReinsert(null, 0);
@@ -88,13 +89,14 @@ function learnStageAdvance(ok) {
       const ahead = card.stage === LEARN_STAGE_COUNT - 1 ? LEARN_REINSERT_OK + 3 : LEARN_REINSERT_OK;
       learnRemoveAndMaybeReinsert(card, ahead);
     }
-    updateWordLevel(card.key, true);
   } else {
     if (!roundWrong.find((w) => w.ar === card.key)) roundWrong.push(card.w);
     learnRemoveAndMaybeReinsert(card, LEARN_REINSERT_ERR);
-    updateWordLevel(card.key, false);
   }
-  if (ok) addDailyWord();
+  if (completedWord) {
+    updateWordLevel(card.key, true);
+    countCompletedWordOnce(card.key);
+  } else if (!ok) updateWordLevel(card.key, false);
 }
 
 function renderLearnQ() {
@@ -133,7 +135,7 @@ function renderLearnQ() {
       <div style="width:100%">
         <div class="learn-intro-ar">${esc(curWord.ar)}</div>
         <div class="learn-intro-ru">${esc(curWord.ru)}</div>
-        <div class="learn-intro-hint">Значит — дальше можно продолжать с</div>
+        <div class="learn-intro-hint">Прочитайте слово и перевод, затем продолжайте.</div>
       </div>`;
     }
     if (btnNext) {
@@ -202,6 +204,7 @@ function renderLearnQ() {
 }
 
 async function handleLearnAns(btn, ok, correct, isAr) {
+  registerQuizAttempt(curWord, btn?.textContent || '');
   const optionButtons = document.querySelectorAll('.opt');
   optionButtons.forEach((b) => (b.disabled = true));
   const fb = learnGetEl('feedback');
@@ -233,15 +236,19 @@ async function handleLearnAns(btn, ok, correct, isAr) {
         esc(correct) +
         '</span>';
     }
-    curWord.userAnswer = btn ? btn.textContent : '';
+    roundUserAnswers[curWord.ar] = btn ? btn.textContent : '';
     learnStageAdvance(false);
-}
+    const btnNext = learnGetEl('btn-next');
+    if (btnNext) btnNext.classList.remove('hidden');
+    pauseTmo = setTimeout(() => nextLearnCard(), 3000);
+  }
 }
 function checkTypedLearn() {
   if (isHist) return;
   const inp = learnGetEl('type-input');
   if (!inp) return;
   const val = inp.value.trim();
+  registerQuizAttempt(curWord, val);
   const fb = learnGetEl('feedback');
   inp.disabled = true;
   const hintBtn = learnGetEl('btn-hint');
@@ -264,7 +271,7 @@ function checkTypedLearn() {
       fb.className = 'feedback err';
       fb.innerHTML = 'Ошибка. Правильно: <span class="answer-ar" dir="rtl">' + esc(curWord.ar) + '</span>';
     }
-    curWord.userAnswer = val;
+    roundUserAnswers[curWord.ar] = val;
     learnStageAdvance(false);
     const btnNext = learnGetEl('btn-next');
     if (btnNext) btnNext.classList.remove('hidden');
