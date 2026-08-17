@@ -592,6 +592,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:#222
 .btn-check{width:100%;padding:13px;background:var(--green);color:white;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px;}
 .btn-hint{width:100%;padding:10px;background:rgba(201,162,39,0.12);color:var(--gold);border:2px solid var(--gold);border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;}
 .hint-cost{font-size:12px;color:var(--gray);text-align:center;margin-bottom:6px;}
+.type-format-hint{direction:ltr;text-align:left;font-size:14px;line-height:1.5;color:var(--ink-soft);background:#f7f7f7;border:1px solid var(--line);border-radius:11px;padding:9px 11px;margin-bottom:9px;}
 .feedback{font-size:15px;font-weight:600;text-align:center;min-height:46px;padding:6px 0;line-height:1.5;}
 .feedback.ok{color:#1e8449;}
 .feedback.err{color:var(--red);}
@@ -1985,6 +1986,7 @@ button .ui-icon{margin-inline-end:.38rem;}
 .life-dot.is-active{background:#496a80;border-color:#496a80;}
 .star-btn.is-active{color:#3f6178!important;background:#edf2f5!important;}
 .star-btn.is-active svg{fill:currentColor!important;}
+#screen-quiz .word-card{padding-inline:64px!important;}
 
 .ui-icon--tiny{
   width:0.92em;
@@ -3505,6 +3507,7 @@ button,input,select,textarea{max-width:100%;min-width:0;}
     </div>
     <div class="opts hidden" id="opts"></div>
     <div class="hidden" id="type-area">
+      <div class="type-format-hint hidden" id="type-format-hint" role="note"></div>
       <input class="type-input" id="type-input" type="text" placeholder="اكتب بالعربية..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" dir="rtl">
       <button class="btn-check" onclick="checkTyped()">Проверить</button>
       <div class="hint-cost" id="hint-cost-label"></div>

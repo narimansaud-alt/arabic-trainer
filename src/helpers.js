@@ -18,13 +18,93 @@ function rmH(t) {
     .trim();
 }
 
+function stripArabicTatweel(value) {
+  return String(value || '').replace(/ـ/gu, '');
+}
+
 function normalizeArabicAnswer(value, mode = Settings.answerCheck || 'learning') {
-  const text = String(value || '').normalize('NFC').replace(/\s+/gu, ' ').trim();
+  const text = stripArabicTatweel(value)
+    .normalize('NFC')
+    .replace(/\s*\/\s*/gu, '/')
+    .replace(/\s+/gu, ' ')
+    .trim();
   return mode === 'strict' ? text : rmH(text);
 }
 
+function parseArabicAnswerSpec(expected) {
+  const source = String(expected || '').normalize('NFC').trim();
+  const slashParts = source
+    .split(/\s*\/\s*/gu)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (slashParts.length > 1) {
+    return { kind: 'required-pair', source, parts: slashParts, primary: slashParts.join('/'), hasTatweel: source.includes('ـ') };
+  }
+
+  const parenthetical = source.match(/^(.+?)\s*\(\s*([^()]*)\s*\)\s*$/u);
+  if (parenthetical) {
+    const main = parenthetical[1].trim();
+    const note = parenthetical[2].trim();
+    if (/[\u0600-\u06ff]/u.test(note)) {
+      if (rmH(note).startsWith('ي')) {
+        return { kind: 'required-pair', source, parts: [main, note], primary: main + '/' + note, hasTatweel: source.includes('ـ') };
+      }
+      return { kind: 'alternatives', source, parts: [main, note], primary: main, hasTatweel: source.includes('ـ') };
+    }
+    return { kind: 'single', source, parts: [main], primary: main, hasTatweel: source.includes('ـ') };
+  }
+
+  const alternatives = source
+    .split(/\s*،\s*/gu)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (alternatives.length > 1) {
+    return { kind: 'alternatives', source, parts: alternatives, primary: alternatives[0], hasTatweel: source.includes('ـ') };
+  }
+
+  return { kind: 'single', source, parts: [source], primary: source, hasTatweel: source.includes('ـ') };
+}
+
+function normalizeRequiredPairInput(value, mode) {
+  const source = String(value || '').normalize('NFC').trim();
+  const parenthetical = source.match(/^(.+?)\s*\(\s*([^()]*)\s*\)\s*$/u);
+  const canonical =
+    parenthetical && /[\u0600-\u06ff]/u.test(parenthetical[2])
+      ? parenthetical[1].trim() + '/' + parenthetical[2].trim()
+      : source;
+  const parts = canonical
+    .split(/\s*\/\s*/gu)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  return parts.map((part) => normalizeArabicAnswer(part, mode));
+}
+
 function isArabicAnswerCorrect(actual, expected, mode = Settings.answerCheck || 'learning') {
-  return normalizeArabicAnswer(actual, mode) === normalizeArabicAnswer(expected, mode);
+  const spec = parseArabicAnswerSpec(expected);
+  if (spec.kind === 'required-pair') {
+    const actualParts = normalizeRequiredPairInput(actual, mode);
+    const expectedParts = spec.parts.map((part) => normalizeArabicAnswer(part, mode));
+    return actualParts.length === expectedParts.length && actualParts.every((part, index) => part === expectedParts[index]);
+  }
+
+  const normalizedActual = normalizeArabicAnswer(actual, mode);
+  return spec.parts.some((part) => normalizedActual === normalizeArabicAnswer(part, mode));
+}
+
+function getArabicAnswerInputHint(expected) {
+  const spec = parseArabicAnswerSpec(expected);
+  const hints = [];
+  if (spec.kind === 'required-pair') {
+    hints.push('Введите обе формы через «/»: прошедшее / настоящее-будущее.');
+  } else if (spec.kind === 'alternatives') {
+    hints.push('Достаточно ввести один из вариантов.');
+  }
+  if (spec.hasTatweel) hints.push('Знак присоединения «ـ» вводить не нужно.');
+  return hints.join(' ');
+}
+
+function getArabicAnswerHintTarget(expected) {
+  return stripArabicTatweel(parseArabicAnswerSpec(expected).primary);
 }
 
 function answerCheckLabel(mode = Settings.answerCheck || 'learning') {

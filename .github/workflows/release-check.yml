@@ -24,3 +24,5 @@ jobs:
         run: python -m py_compile services/qutrub-worker/src/entry.py
       - name: Run release invariants
         run: node scripts/release-check.mjs
+      - name: Run training regressions
+        run: node scripts/test-training-regressions.mjs

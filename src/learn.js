@@ -119,6 +119,7 @@ function renderLearnQ() {
   }
   if (opts) opts.classList.add('hidden');
   if (typeArea) typeArea.classList.add('hidden');
+  renderArabicInputFormatHint('');
   if (opts) opts.innerHTML = '';
 
   const stage = curLearnCard.stage;
@@ -150,6 +151,7 @@ function renderLearnQ() {
     const wordDisplay = learnGetEl('word-display');
     if (wordDisplay) wordDisplay.innerHTML = `<div class="w-ru">${esc(curWord.ru)}</div>`;
     if (typeArea) typeArea.classList.remove('hidden');
+    renderArabicInputFormatHint(curWord.ar);
     const inp = learnGetEl('type-input');
     if (!inp) return;
     inp.value = '';
@@ -240,14 +242,13 @@ function checkTypedLearn() {
   const inp = learnGetEl('type-input');
   if (!inp) return;
   const val = inp.value.trim();
-  const correct = curWord.ar.replace(/\s*\(.*?\)\s*/g, '');
   const fb = learnGetEl('feedback');
   inp.disabled = true;
   const hintBtn = learnGetEl('btn-hint');
   if (hintBtn) hintBtn.style.display = 'none';
   const hintLbl = learnGetEl('hint-cost-label');
   if (hintLbl) hintLbl.textContent = '';
-  if (isArabicAnswerCorrect(val, correct, Settings.answerCheck)) {
+  if (isArabicAnswerCorrect(val, curWord.ar, Settings.answerCheck)) {
     const penalty = hintCount * 5;
     const pts = Math.max(0, 20 - penalty);
     if (fb) {

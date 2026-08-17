@@ -71,6 +71,7 @@ function getNextReview(level, ok) {
 }
 async function updateWordLevel(ar, ok) {
   roundAttempts++;
+  if (!ok) setWordFavoriteLocal(ar, true);
   const s = App.wordStats[ar] || {};
   const cur = s.level || 1;
   const nl = ok ? Math.min(cur + 1, 5) : Math.max(cur - 1, 1);
@@ -154,20 +155,7 @@ function startQuiz(onlyFav) {
   if (!words.length) return alert(onlyFav ? 'Нет трудных слов в выбранных уроках' : 'Слова не найдены');
   const effectiveMode = onlyFav ? 'learn' : Settings.mode;
   const limit = effectiveMode === 'fast' ? Settings.qtyFast : Settings.qtyNormal;
-  if (effectiveMode === 'review' && !onlyFav) {
-    const now = new Date().toISOString();
-    const due = words.filter((w) => {
-      const s = App.wordStats[w.ar];
-      return !s || !s.next || s.next <= now;
-    });
-    if (!due.length) {
-      alert('На сегодня нечего повторять из выбранных уроков.\nВыберите другие уроки или вернитесь позже.');
-      return;
-    }
-    initQuiz(getSmartQueue(due, limit), effectiveMode, onlyFav);
-  } else {
-    initQuiz(getSmartQueue(words, limit), effectiveMode, onlyFav);
-  }
+  initQuiz(getSmartQueue(words, limit), effectiveMode, onlyFav);
 }
 
 function initQuiz(words, effectiveMode, isFav) {
@@ -257,6 +245,13 @@ function nextWord(inc) {
   renderQ();
 }
 
+function renderArabicInputFormatHint(expected) {
+  const el = quizGetEl('type-format-hint');
+  const text = expected ? getArabicAnswerInputHint(expected) : '';
+  el.textContent = text;
+  el.classList.toggle('hidden', !text);
+}
+
 function renderQ() {
   quizGetEl('q-prog').textContent = qi + 1 + '/' + queue.length;
   quizGetEl('q-bar').style.width = ((qi + 1) / queue.length) * 100 + '%';
@@ -269,6 +264,7 @@ function renderQ() {
   const typeArea = quizGetEl('type-area');
   opts.classList.add('hidden');
   typeArea.classList.add('hidden');
+  renderArabicInputFormatHint('');
   opts.innerHTML = '';
 
   if (isHist) quizGetEl('feedback').innerHTML = '<span class="feedback-note">Просмотр ответа</span>';
@@ -279,6 +275,7 @@ function renderQ() {
     hintCount = 0;
     quizGetEl('word-display').innerHTML = `<div class="w-ru">${esc(curWord.ru)}</div>`;
     typeArea.classList.remove('hidden');
+    renderArabicInputFormatHint(curWord.ar);
     const inp = quizGetEl('type-input');
     inp.value = '';
     inp.disabled = false;
@@ -377,7 +374,7 @@ async function handleAns(btn, ok, correct, isAr) {
 // HINT for type-ar mode
 function showHint() {
   if (!curWord || isHist) return;
-  const fullWord = rmH(curWord.ar.replace(/\s*\(.*?\)\s*/g, ''));
+  const fullWord = rmH(getArabicAnswerHintTarget(curWord.ar));
   hintCount++;
   const inp = quizGetEl('type-input');
   const revealedPart = fullWord.substring(0, hintCount);
@@ -405,14 +402,13 @@ function checkTyped() {
     return;
   }
   const val = quizGetEl('type-input').value.trim();
-  const correct = curWord.ar.replace(/\s*\(.*?\)\s*/g, '');
   const fb = quizGetEl('feedback');
   quizGetEl('type-input').disabled = true;
   const hintBtn = quizGetEl('btn-hint');
   if (hintBtn) hintBtn.style.display = 'none';
   const hintLbl = quizGetEl('hint-cost-label');
   if (hintLbl) hintLbl.textContent = '';
-  if (isArabicAnswerCorrect(val, correct, Settings.answerCheck)) {
+  if (isArabicAnswerCorrect(val, curWord.ar, Settings.answerCheck)) {
     const penalty = hintCount * 5;
     const pts = Math.max(0, 20 - penalty);
     fb.className = 'feedback ok';
@@ -505,7 +501,6 @@ async function handleFast(btn, ok, correct, isTimeout) {
   } else {
     lives--;
     updFastUI();
-    addFav(curWord.ar);
     fb.className = 'feedback err';
     fb.innerHTML = (isTimeout ? 'Время истекло. ' : 'Ошибка. ') + '<span class="answer-ar" dir="rtl">' + esc(correct) + '</span>';
     if (lives <= 0) {
@@ -814,44 +809,36 @@ function restartQuiz() {
 }
 
 // FAVORITES / SCORING
-async function addFav(ar) {
-  if (!App.favorites.includes(ar)) {
-    App.favorites.push(ar);
-    if (App.username) {
-      try {
-        await Api.call('update-word-stat', {
-          username: App.username,
-          password: App.password,
-          word_ar: ar,
-          is_favorite: true,
-          seen_count: App.wordStats[ar]?.seen || 0,
-          level: App.wordStats[ar]?.level || 1,
-        });
-      } catch (e) {
-        ErrorLog.capture(e, { source: 'quiz', action: 'add-favorite', word: ar });
-      }
-    }
-  }
+function setWordFavoriteLocal(ar, active) {
+  const wasActive = App.favorites.includes(ar);
+  if (active && !wasActive) App.favorites.push(ar);
+  if (!active && wasActive) App.favorites = App.favorites.filter((word) => word !== ar);
+  if (curWord && curWord.ar === ar) renderFavoriteButton(quizGetEl('star-btn'), active);
+  return wasActive !== active;
 }
-async function toggleStar() {
-  if (!curWord) return;
-  const ar = curWord.ar,
-    was = App.favorites.includes(ar);
-  if (was) App.favorites = App.favorites.filter((w) => w !== ar);
-  else App.favorites.push(ar);
-  renderFavoriteButton(quizGetEl('star-btn'), !was);
+
+async function persistWordFavorite(ar, active, action) {
   try {
     await Api.call('update-word-stat', {
       username: App.username,
       password: App.password,
       word_ar: ar,
-      is_favorite: !was,
+      is_favorite: active,
       seen_count: App.wordStats[ar]?.seen || 0,
       level: App.wordStats[ar]?.level || 1,
     });
   } catch (e) {
-    ErrorLog.capture(e, { source: 'quiz', action: 'toggle-favorite', word: ar });
+    ErrorLog.capture(e, { source: 'quiz', action, word: ar });
   }
+}
+
+async function toggleStar() {
+  if (!curWord) return;
+  const ar = curWord.ar;
+  const active = !App.favorites.includes(ar);
+  setWordFavoriteLocal(ar, active);
+  if (!App.username) return;
+  await persistWordFavorite(ar, active, 'toggle-favorite');
 }
 async function logPts(pts) {
   if (!App.username) return;

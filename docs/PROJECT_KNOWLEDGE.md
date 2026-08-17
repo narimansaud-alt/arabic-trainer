@@ -102,12 +102,16 @@ Authentication decision:
 ## Trainer behavior
 
 - Training modes include learn, Arabic typing, review, mix, and fast review.
+- Review is always available for words in the selected lessons: due and weak words remain prioritized, while already completed words fill the queue when nothing is due.
 - Arabic typing has educational and strict checking modes.
 - Strict checking preserves distinct hamza forms and checks diacritics.
 - Educational checking permits omitted vowel marks but does not collapse different Arabic letters.
+- Slash-separated verb pairs and Arabic present forms in parentheses require both forms; the writing screen shows the required `past / present-future` input format.
+- Arabic comma variants and non-verb Arabic parenthetical forms accept either variant. Tatweel used as an attachment marker is never required in typed answers.
 - Session progress is tied to the active username and volume.
 - Changing volumes clears the active training session to prevent state leakage.
 - Attempts and correct answers are tracked separately.
+- Every wrong answer automatically marks the word as difficult; the star button remains the explicit add/remove control, and later correct answers do not silently clear the mark.
 - A word's review interval can increase at most once in a single training session; an error schedules a short retry interval.
 
 ## Database change procedure
