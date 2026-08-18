@@ -3031,16 +3031,23 @@ button,input,select,textarea{max-width:100%;min-width:0;}
 #tab-rules .rule-check-card .ar-tone-default,
 #tab-rules .rule-example-ru .ar-tone-default,
 #tab-rules .rule-term-ru .ar-tone-default{color:#246076!important;}
+#tab-rules .rule-study .tbl-wrap td[dir="rtl"],
 #tab-rules .rule-study .tbl-wrap td [dir="rtl"],
 #tab-rules .rule-study .tbl-wrap td .ar-term,
 #tab-rules .rule-study .tbl-wrap td .ar-inline,
 #tab-rules .rule-study .tbl-wrap td .ar-text,
 #tab-rules .rule-study .tbl-wrap td .ar-sentence{
+  direction:rtl!important;
+  unicode-bidi:isolate!important;
+  color:#246076!important;
   font-family:var(--ui-font-ar)!important;
   font-size:clamp(20px,4.8vw,24px)!important;
   font-weight:850!important;
   line-height:1.75!important;
+  text-align:right!important;
   white-space:normal!important;
+  overflow-wrap:normal!important;
+  word-break:normal!important;
 }
 #tab-rules .rule-study .tbl-wrap th [dir="rtl"],
 #tab-rules .rule-study .tbl-wrap th .ar-term,
