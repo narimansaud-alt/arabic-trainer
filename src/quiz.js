@@ -1139,6 +1139,7 @@ async function finishQuiz() {
   showScreen('screen-results');
 }
 function backToMenu() {
+  if (typeof closeTrainingModeSetup === 'function') closeTrainingModeSetup();
   showScreen('screen-app');
   switchTab('train');
   if (typeof renderDailyGoal === 'function') renderDailyGoal();

@@ -45,6 +45,7 @@ function openCourseSettings() {
 }
 
 async function selectVolume(volumeId) {
+  if (typeof closeTrainingModeSetup === 'function') closeTrainingModeSetup();
   const volumeChanged = Boolean(App.volume && App.volume !== volumeId);
   if (volumeChanged) {
     if (typeof resetQuizState === 'function') resetQuizState();

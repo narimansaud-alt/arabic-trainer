@@ -4,6 +4,9 @@ import vm from 'node:vm';
 
 const root = new URL('../', import.meta.url);
 const setupSource = fs.readFileSync(new URL('src/training-setup.js', root), 'utf8');
+const mainSource = fs.readFileSync(new URL('src/main.js', root), 'utf8');
+const dictSource = fs.readFileSync(new URL('src/dict.js', root), 'utf8');
+const courseSource = fs.readFileSync(new URL('src/course.js', root), 'utf8');
 const quizSource = fs.readFileSync(new URL('src/quiz.js', root), 'utf8');
 const stateSource = fs.readFileSync(new URL('src/state.js', root), 'utf8');
 const lbSource = fs.readFileSync(new URL('src/lb.js', root), 'utf8');
@@ -130,5 +133,18 @@ const resetAppSource = stateSource.match(/function resetApp\(\) \{([\s\S]*?)\n\}
 assert.match(resetAppSource, /resetDailyGoalState/u, 'logout must clear the previous account daily-goal state');
 
 assert.match(setupSource, /mode === 'fast'.*renderFastTrainingPicker/su, 'fast mode must have a dedicated multi-volume picker');
+assert.match(setupSource, /function openTrainingModeSetup\(\)/u, 'clicking a mode must open a dedicated setup page');
+assert.match(setupSource, /function closeTrainingModeSetup\(\)/u, 'the setup page must have an explicit return path');
+assert.match(setupSource, /training-mode-page-head/u, 'the dedicated setup page must render its own header');
+assert.match(setupSource, /tab\.appendChild\(root\)/u, 'the setup page must be a direct child of the training tab, not an inline mode-card panel');
+assert.doesNotMatch(setupSource, /insertAdjacentElement\('afterend', root\)/u, 'the setup page must not be inserted below the mode buttons');
+assert.match(setupSource, /actions\.appendChild\(startButton\)/u, 'the start action must live inside the selected mode page');
+assert.match(mainSource, /openTrainingModeSetup\(\)/u, 'mode cards must enter the setup page');
+assert.match(dictSource, /t !== 'train'.*closeTrainingModeSetup/su, 'leaving the training tab must close its setup page');
+assert.match(courseSource, /selectVolume[\s\S]*closeTrainingModeSetup/u, 'changing volume must close stale mode setup state');
+assert.match(quizSource, /backToMenu[\s\S]*closeTrainingModeSetup/u, 'returning from results must restore the mode menu');
+assert.match(cssSource, /#tab-train\.training-mode-page-open > :not\(#training-mode-config\)/u, 'only the setup page must remain visible while a mode is open');
+assert.match(cssSource, /#tab-train:not\(\.training-mode-page-open\) > #btn-start/u, 'start controls must not flash on the mode menu before JavaScript moves them');
+assert.match(cssSource, /@media \(max-width: 520px\)[\s\S]*training-mode-page-head/u, 'the dedicated setup page must have a mobile layout');
 
 console.log('Training mode setup regression tests passed.');

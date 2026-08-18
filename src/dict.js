@@ -1483,6 +1483,7 @@ function renderPronounReferenceTable() {
 
 // TABS
 function switchTab(t) {
+  if (t !== 'train' && typeof closeTrainingModeSetup === 'function') closeTrainingModeSetup();
   document.querySelectorAll('.tab-content').forEach((p) => p.classList.remove('active'));
   document.querySelectorAll('.app-tab').forEach((b) => b.classList.remove('active'));
   const tab = document.getElementById('tab-' + t);

@@ -29,6 +29,7 @@ const TRAINING_MODE_META = {
 };
 
 const TrainingSetup = {
+  pageOpen: false,
   loadedFor: null,
   normalSelections: {},
   fastSelections: {},
@@ -476,6 +477,29 @@ function renderTrainingQuantity() {
     </div>`;
 }
 
+function openTrainingModeSetup() {
+  TrainingSetup.pageOpen = true;
+  const tab = document.getElementById('tab-train');
+  if (tab) {
+    tab.classList.add('training-mode-page-open');
+    tab.scrollTop = 0;
+  }
+  renderTrainingModeSetup();
+  if (typeof window?.scrollTo === 'function') window.scrollTo(0, 0);
+}
+
+function closeTrainingModeSetup() {
+  TrainingSetup.pageOpen = false;
+  const tab = document.getElementById('tab-train');
+  const root = document.getElementById('training-mode-config');
+  if (tab) {
+    tab.classList.remove('training-mode-page-open');
+    tab.scrollTop = 0;
+  }
+  root?.classList.add('hidden');
+  if (typeof window?.scrollTo === 'function') window.scrollTo(0, 0);
+}
+
 function renderTrainingModeSetup() {
   const root = ensureTrainingModeConfigRoot();
   if (!root) return;
@@ -488,19 +512,44 @@ function renderTrainingModeSetup() {
     button.classList.toggle('active', buttonMode === mode);
   });
   const answerRow = document.querySelector('.answer-check-row');
-  if (answerRow) answerRow.classList.toggle('hidden', !['learn', 'type-ar', 'mix'].includes(mode));
+  const startButton = document.getElementById('btn-start');
+  const favoriteButton = document.getElementById('btn-fav');
 
   const meta = TRAINING_MODE_META[mode];
   const picker = mode === 'fast' ? renderFastTrainingPicker() : renderNormalTrainingPicker(mode);
   root.innerHTML = `
-    <div class="training-mode-head">
-      <div><span>Настройка режима</span><h3>${esc(meta.title)}</h3></div>
+    <div class="training-mode-page-head">
+      <button class="training-mode-back" type="button" onclick="closeTrainingModeSetup()" aria-label="Вернуться к выбору режима">← <span>Назад</span></button>
+      <div class="training-mode-page-title"><span>Настройка режима</span><h2>${esc(meta.title)}</h2></div>
       <span class="training-mode-scope">${mode === 'fast' ? 'Тома 1–4' : esc(trainingVolumeLabel(App.volume))}</span>
     </div>
-    <p class="training-mode-note">${esc(meta.note)}</p>
-    <div class="training-picker">${picker}</div>
-    ${renderTrainingQuantity()}
-    <div class="training-selection-summary" id="mode-selection-summary" aria-live="polite"></div>`;
+    <div class="training-mode-page-body">
+      <p class="training-mode-note">${esc(meta.note)}</p>
+      <section class="training-mode-section" aria-labelledby="training-lessons-title">
+        <h3 class="training-mode-section-title" id="training-lessons-title">Выберите уроки</h3>
+        <div class="training-picker">${picker}</div>
+      </section>
+      <section class="training-mode-section training-quantity-section" aria-labelledby="training-quantity-title">
+        <h3 class="training-mode-section-title" id="training-quantity-title">Количество слов</h3>
+        ${renderTrainingQuantity()}
+      </section>
+      <section class="training-mode-section training-answer-slot hidden" id="training-answer-slot" aria-label="Проверка арабского ввода"></section>
+      <div class="training-selection-summary" id="mode-selection-summary" aria-live="polite"></div>
+      <div class="training-mode-actions" id="training-mode-actions"></div>
+    </div>`;
+
+  const answerSlot = document.getElementById('training-answer-slot');
+  const showAnswerOptions = ['learn', 'type-ar', 'mix'].includes(mode);
+  if (answerRow && answerSlot) {
+    answerRow.classList.toggle('hidden', !showAnswerOptions);
+    answerSlot.classList.toggle('hidden', !showAnswerOptions);
+    answerSlot.appendChild(answerRow);
+  }
+  const actions = document.getElementById('training-mode-actions');
+  if (actions && startButton) actions.appendChild(startButton);
+  if (actions && favoriteButton) actions.appendChild(favoriteButton);
+  root.classList.toggle('hidden', !TrainingSetup.pageOpen);
+  document.getElementById('tab-train')?.classList.toggle('training-mode-page-open', TrainingSetup.pageOpen);
   updateTrainingQuantityView();
 
   if (mode === 'fast' && !TrainingSetup.fastCatalogLoaded && !TrainingSetup.fastCatalogLoading && !TrainingSetup.fastCatalogError) {
@@ -509,14 +558,16 @@ function renderTrainingModeSetup() {
 }
 
 function ensureTrainingModeConfigRoot() {
+  const tab = document.getElementById('tab-train');
+  if (!tab) return null;
   let root = document.getElementById('training-mode-config');
   if (!root) {
-    const modeGrid = document.getElementById('mode-btns');
-    if (!modeGrid?.parentNode) return null;
     root = document.createElement('div');
     root.id = 'training-mode-config';
-    root.className = 'training-mode-config';
-    modeGrid.insertAdjacentElement('afterend', root);
+    root.className = 'training-mode-config hidden';
+    tab.appendChild(root);
+  } else if (root.parentNode !== tab) {
+    tab.appendChild(root);
   }
   const legacyLessonGrid = document.getElementById('lesson-grid');
   if (legacyLessonGrid?.closest) legacyLessonGrid.closest('.sc')?.classList.add('legacy-training-lessons');
