@@ -5,8 +5,12 @@ function setMode(m, btn) {
   Settings.mode = m;
   document.querySelectorAll('#mode-btns .mode-pill').forEach((b) => b.classList.remove('active'));
   if (btn && btn.classList) btn.classList.add('active');
-  if (typeof openTrainingModeSetup === 'function') openTrainingModeSetup();
-  else if (typeof renderTrainingModeSetup === 'function') renderTrainingModeSetup();
+  const nextButton = document.getElementById('training-mode-next');
+  if (nextButton) {
+    nextButton.classList.remove('hidden');
+    const modeName = String(btn?.textContent || '').replace(/\s+/gu, ' ').trim();
+    nextButton.setAttribute('aria-label', modeName ? `Далее: ${modeName}` : 'Далее к настройке режима');
+  }
 }
 
 function setQty(type, val, btn) {

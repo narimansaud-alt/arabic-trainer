@@ -384,7 +384,14 @@ function updateTrainingStartButtons(selectedWords = getTrainingSelectedWords(Set
     if (typeof setIconLabel === 'function') setIconLabel(start, icon, label);
     else start.textContent = label;
   }
-  if (favorite) favorite.disabled = unavailable;
+  if (favorite) {
+    const difficult = new Set(Array.isArray(App.favorites) ? App.favorites : []);
+    const difficultCount = getTrainingSelectedWords(Settings.mode).filter((word) => difficult.has(word.ar)).length;
+    favorite.disabled = unavailable || !difficultCount;
+    favorite.textContent = difficultCount ? `Только трудные слова · ${difficultCount}` : 'Трудных слов в выбранных уроках нет';
+    favorite.setAttribute('aria-label', difficultCount ? `Начать тренировку: только трудные слова, ${difficultCount}` : 'В выбранных уроках нет трудных слов');
+    favorite.title = difficultCount ? `Будут использованы только трудные слова из выбранных уроков: ${difficultCount}` : 'Добавьте слова звёздочкой или выберите уроки, где уже есть трудные слова';
+  }
 }
 
 function setTrainingStartBusy(busy) {

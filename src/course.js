@@ -49,6 +49,7 @@ async function selectVolume(volumeId) {
   const volumeChanged = Boolean(App.volume && App.volume !== volumeId);
   if (volumeChanged) {
     if (typeof resetQuizState === 'function') resetQuizState();
+    document.getElementById('training-mode-next')?.classList.add('hidden');
     Settings.mode = 'learn';
     Settings.answerCheck = 'learning';
     updateAnswerCheckUI();

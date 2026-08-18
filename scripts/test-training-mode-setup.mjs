@@ -133,18 +133,22 @@ const resetAppSource = stateSource.match(/function resetApp\(\) \{([\s\S]*?)\n\}
 assert.match(resetAppSource, /resetDailyGoalState/u, 'logout must clear the previous account daily-goal state');
 
 assert.match(setupSource, /mode === 'fast'.*renderFastTrainingPicker/su, 'fast mode must have a dedicated multi-volume picker');
-assert.match(setupSource, /function openTrainingModeSetup\(\)/u, 'clicking a mode must open a dedicated setup page');
+assert.match(setupSource, /function openTrainingModeSetup\(\)/u, 'the next action must open a dedicated setup page');
 assert.match(setupSource, /function closeTrainingModeSetup\(\)/u, 'the setup page must have an explicit return path');
 assert.match(setupSource, /training-mode-page-head/u, 'the dedicated setup page must render its own header');
 assert.match(setupSource, /tab\.appendChild\(root\)/u, 'the setup page must be a direct child of the training tab, not an inline mode-card panel');
 assert.doesNotMatch(setupSource, /insertAdjacentElement\('afterend', root\)/u, 'the setup page must not be inserted below the mode buttons');
 assert.match(setupSource, /actions\.appendChild\(startButton\)/u, 'the start action must live inside the selected mode page');
-assert.match(mainSource, /openTrainingModeSetup\(\)/u, 'mode cards must enter the setup page');
+assert.match(setupSource, /difficultCount[\s\S]*favorite\.disabled = unavailable \|\| !difficultCount/u, 'difficult-only start must show its selected-lesson count and disable at zero');
+assert.match(htmlSource, /id="training-mode-next"[^>]*hidden[^>]*onclick="openTrainingModeSetup\(\)"/u, 'the mode menu must provide a hidden next action that opens setup');
+assert.match(mainSource, /training-mode-next[\s\S]*classList\.remove\('hidden'\)/u, 'selecting a mode must reveal the next action');
+assert.doesNotMatch(mainSource, /function setMode[\s\S]*openTrainingModeSetup\(\)/u, 'selecting a mode must wait for the explicit next action');
 assert.match(dictSource, /t !== 'train'.*closeTrainingModeSetup/su, 'leaving the training tab must close its setup page');
 assert.match(courseSource, /selectVolume[\s\S]*closeTrainingModeSetup/u, 'changing volume must close stale mode setup state');
 assert.match(quizSource, /backToMenu[\s\S]*closeTrainingModeSetup/u, 'returning from results must restore the mode menu');
 assert.match(cssSource, /#tab-train\.training-mode-page-open > :not\(#training-mode-config\)/u, 'only the setup page must remain visible while a mode is open');
 assert.match(cssSource, /#tab-train:not\(\.training-mode-page-open\) > #btn-start/u, 'start controls must not flash on the mode menu before JavaScript moves them');
+assert.match(cssSource, /\.training-mode-next[\s\S]*min-height: 48px/u, 'the next action must be visibly tappable on mobile');
 assert.match(cssSource, /@media \(max-width: 520px\)[\s\S]*training-mode-page-head/u, 'the dedicated setup page must have a mobile layout');
 
 console.log('Training mode setup regression tests passed.');
