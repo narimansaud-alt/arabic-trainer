@@ -2826,6 +2826,73 @@ button,input,select,textarea{max-width:100%;min-width:0;}
 #tab-rules .rule-source-line:nth-child(4n+2){color:#2755a3!important;}
 #tab-rules .rule-source-line:nth-child(4n+3){color:#1f7a4f!important;}
 #tab-rules .rule-source-line:nth-child(4n+4){color:#7c3aed!important;}
+#tab-rules .rule-analysis,
+#tab-rules .rule-analysis-list{
+  display:grid;
+  gap:10px;
+  margin-top:10px;
+}
+#tab-rules .rule-analysis-row{
+  display:grid;
+  gap:7px;
+  padding:13px 14px;
+  border:1px solid #d7e4ea;
+  border-radius:12px;
+  background:#f8fbfc;
+}
+#tab-rules .rule-analysis-ar{
+  display:block;
+  direction:rtl!important;
+  unicode-bidi:isolate!important;
+  text-align:right!important;
+  font-family:var(--ui-font-ar)!important;
+  font-size:clamp(22px,5.4vw,28px)!important;
+  font-weight:850!important;
+  line-height:1.9!important;
+  color:#24556a!important;
+  overflow-wrap:normal!important;
+  word-break:normal!important;
+}
+#tab-rules .rule-analysis-ru{
+  display:block;
+  direction:ltr;
+  text-align:left;
+  color:#425b69;
+  font-size:14px;
+  font-weight:600;
+  line-height:1.65;
+}
+#tab-rules .rule-note{
+  margin-top:10px;
+  padding:12px 14px;
+  border:1px solid #d8e4ea;
+  border-radius:12px;
+  background:#f7fafc;
+  color:#344c5b;
+  font-size:15px;
+  line-height:1.8;
+}
+#tab-rules .rule-note-label{
+  display:block;
+  margin-bottom:6px;
+  color:#315f78;
+  font-size:13px;
+  font-weight:850;
+  line-height:1.55;
+}
+#tab-rules .rule-study .rule-note > .ar-inline,
+#tab-rules .rule-study .rule-note > .ar-expression{
+  display:inline-block!important;
+  margin-inline:.08em!important;
+  padding:0 .14em!important;
+  border-radius:6px!important;
+  background:#fff!important;
+  font-family:var(--ui-font-ar)!important;
+  font-size:clamp(20px,5vw,24px)!important;
+  font-weight:850!important;
+  line-height:1.65!important;
+  vertical-align:middle;
+}
 #tab-rules .rule-check-card{
   background:#fffaf3;
   border-color:#f0dfc3;
@@ -2908,7 +2975,7 @@ button,input,select,textarea{max-width:100%;min-width:0;}
   margin-inline:.04em!important;
   border-radius:6px!important;
   font-family:var(--ui-font-ar)!important;
-  font-size:1.22em!important;
+  font-size:1.35em!important;
   font-weight:900!important;
   line-height:1.65!important;
   background:rgba(255,255,255,.55)!important;
