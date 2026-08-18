@@ -41,6 +41,9 @@ async function loadDict() {
   if (btnFav) btnFav.disabled = true;
 
   let words = [];
+  Dict.byLesson = {};
+  Dict.allWords = [];
+  if (typeof renderTrainingModeSetup === 'function') renderTrainingModeSetup();
   try {
     const result = await db
       .from('words')
@@ -56,6 +59,7 @@ async function loadDict() {
     if (dictContent) dictContent.innerHTML = '<div class="lb-empty">Ошибка чтения словаря</div>';
     if (btnStart) btnStart.disabled = false;
     if (btnFav) btnFav.disabled = false;
+    if (typeof renderTrainingModeSetup === 'function') renderTrainingModeSetup();
     return;
   }
 
@@ -64,6 +68,7 @@ async function loadDict() {
     if (dictContent) dictContent.innerHTML = '<div class="lb-empty">Словарь пуст</div>';
     if (btnStart) btnStart.disabled = false;
     if (btnFav) btnFav.disabled = false;
+    if (typeof renderTrainingModeSetup === 'function') renderTrainingModeSetup();
     return;
   }
 
@@ -72,9 +77,11 @@ async function loadDict() {
   const lessons = new Set();
 
   words.forEach((r) => {
-    const k = r.lesson_number;
+    const k = String(r.lesson_number);
     if (!Dict.byLesson[k]) Dict.byLesson[k] = [];
     const word = {
+      id: r.id == null ? null : r.id,
+      volume: r.course_name || App.volume,
       ar: r.word_ar,
       ru: r.word_ru,
       lesson: k,
@@ -108,6 +115,7 @@ async function loadDict() {
 
   if (btnStart) btnStart.disabled = false;
   if (btnFav) btnFav.disabled = false;
+  if (typeof renderTrainingModeSetup === 'function') renderTrainingModeSetup();
   buildLessonPills('dict-lesson-row', lessons, (l) => {
     Settings.dictLesson = l;
     renderDict();

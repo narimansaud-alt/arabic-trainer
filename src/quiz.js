@@ -66,11 +66,25 @@ function quizGetEl(id, required = false) {
   if (el) return el;
   return required ? null : quizGetEl._noop;
 }
+function copyTrainingWord(word) {
+  if (!word || typeof word !== 'object') return { ar: '', ru: '' };
+  const copy = {
+    ar: String(word.ar || ''),
+    ru: String(word.ru || ''),
+  };
+  if (word.id != null) copy.id = word.id;
+  if (word.volume) copy.volume = String(word.volume);
+  if (word.lesson != null && word.lesson !== '') copy.lesson = String(word.lesson);
+  if (word.dictionaryRow != null) copy.dictionaryRow = word.dictionaryRow;
+  if (word.dictionaryForm) copy.dictionaryForm = String(word.dictionaryForm);
+  return copy;
+}
+
 
 function registerQuizAttempt(word, answer = '') {
   roundAttempts++;
   if (word?.ar && !roundAttemptedWords.some((item) => item.ar === word.ar)) {
-    roundAttemptedWords.push({ ar: word.ar, ru: word.ru });
+    roundAttemptedWords.push(copyTrainingWord(word));
   }
   if (word?.ar && answer) roundUserAnswers[word.ar] = String(answer);
   ErrorLog.invariant(roundAttempts >= roundCorrect, 'quiz-correct-count-exceeds-attempts', {
@@ -161,6 +175,43 @@ function getSmartQueue(words, limit) {
   if (limit !== 'all' && limit !== 'inf') pool = pool.slice(0, parseInt(limit));
   return pool;
 }
+function getBalancedFastQueue(words, limit) {
+  const groups = new Map();
+  words.forEach((word) => {
+    const groupKey = `${word.volume || App.volume || ''}|${word.lesson || ''}`;
+    if (!groups.has(groupKey)) groups.set(groupKey, []);
+    groups.get(groupKey).push(word);
+  });
+
+  const groupQueues = shuf(
+    [...groups.values()]
+      .map((group) => getSmartQueue(group, 'all'))
+      .filter((group) => group.length)
+  );
+  const result = [];
+  const seenArabic = new Set();
+  const target = Math.max(0, Math.min(words.length, Number(limit) || words.length));
+
+  while (groupQueues.length && result.length < target) {
+    for (let index = groupQueues.length - 1; index >= 0 && result.length < target; index--) {
+      const group = groupQueues[index];
+      let word = null;
+      while (group.length && !word) {
+        const candidate = group.shift();
+        const key = `${rmH(candidate.ar)}|${String(candidate.ru || '').trim().toLowerCase()}`;
+        if (seenArabic.has(key)) continue;
+        seenArabic.add(key);
+        word = candidate;
+      }
+      if (word) result.push(word);
+      if (!group.length) groupQueues.splice(index, 1);
+    }
+    groupQueues.reverse();
+  }
+
+  return result;
+}
+
 
 function resetQuizState() {
   clearTimers();
@@ -201,7 +252,7 @@ function stopDailyQuizForNewDay() {
 }
 
 // QUIZ START
-function getSelectedWords() {
+function getSelectedWordsLegacy() {
   const active = [...document.querySelectorAll('.lesson-pill.active')].map((p) => p.dataset.lesson);
   if (!active.length) {
     alert('Выберите хотя бы один урок');
@@ -214,7 +265,7 @@ function getSelectedWords() {
   return words;
 }
 
-function startQuiz(onlyFav) {
+function startQuizLegacy(onlyFav) {
   let words = getSelectedWords();
   if (!words) return;
   if (onlyFav) words = words.filter((w) => App.favorites.includes(w.ar));
@@ -224,6 +275,38 @@ function startQuiz(onlyFav) {
   initQuiz(getSmartQueue(words, limit), effectiveMode, onlyFav);
 }
 
+function getSelectedWords() {
+  if (typeof getTrainingSelectedWords !== 'function') return getSelectedWordsLegacy();
+  const words = getTrainingSelectedWords(Settings.mode);
+  const lessons = typeof getTrainingSelectedLessonCount === 'function' ? getTrainingSelectedLessonCount(Settings.mode) : 0;
+  if (!lessons) {
+    alert('\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0445\u043e\u0442\u044f \u0431\u044b \u043e\u0434\u0438\u043d \u0443\u0440\u043e\u043a');
+    return null;
+  }
+  return words;
+}
+
+async function startQuiz(onlyFav) {
+  const effectiveMode = Settings.mode;
+  if (effectiveMode === 'fast' && typeof ensureFastTrainingCatalog === 'function') {
+    if (typeof setTrainingStartBusy === 'function') setTrainingStartBusy(true);
+    const catalog = await ensureFastTrainingCatalog();
+    if (typeof setTrainingStartBusy === 'function') setTrainingStartBusy(false);
+    if (!catalog) return;
+  }
+
+  let words = getSelectedWords();
+  if (!words) return;
+  if (onlyFav) words = words.filter((word) => App.favorites.includes(word.ar));
+  if (!words.length) {
+    alert(onlyFav ? '\u041d\u0435\u0442 \u0442\u0440\u0443\u0434\u043d\u044b\u0445 \u0441\u043b\u043e\u0432 \u0432 \u0432\u044b\u0431\u0440\u0430\u043d\u043d\u044b\u0445 \u0443\u0440\u043e\u043a\u0430\u0445' : '\u0421\u043b\u043e\u0432\u0430 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u044b');
+    return;
+  }
+  const limit = typeof getTrainingModeLimit === 'function' ? getTrainingModeLimit(effectiveMode, words.length) : effectiveMode === 'fast' ? Settings.qtyFast : Settings.qtyNormal;
+  const prepared = effectiveMode === 'fast' ? getBalancedFastQueue(words, limit) : getSmartQueue(words, limit);
+  initQuiz(prepared, effectiveMode, onlyFav);
+}
+
 function initQuiz(words, effectiveMode, isFav, options = {}) {
   if (!words.length) {
     alert('Нет слов для тренировки');
@@ -231,7 +314,7 @@ function initQuiz(words, effectiveMode, isFav, options = {}) {
   }
   quizMode = ['learn', 'type-ar', 'review', 'mix', 'fast', 'daily'].includes(effectiveMode) ? effectiveMode : Settings.mode;
   sessionOnlyFavorites = Boolean(isFav);
-  sessionInitialWords = words.map((word) => ({ ar: word.ar, ru: word.ru }));
+  sessionInitialWords = words.map(copyTrainingWord);
   dailyQuizTasks = Array.isArray(options.dailyTasks) ? options.dailyTasks : [];
   dailyQuizReplay = Boolean(options.dailyReplay);
   queue = sessionInitialWords;
@@ -332,10 +415,34 @@ function renderArabicInputFormatHint(expected) {
   el.textContent = text;
   el.classList.toggle('hidden', !text);
 }
+function renderQuizWordSource(word) {
+  let el = document.getElementById('q-source');
+  if (!el) {
+    const wordDisplay = document.getElementById('word-display');
+    if (!wordDisplay?.parentNode) return;
+    el = document.createElement('div');
+    el.id = 'q-source';
+    el.className = 'quiz-word-source hidden';
+    wordDisplay.parentNode.insertBefore(el, wordDisplay);
+  }
+  const volumeId = word?.volume || App.volume || '';
+  const volumeLabel =
+    typeof trainingVolumeLabel === 'function'
+      ? trainingVolumeLabel(volumeId)
+      : findVolumeById(volumeId)?.label || '';
+  const lesson = word?.lesson ? String(word.lesson) : '';
+  const parts = [];
+  if (volumeLabel) parts.push(volumeLabel);
+  if (lesson) parts.push(`\u0423\u0440\u043e\u043a ${lesson}`);
+  el.textContent = parts.join(' \u00b7 ');
+  el.classList.toggle('hidden', !parts.length);
+}
+
 
 function renderQ() {
   quizGetEl('q-prog').textContent = qi + 1 + '/' + queue.length;
   quizGetEl('q-bar').style.width = ((qi + 1) / queue.length) * 100 + '%';
+  renderQuizWordSource(curWord);
   renderFavoriteButton(quizGetEl('star-btn'), App.favorites.includes(curWord.ar));
   quizGetEl('feedback').textContent = '';
   quizGetEl('feedback').className = 'feedback';
@@ -417,7 +524,7 @@ function renderQ() {
 }
 
 function genOpts(correct, key) {
-  const source = Dict.allWords.length ? Dict.allWords : queue;
+  const source = quizMode === 'fast' && roundWords.length ? roundWords : Dict.allWords.length ? Dict.allWords : queue;
   const pool = shuf(source.filter((w) => w[key] !== correct && rmH(w[key]) !== rmH(correct)));
   const opts = [correct, ...pool.slice(0, 3).map((w) => w[key])];
   while (opts.length < 4) opts.push('—');
@@ -597,7 +704,7 @@ async function handleFast(btn, ok, correct, isTimeout) {
     countCompletedWordOnce(curWord.ar);
     pauseTmo = setTimeout(() => nextWord(true), 700);
   } else {
-    if (!roundWrong.find((word) => word.ar === curWord.ar)) roundWrong.push({ ar: curWord.ar, ru: curWord.ru });
+    if (!roundWrong.find((word) => word.ar === curWord.ar)) roundWrong.push(copyTrainingWord(curWord));
     lives--;
     updFastUI();
     fb.className = 'feedback err';

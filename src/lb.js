@@ -27,7 +27,7 @@ function setLbFilter(dim, val, btn) {
   if (btn && btn.classList) btn.classList.add('active');
   if (dim === 'type') {
     const section = document.getElementById('lb-time-section');
-    if (section) section.classList.toggle('hidden', ['fast', 'streak', 'daily'].includes(val));
+    if (section) section.classList.toggle('hidden', ['fast', 'daily'].includes(val));
   }
   loadLB();
 }
@@ -54,24 +54,6 @@ async function loadLB() {
     return;
   }
 
-  if (type === 'streak') {
-    const data = await safeLbQuery(() =>
-      db.from('leaderboard').select('nickname,streak,max_streak,daily_goals_completed').order('streak', { ascending: false }).limit(20),
-      'streak'
-    );
-    if (data === null) {
-      cont.innerHTML = '<div class="lb-empty">' + lbQueryErrorMessage() + '</div>';
-      return;
-    }
-    const items = data.map((r) => ({
-      name: r.nickname,
-      val: (r.streak || 0) + ' дн.',
-      extra: 'Выполнено: ' + (r.daily_goals_completed || 0) + ' · макс. серия: ' + (r.max_streak || 0),
-    }));
-    cont.innerHTML = '';
-    renderLbTable(cont, items, true);
-    return;
-  }
 
   if (type === 'daily') {
     const data = await safeLbQuery(() =>

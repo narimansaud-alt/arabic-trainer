@@ -131,21 +131,22 @@ const __LEADERBOARD_CACHE_MS = 25000;
 
 async function loadLeaderboardCacheBy(sortBy) {
   const now = Date.now();
-  const isStreakSort = sortBy === 'streak';
-  const store = isStreakSort ? __leaderboardStreakCache : __leaderboardScoreCache;
+  const isDailyGoalSort = sortBy === 'daily_goals_completed';
+  const store = isDailyGoalSort ? __leaderboardStreakCache : __leaderboardScoreCache;
   if (store.rows && now - store.ts < __LEADERBOARD_CACHE_MS) {
     return store.rows;
   }
 
-  const inflightKey = isStreakSort ? 'streak' : 'score';
+  const inflightKey = isDailyGoalSort ? 'streak' : 'score';
   if (__leaderboardInflight[inflightKey]) return __leaderboardInflight[inflightKey];
 
   const request = (async () => {
-    const queryPromise = db
+    let query = db
       .from('leaderboard')
-      .select('nickname,total_score,streak')
-      .order(sortBy, { ascending: false })
-      .limit(200);
+      .select('nickname,total_score,streak,daily_goals_completed')
+      .order(sortBy, { ascending: false });
+    if (isDailyGoalSort) query = query.order('streak', { ascending: false });
+    const queryPromise = query.limit(200);
     let timeoutId = 0;
     const timeoutPromise = new Promise((_, reject) => {
       timeoutId = setTimeout(() => reject(new Error('leaderboard-timeout')), 10000);
@@ -222,12 +223,12 @@ async function loadStreakRank() {
   if (!App.username) return;
   const el = document.getElementById('banner-rank');
   try {
-    const data = await loadLeaderboardCacheBy('streak');
+    const data = await loadLeaderboardCacheBy('daily_goals_completed');
     if (!el || !data || !data.length) return;
     const rank = data.findIndex((user) => user.nickname === App.username) + 1;
     if (rank > 0) {
       const place = rank === 1 ? '1-е' : rank === 2 ? '2-е' : rank === 3 ? '3-е' : rank + '-е';
-      el.textContent = place + ' место в рейтинге серии дней';
+      el.textContent = place + ' \u043c\u0435\u0441\u0442\u043e \u0432 \u0440\u0435\u0439\u0442\u0438\u043d\u0433\u0435 \u0437\u0430\u0434\u0430\u043d\u0438\u0439 \u0434\u043d\u044f';
     } else {
       el.textContent = '';
     }

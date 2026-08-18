@@ -11,7 +11,7 @@ const fail = (message) => {
 };
 
 const sw = read('sw.js');
-for (const asset of ['./src/verb-rules.js', './src/verb-rules.css', './src/daily.js']) {
+for (const asset of ['./src/verb-rules.js', './src/verb-rules.css', './src/daily.js', './src/training-setup.js', './src/training-setup.css']) {
   const occurrences = sw.split("'" + asset + "'").length - 1;
   if (occurrences !== 2) fail('service worker must include ' + asset + ' once in each cache strategy');
 }

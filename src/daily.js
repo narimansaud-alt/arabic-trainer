@@ -388,7 +388,7 @@ function buildDailyGoalPlan(row) {
   Dict.allWords.forEach((word) => {
     if (!word?.ar || !word?.ru || seen.has(word.ar)) return;
     seen.add(word.ar);
-    unique.push({ ar: word.ar, ru: word.ru });
+    unique.push({ ...word });
   });
   if (!unique.length) return null;
 
@@ -454,7 +454,7 @@ function buildDailyContinuationTasks(row, roundNumber) {
   Dict.allWords.forEach((word) => {
     if (!word?.ar || !word?.ru || seen.has(word.ar)) return;
     seen.add(word.ar);
-    unique.push({ ar: word.ar, ru: word.ru });
+    unique.push({ ...word });
   });
   if (!unique.length) return [];
 

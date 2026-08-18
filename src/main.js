@@ -5,6 +5,7 @@ function setMode(m, btn) {
   Settings.mode = m;
   document.querySelectorAll('#mode-btns .mode-pill').forEach((b) => b.classList.remove('active'));
   if (btn && btn.classList) btn.classList.add('active');
+  if (typeof renderTrainingModeSetup === 'function') renderTrainingModeSetup();
 }
 
 function setQty(type, val, btn) {

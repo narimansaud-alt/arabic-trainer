@@ -173,5 +173,5 @@ function resetApp() {
   App.lastDailyGoalDate = null;
   App.favorites = [];
   App.wordStats = {};
-}
   if (typeof resetDailyGoalState === 'function') resetDailyGoalState();
+}

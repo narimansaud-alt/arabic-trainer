@@ -3422,7 +3422,6 @@ button,input,select,textarea{max-width:100%;min-width:0;}
       <div class="lb-row-btns" id="lb-type-row">
         <button class="lb-pill gold active" onclick="setLbFilter('type','score',this)"><span class="ui-icon"><svg><use href="#ui-icon-trophy"></use></svg></span>Очки</button>
         <button class="lb-pill" onclick="setLbFilter('type','fast',this)"><span class="ui-icon"><svg><use href="#ui-icon-bolt"></use></svg></span>Быстрый режим</button>
-        <button class="lb-pill" onclick="setLbFilter('type','streak',this)"><span class="ui-icon"><svg><use href="#ui-icon-calendar"></use></svg></span>Серия дней</button>
         <button class="lb-pill" onclick="setLbFilter('type','daily',this)"><span class="ui-icon"><svg><use href="#ui-icon-target"></use></svg></span>Задания дня</button>
       </div>
       <div id="lb-time-section">
@@ -3998,6 +3997,7 @@ button:not(:disabled):active,[role="button"]:not([aria-disabled="true"]):active,
   .daily-goal-chip span{font-size:10px}
 }
 </style>
+<link rel="stylesheet" href="src/training-setup.css">
 <script src="src/api.js"></script>
 <script src="src/state.js"></script>
 <script src="src/helpers.js"></script>
@@ -4007,6 +4007,7 @@ button:not(:disabled):active,[role="button"]:not([aria-disabled="true"]):active,
 <script src="src/streak.js"></script>
 <script src="src/lb.js"></script>
 <script src="src/dict.js"></script>
+<script src="src/training-setup.js"></script>
 <script src="src/verb-rules.js"></script>
 <script src="src/quiz.js"></script>
 <script src="src/learn.js"></script>
