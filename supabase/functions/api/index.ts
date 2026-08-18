@@ -50,6 +50,22 @@ function moscowDateKey(offsetDays = 0) {
     .split("T")[0];
 }
 
+function addDaysToDateKey(dateKey: string, offsetDays: number) {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day + offsetDays)).toISOString().split("T")[0];
+}
+
+function moscowWeekBounds(dateKey = moscowDateKey()) {
+  const [year, month, day] = dateKey.split("-").map(Number);
+  const utcDay = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+  const mondayOffset = (utcDay + 6) % 7;
+  const start = addDaysToDateKey(dateKey, -mondayOffset);
+  return {
+    start,
+    end: addDaysToDateKey(start, 6),
+  };
+}
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -331,10 +347,24 @@ Deno.serve(async (req: Request) => {
               p_course_name: courseName,
             });
             if (error) return badRequest(error.message);
+            const serverDate = moscowDateKey();
+            const weekBounds = moscowWeekBounds(serverDate);
+            const { data: week, error: weekError } = await db
+              .from("daily_goal_progress")
+              .select("goal_date,completed_at")
+              .eq("username", username)
+              .gte("goal_date", weekBounds.start)
+              .lte("goal_date", weekBounds.end)
+              .order("goal_date", { ascending: true });
+            if (weekError) return badRequest(weekError.message);
             const refreshed = await getUserByUsername(username);
             return json({
               ok: true,
               goal: data,
+              week: week || [],
+              server_date: serverDate,
+              week_start: weekBounds.start,
+              week_end: weekBounds.end,
               daily_goal_minutes: Number(refreshed?.daily_goal_minutes || 10),
               daily_goal_selected_at: refreshed?.daily_goal_selected_at || null,
               daily_goals_completed: Number(refreshed?.daily_goals_completed || 0),

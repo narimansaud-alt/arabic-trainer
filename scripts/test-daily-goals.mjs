@@ -10,7 +10,8 @@ const streakSource = read('src/streak.js');
 const htmlSource = read('index.html');
 const swSource = read('sw.js');
 const apiSource = read('supabase/functions/api/index.ts');
-const migrationSource = read('supabase/migrations/20260817120000_daily_learning_goals_and_diagnostics.sql');
+const baseMigrationSource = read('supabase/migrations/20260817120000_daily_learning_goals_and_diagnostics.sql');
+const scaleMigrationSource = read('supabase/migrations/20260818131000_daily_goal_four_tasks_per_minute.sql');
 const manifest = JSON.parse(read('manifest.json'));
 
 const context = {
@@ -58,12 +59,12 @@ assert.deepEqual(
 );
 assert.deepEqual(
   JSON.parse(JSON.stringify(vm.runInContext('dailyGoalTargets(5)', context))),
-  { goal_minutes: 5, target_tasks: 10, new_target: 2, review_target: 5, typing_target: 3 },
-  'five minutes must produce a balanced ten-task plan'
+  { goal_minutes: 5, target_tasks: 20, new_target: 4, review_target: 10, typing_target: 6 },
+  'five minutes must produce a balanced twenty-task plan'
 );
 assert.deepEqual(
   JSON.parse(JSON.stringify(vm.runInContext('dailyGoalTargets(25)', context))),
-  { goal_minutes: 25, target_tasks: 50, new_target: 10, review_target: 25, typing_target: 15 },
+  { goal_minutes: 25, target_tasks: 100, new_target: 20, review_target: 50, typing_target: 30 },
   'twenty-five minutes must scale every task category'
 );
 
@@ -76,7 +77,7 @@ context.Dict.allWords = [
   { ar: 'سَادِسٌ', ru: 'шестой' },
 ];
 context.Dict.allWords.push(
-  ...Array.from({ length: 74 }, (_, index) => ({
+  ...Array.from({ length: 154 }, (_, index) => ({
     ar: `كَلِمَةٌ-${index + 7}`,
     ru: `слово ${index + 7}`,
   }))
@@ -87,35 +88,59 @@ context.App.wordStats = {
 };
 context.App.favorites = ['أَوَّلٌ'];
 const plan = vm.runInContext('buildDailyGoalPlan(normalizeDailyGoalRow(dailyGoalTargets(5)))', context);
-assert.equal(plan.tasks.length, 10, 'daily plan length must equal the target');
-assert.equal(plan.tasks.filter((task) => task.category === 'new').length, 2, 'daily plan must include new-word tasks');
-assert.equal(plan.tasks.filter((task) => task.category === 'review').length, 5, 'daily plan must include review tasks');
-assert.equal(plan.tasks.filter((task) => task.category === 'typing').length, 3, 'daily plan must include typing tasks');
-assert.equal(plan.tasks.filter((task) => task.mode === 'type-ar').length, 3, 'typing tasks must use Arabic input');
-assert.equal(plan.version, 3, 'daily plan cache version must invalidate the legacy counted flags');
-assert.equal(new Set(plan.tasks.map((task) => task.word.ar)).size, 10, 'a ten-task plan must not repeat words when vocabulary is sufficient');
+assert.equal(plan.tasks.length, 20, 'daily plan length must equal four tasks per minute');
+assert.equal(plan.tasks.filter((task) => task.category === 'new').length, 4, 'daily plan must include new-word tasks');
+assert.equal(plan.tasks.filter((task) => task.category === 'review').length, 10, 'daily plan must include review tasks');
+assert.equal(plan.tasks.filter((task) => task.category === 'typing').length, 6, 'daily plan must include typing tasks');
+assert.equal(plan.tasks.filter((task) => task.mode === 'type-ar').length, 6, 'typing tasks must use Arabic input');
+assert.equal(plan.version, 4, 'daily plan cache version must invalidate the old two-tasks-per-minute plan');
+assert.equal(new Set(plan.tasks.map((task) => task.word.ar)).size, 20, 'a twenty-task plan must not repeat words when vocabulary is sufficient');
 
-const sixtyRow = vm.runInContext(`normalizeDailyGoalRow({
+const largestRow = vm.runInContext(`normalizeDailyGoalRow({
   ...dailyGoalTargets(30),
   username: 'tester',
   goal_date: '2026-08-17',
   course_name: App.volume,
 })`, context);
-const sixtyPlan = context.buildDailyGoalPlan(sixtyRow);
-assert.equal(sixtyPlan.tasks.length, 60, 'thirty minutes must always build exactly sixty tasks');
-assert.equal(new Set(sixtyPlan.tasks.map((task) => task.word.ar)).size, 60, 'the sixty-task plan must not repeat words across categories');
+const largestPlan = context.buildDailyGoalPlan(largestRow);
+assert.equal(largestPlan.tasks.length, 120, 'thirty minutes must always build exactly 120 tasks');
+assert.equal(new Set(largestPlan.tasks.map((task) => task.word.ar)).size, 120, 'the 120-task plan must not repeat words across categories');
+const continuation = context.buildDailyContinuationTasks(largestRow, 1);
+assert.equal(continuation.length, 12, 'continuing after the daily goal must create one compact twelve-task block');
+assert.equal(continuation.filter((task) => task.category === 'new').length, 3, 'continuation must contain three new-word tasks');
+assert.equal(continuation.filter((task) => task.category === 'review').length, 6, 'continuation must contain six review tasks');
+assert.equal(continuation.filter((task) => task.category === 'typing').length, 3, 'continuation must contain three typing tasks');
+assert.equal(new Set(continuation.map((task) => task.word.ar)).size, 12, 'a continuation block must not repeat words when vocabulary is sufficient');
+const replayRow = vm.runInContext(`normalizeDailyGoalRow({
+  ...dailyGoalTargets(30),
+  username: 'tester',
+  goal_date: '2026-08-17',
+  course_name: App.volume,
+  new_completed: 24,
+  review_completed: 60,
+  typing_completed: 36,
+  completed_at: '2026-08-17T10:00:00Z',
+})`, context);
+context.__replayRow = replayRow;
+context.__replayTask = continuation[0];
+vm.runInContext(`
+  DailyGoalState.row = __replayRow;
+  DailyGoalState.replay = true;
+  markDailyGoalTaskCompleted(__replayTask, true);
+`, context);
+assert.equal(context.dailyGoalDoneCount(replayRow), 120, 'extra practice must never increment the completed daily target again');
 
 const stuckRow = vm.runInContext(`normalizeDailyGoalRow({
   ...dailyGoalTargets(30),
   username: 'tester',
   goal_date: '2026-08-17',
   course_name: App.volume,
-  new_completed: 12,
-  review_completed: 30,
-  typing_completed: 14,
+  new_completed: 24,
+  review_completed: 60,
+  typing_completed: 35,
 })`, context);
 const stuckPlan = context.buildDailyGoalPlan(stuckRow);
-const formerlyStuckTask = stuckPlan.tasks.find((task) => task.category === 'typing' && task.ordinal === 15);
+const formerlyStuckTask = stuckPlan.tasks.find((task) => task.category === 'typing' && task.ordinal === 36);
 formerlyStuckTask.__counted = true;
 context.__testRow = stuckRow;
 context.__testPlan = stuckPlan;
@@ -127,18 +152,20 @@ vm.runInContext(`
   applyDailyServerProgress(__testPlan, __testRow);
 `, context);
 assert.equal('__counted' in formerlyStuckTask, false, 'legacy counted flags must be removed from restored tasks');
-assert.equal(formerlyStuckTask.done, false, 'task 57 must remain pending at 56 of 60');
+assert.equal(formerlyStuckTask.done, false, 'task 120 must remain pending at 119 of 120');
 vm.runInContext('markDailyGoalTaskCompleted(__testTask, false)', context);
 await vm.runInContext('DailyGoalState.syncing', context);
-assert.equal(stuckRow.typing_completed, 15, 'the formerly stuck task must advance progress to 57 of 60');
+assert.equal(stuckRow.typing_completed, 36, 'the final pending task must advance progress to 120 of 120');
 vm.runInContext('markDailyGoalTaskCompleted(__testTask, false)', context);
-assert.equal(stuckRow.typing_completed, 15, 'one task must never be counted twice');
+assert.equal(stuckRow.typing_completed, 36, 'one task must never be counted twice');
 
 const mergedRow = context.mergeDailyGoalRows(
-  { ...stuckRow, typing_completed: 14 },
-  { ...stuckRow, typing_completed: 15 }
+  { ...stuckRow, typing_completed: 35 },
+  { ...stuckRow, typing_completed: 36 }
 );
-assert.equal(mergedRow.typing_completed, 15, 'a delayed server response must not roll local progress backwards');
+assert.equal(mergedRow.typing_completed, 36, 'a delayed server response must not roll local progress backwards');
+assert.equal(vm.runInContext("startOfDailyGoalWeek('2026-08-18')", context), '2026-08-17', 'the weekly map must start on Monday');
+assert.equal(vm.runInContext("addDaysToDateKey('2026-08-17', 6)", context), '2026-08-23', 'the weekly map must end on Sunday');
 
 const dateContext = { Date, localStorage: { getItem() { return null; } } };
 vm.createContext(dateContext);
@@ -162,14 +189,20 @@ assert.equal(manifest.id, './', 'PWA identity id must stay stable');
 assert.equal((swSource.match(/'\.\/src\/daily\.js'/g) || []).length, 2, 'daily module must be in both service-worker cache strategies');
 assert.match(htmlSource, /id="daily-goal-choice-overlay"/u, 'first-login daily-goal dialog must exist');
 assert.match(htmlSource, /id="daily-goal-settings"/u, 'daily goal must be changeable in settings');
+assert.match(htmlSource, /id="daily-week-map"/u, 'the current Monday-Sunday map must exist');
+assert.match(dailySource, /isComplete \? 'is-complete'/u, 'a completed current day must remain visibly marked on the week map');
+assert.match(dailySource, /Продолжить занятия/u, 'the completed daily goal must offer additional practice');
 assert.match(htmlSource, /setLbFilter\('type','daily'/u, 'daily-goal leaderboard control must exist');
 assert.doesNotMatch(htmlSource, /data-minutes="15"/u, 'unapproved 15-minute choice must not be shown');
 for (const minutes of [5, 10, 20, 25, 30]) {
   assert.match(htmlSource, new RegExp(`data-minutes="${minutes}"`), `${minutes}-minute choice must be shown`);
 }
 assert.match(apiSource, /\[5, 10, 20, 25, 30\]\.includes\(minutes\)/u, 'Edge API must accept exactly the approved minute choices');
-assert.match(migrationSource, /daily_goal_minutes in \(5, 10, 20, 25, 30\)/u, 'database must enforce the approved minute choices');
-assert.match(migrationSource, /sync_user_daily_goal_progress/u, 'daily completion must be synchronized atomically');
-assert.match(migrationSource, /last_daily_goal_date is distinct from v_today/u, 'one date may increment the streak only once');
+assert.match(baseMigrationSource, /daily_goal_minutes in \(5, 10, 20, 25, 30\)/u, 'database must enforce the approved minute choices');
+assert.match(baseMigrationSource, /sync_user_daily_goal_progress/u, 'daily completion must be synchronized atomically');
+assert.match(baseMigrationSource, /last_daily_goal_date is distinct from v_today/u, 'one date may increment the streak only once');
+assert.match(scaleMigrationSource, /v_target := v_minutes \* 4/u, 'server plans must use four tasks per selected minute');
+assert.match(apiSource, /week: week \|\| \[\]/u, 'the authenticated daily-goal response must include the current week');
+assert.match(apiSource, /moscowWeekBounds/u, 'weekly map boundaries must be calculated from the Moscow date');
 
 console.log('Daily goal regression tests passed.');

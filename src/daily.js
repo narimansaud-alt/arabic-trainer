@@ -3,7 +3,10 @@
 
 const DAILY_GOAL_MINUTE_OPTIONS = [5, 10, 20, 25, 30];
 const DAILY_GOAL_CACHE_KEY = 'arabic_daily_goal_v2';
-const DAILY_GOAL_PLAN_VERSION = 3;
+const DAILY_GOAL_PLAN_VERSION = 4;
+const DAILY_GOAL_TASKS_PER_MINUTE = 4;
+const DAILY_CONTINUATION_TASKS = 12;
+const DAILY_WEEK_LABELS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
 const DailyGoalState = {
   row: null,
@@ -11,11 +14,13 @@ const DailyGoalState = {
   pendingChoice: null,
   syncing: Promise.resolve(),
   replay: false,
+  week: [],
+  continuationRound: 0,
 };
 
 function dailyGoalTargets(minutes) {
   const safeMinutes = DAILY_GOAL_MINUTE_OPTIONS.includes(Number(minutes)) ? Number(minutes) : 10;
-  const target = safeMinutes * 2;
+  const target = safeMinutes * DAILY_GOAL_TASKS_PER_MINUTE;
   const fresh = Math.round(target * 0.2);
   const review = Math.round(target * 0.5);
   return {
@@ -25,6 +30,30 @@ function dailyGoalTargets(minutes) {
     review_target: review,
     typing_target: target - fresh - review,
   };
+}
+
+function addDaysToDateKey(dateKey, offsetDays) {
+  const [year, month, day] = String(dateKey || appDateKey()).split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day + Number(offsetDays || 0)));
+  return date.toISOString().split('T')[0];
+}
+
+function startOfDailyGoalWeek(dateKey) {
+  const [year, month, day] = String(dateKey || appDateKey()).split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  const mondayOffset = (date.getUTCDay() + 6) % 7;
+  return addDaysToDateKey(dateKey, -mondayOffset);
+}
+
+function normalizeDailyGoalWeek(rows) {
+  if (!Array.isArray(rows)) return [];
+  return rows
+    .filter((row) => row && /^\d{4}-\d{2}-\d{2}$/.test(String(row.goal_date || '').split('T')[0]))
+    .map((row) => ({
+      goal_date: String(row.goal_date).split('T')[0],
+      completed_at: row.completed_at || null,
+    }))
+    .sort((a, b) => a.goal_date.localeCompare(b.goal_date));
 }
 
 function normalizeDailyGoalRow(row) {
@@ -105,6 +134,8 @@ function writeDailyGoalCache() {
         date: appDateKey(),
         row: DailyGoalState.row,
         plan: DailyGoalState.plan,
+        week: DailyGoalState.week,
+        continuationRound: DailyGoalState.continuationRound,
       })
     );
   } catch (error) {
@@ -118,6 +149,48 @@ function updateDailyGoalSettingsUI() {
   });
   const note = document.getElementById('daily-goal-settings-note');
   if (note) note.textContent = `Текущая цель: ${App.dailyGoalMinutes || 10} минут в день.`;
+}
+
+function updateDailyGoalWeekFromRow(row) {
+  if (!row?.goal_date || !row.completed_at) return;
+  DailyGoalState.week = normalizeDailyGoalWeek([
+    ...DailyGoalState.week.filter((day) => day.goal_date !== row.goal_date),
+    { goal_date: row.goal_date, completed_at: row.completed_at },
+  ]);
+}
+
+function renderDailyGoalWeek(row = DailyGoalState.row) {
+  const container = document.getElementById('daily-week-map');
+  if (!container || !row) return;
+  const today = row.goal_date || appDateKey();
+  const weekStart = startOfDailyGoalWeek(today);
+  const completedDates = new Set(
+    DailyGoalState.week.filter((day) => day.completed_at).map((day) => day.goal_date)
+  );
+  if (dailyGoalIsComplete(row)) completedDates.add(today);
+
+  container.innerHTML = DAILY_WEEK_LABELS.map((label, index) => {
+    const dateKey = addDaysToDateKey(weekStart, index);
+    const isToday = dateKey === today;
+    const isComplete = completedDates.has(dateKey);
+    const isPast = dateKey < today;
+    const stateClass = [
+      isComplete ? 'is-complete' : '',
+      isToday ? 'is-today' : '',
+      !isComplete && !isToday && isPast ? 'is-missed' : '',
+      !isComplete && !isToday && !isPast ? 'is-future' : '',
+    ].filter(Boolean).join(' ');
+    const nodeText = isComplete ? '✓' : String(Number(dateKey.slice(-2)));
+    const stateText = isComplete ? 'выполнено' : isToday ? 'сегодня' : isPast ? 'пропущено' : 'впереди';
+    return `<div class="daily-week-day ${stateClass}" aria-label="${label}, ${dateKey}: ${stateText}"><span class="daily-week-label">${label}</span><span class="daily-week-node">${nodeText}</span></div>`;
+  }).join('');
+
+  const caption = document.getElementById('daily-week-caption');
+  if (caption) {
+    caption.textContent = dailyGoalIsComplete(row)
+      ? 'Сегодня засчитано. Следующий день серии откроется после 00:00 по Москве.'
+      : 'Выполните сегодняшнюю норму, чтобы день появился на карте.';
+  }
 }
 
 function renderDailyGoal() {
@@ -139,7 +212,7 @@ function renderDailyGoal() {
   setText('banner-today-count', `${done} / ${total} заданий`);
   setText('daily-progress-start', `${done} заданий`);
   setText('daily-progress-goal', `Цель: ${total} заданий`);
-  setText('banner-hint', complete ? 'Дневная цель выполнена. Можно повторить задания ещё раз.' : `План примерно на ${row.goal_minutes} минут — приложение само подобрало виды заданий.`);
+  setText('banner-hint', complete ? 'Норма выполнена. Можно продолжать занятия; счётчик дней сегодня больше не изменится.' : `План примерно на ${row.goal_minutes} минут — приложение само подобрало виды заданий.`);
   setText('daily-new-progress', `${row.new_completed} / ${row.new_target}`);
   setText('daily-review-progress', `${row.review_completed} / ${row.review_target}`);
   setText('daily-typing-progress', `${row.typing_completed} / ${row.typing_target}`);
@@ -148,13 +221,17 @@ function renderDailyGoal() {
   if (fill) fill.style.width = pct + '%';
   const doneBox = document.getElementById('streak-done');
   if (doneBox) doneBox.classList.toggle('hidden', !complete);
+  setText('streak-done-text', 'Сегодняшний день засчитан. Приходите завтра, чтобы продолжить серию.');
+  const nextDayNote = document.getElementById('daily-next-day-note');
+  if (nextDayNote) nextDayNote.classList.toggle('hidden', !complete);
   const hint = document.getElementById('banner-hint');
   if (hint) hint.classList.remove('hidden');
   const button = document.getElementById('btn-daily-goal');
   if (button) {
     button.disabled = false;
-    button.textContent = complete ? 'Повторить задания дня' : done > 0 ? 'Продолжить задание дня' : 'Начать задание дня';
+    button.textContent = complete ? 'Продолжить занятия' : done > 0 ? 'Продолжить задание дня' : 'Начать задание дня';
   }
+  renderDailyGoalWeek(row);
 
   if (typeof loadStreakRank === 'function') void loadStreakRank();
 }
@@ -176,6 +253,8 @@ async function loadDailyGoal() {
   if (cached?.row && cached.row.course_name === App.volume) {
     DailyGoalState.row = normalizeDailyGoalRow(cached.row);
     DailyGoalState.plan = cached.plan || null;
+    DailyGoalState.week = normalizeDailyGoalWeek(cached.week);
+    DailyGoalState.continuationRound = Math.max(0, Number(cached.continuationRound) || 0);
     renderDailyGoal();
   }
 
@@ -187,6 +266,8 @@ async function loadDailyGoal() {
     App.dailyGoalMinutes = Number(response?.daily_goal_minutes || DailyGoalState.row.goal_minutes || App.dailyGoalMinutes || 10);
     App.dailyGoalSelected = Boolean(response?.daily_goal_selected_at || App.dailyGoalSelected);
     if (response?.daily_goals_completed != null) App.dailyGoalsCompleted = Number(response.daily_goals_completed) || 0;
+    DailyGoalState.week = normalizeDailyGoalWeek(response?.week || DailyGoalState.week);
+    updateDailyGoalWeekFromRow(DailyGoalState.row);
     if (hasUnsyncedProgress) void syncDailyGoalProgress();
   } catch (error) {
     if (!DailyGoalState.row) DailyGoalState.row = buildOfflineDailyGoalRow();
@@ -361,6 +442,70 @@ function buildDailyGoalPlan(row) {
   };
 }
 
+function rotateDailyPool(pool, offset) {
+  if (!pool.length) return [];
+  const start = Math.abs(Number(offset) || 0) % pool.length;
+  return [...pool.slice(start), ...pool.slice(0, start)];
+}
+
+function buildDailyContinuationTasks(row, roundNumber) {
+  const unique = [];
+  const seen = new Set();
+  Dict.allWords.forEach((word) => {
+    if (!word?.ar || !word?.ru || seen.has(word.ar)) return;
+    seen.add(word.ar);
+    unique.push({ ar: word.ar, ru: word.ru });
+  });
+  if (!unique.length) return [];
+
+  const round = Math.max(1, Number(roundNumber) || 1);
+  const offset = (round - 1) * DAILY_CONTINUATION_TASKS;
+  const freshPool = rotateDailyPool(
+    unique.filter((word) => !App.wordStats[word.ar] || !App.wordStats[word.ar].seen),
+    offset
+  );
+  const reviewPool = rotateDailyPool(
+    dailyReviewPool(unique.filter((word) => App.wordStats[word.ar])),
+    offset
+  );
+  const fallbackPool = rotateDailyPool(dailyReviewPool(unique), offset);
+  const typingPool = rotateDailyPool(
+    [...reviewPool, ...freshPool].filter((word, index, items) => items.findIndex((item) => item.ar === word.ar) === index),
+    offset
+  );
+  const targets = { new: 3, review: 6, typing: 3 };
+  const tasks = [];
+  const usedWords = new Set();
+
+  for (let index = 0; index < targets.new; index++) {
+    const word = takeDailyPlanWord(freshPool, fallbackPool, usedWords, offset + index);
+    if (!word) break;
+    const isFresh = freshPool.some((item) => item.ar === word.ar);
+    const mode = isFresh ? ['intro', 'ar-ru', 'ru-ar'][index % 3] : index % 2 === 0 ? 'ar-ru' : 'ru-ar';
+    tasks.push({ id: `extra-${round}-new-${index}`, category: 'new', ordinal: index + 1, mode, word, done: false });
+  }
+  for (let index = 0; index < targets.review; index++) {
+    const word = takeDailyPlanWord(reviewPool, fallbackPool, usedWords, offset + index);
+    if (!word) break;
+    tasks.push({ id: `extra-${round}-review-${index}`, category: 'review', ordinal: index + 1, mode: index % 2 === 0 ? 'ar-ru' : 'ru-ar', word, done: false });
+  }
+  for (let index = 0; index < targets.typing; index++) {
+    const word = takeDailyPlanWord(typingPool, fallbackPool, usedWords, offset + index);
+    if (!word) break;
+    tasks.push({ id: `extra-${round}-typing-${index}`, category: 'typing', ordinal: index + 1, mode: 'type-ar', word, done: false });
+  }
+
+  ErrorLog.invariant(tasks.length === DAILY_CONTINUATION_TASKS, 'daily-continuation-task-count-mismatch', {
+    source: 'daily-goal',
+    expected: DAILY_CONTINUATION_TASKS,
+    actual: tasks.length,
+    vocabulary: unique.length,
+    round,
+    goalDate: row?.goal_date || null,
+  });
+  return tasks;
+}
+
 function dailyPlanMatches(plan, row) {
   return Boolean(
     plan &&
@@ -401,13 +546,17 @@ async function startDailyGoal() {
 
   const replay = dailyGoalIsComplete(row);
   DailyGoalState.replay = replay;
+  let pending = [];
   if (replay) {
-    DailyGoalState.plan.tasks.forEach((task) => (task.done = false));
+    DailyGoalState.continuationRound += 1;
+    pending = buildDailyContinuationTasks(row, DailyGoalState.continuationRound);
   } else {
     applyDailyServerProgress(DailyGoalState.plan, row);
+    pending = DailyGoalState.plan.tasks.filter((task) => !task.done);
   }
-  const pending = DailyGoalState.plan.tasks.filter((task) => !task.done);
-  if (!pending.length) return alert('Задание дня уже выполнено. Нажмите ещё раз для повторения.');
+  if (!pending.length) {
+    return alert(replay ? 'Не удалось составить дополнительный блок занятий.' : 'Задание дня уже выполнено.');
+  }
   writeDailyGoalCache();
   initQuiz(
     pending.map((task) => ({ ...task.word })),
@@ -469,7 +618,10 @@ function syncDailyGoalProgress() {
         });
         return null;
       }
-      if (response?.goal) DailyGoalState.row = mergeDailyGoalRows(response.goal, DailyGoalState.row);
+      if (response?.goal) {
+        DailyGoalState.row = mergeDailyGoalRows(response.goal, DailyGoalState.row);
+        updateDailyGoalWeekFromRow(DailyGoalState.row);
+      }
       if (response?.streak != null) App.streak = Number(response.streak) || 0;
       if (response?.max_streak != null) App.maxStreak = Number(response.max_streak) || 0;
       if (response?.daily_goals_completed != null) App.dailyGoalsCompleted = Number(response.daily_goals_completed) || 0;
@@ -507,10 +659,11 @@ async function resetDailyGoalForNewDay(today = appDateKey()) {
 }
 
 function dailyTaskLabel(task) {
-  if (!task) return 'Задание дня';
-  if (task.category === 'new') return 'Задание дня · новые слова';
-  if (task.category === 'typing') return 'Задание дня · арабский ввод';
-  return 'Задание дня · повторение';
+  const prefix = DailyGoalState.replay ? 'Дополнительная практика' : 'Задание дня';
+  if (!task) return prefix;
+  if (task.category === 'new') return `${prefix} · новые слова`;
+  if (task.category === 'typing') return `${prefix} · арабский ввод`;
+  return `${prefix} · повторение`;
 }
 
 function resetDailyGoalState() {
@@ -518,6 +671,8 @@ function resetDailyGoalState() {
   DailyGoalState.plan = null;
   DailyGoalState.pendingChoice = null;
   DailyGoalState.replay = false;
+  DailyGoalState.week = [];
+  DailyGoalState.continuationRound = 0;
 }
 
 if (typeof window !== 'undefined') {

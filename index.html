@@ -3315,22 +3315,36 @@ button,input,select,textarea{max-width:100%;min-width:0;}
           <span class="streak-big-num"><span class="streak-calendar-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M7 3v4M17 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"></path></svg></span><span id="banner-days">0</span></span>
           Ты занимаешься уже <span id="banner-days-label">0 дней</span> подряд!
         </div>
-        <div class="streak-days" id="banner-today-count">0 / 20 заданий</div>
+        <div class="streak-days" id="banner-today-count">0 / 40 заданий</div>
       </div>
       <div class="streak-hint" id="banner-hint">Задание дня загрузится после выбора тома.</div>
+      <section class="daily-week-card" aria-labelledby="daily-week-title">
+        <div class="daily-week-head"><strong id="daily-week-title">Карта недели</strong><span>дни по Москве</span></div>
+        <div class="daily-week-map" id="daily-week-map" role="list" aria-label="Выполнение дневных заданий за текущую неделю">
+          <div class="daily-week-day is-future"><span class="daily-week-label">Пн</span><span class="daily-week-node">—</span></div>
+          <div class="daily-week-day is-future"><span class="daily-week-label">Вт</span><span class="daily-week-node">—</span></div>
+          <div class="daily-week-day is-future"><span class="daily-week-label">Ср</span><span class="daily-week-node">—</span></div>
+          <div class="daily-week-day is-future"><span class="daily-week-label">Чт</span><span class="daily-week-node">—</span></div>
+          <div class="daily-week-day is-future"><span class="daily-week-label">Пт</span><span class="daily-week-node">—</span></div>
+          <div class="daily-week-day is-future"><span class="daily-week-label">Сб</span><span class="daily-week-node">—</span></div>
+          <div class="daily-week-day is-future"><span class="daily-week-label">Вс</span><span class="daily-week-node">—</span></div>
+        </div>
+        <p class="daily-week-caption" id="daily-week-caption">Карта обновится после загрузки задания дня.</p>
+      </section>
       <div class="streak-bar-bg"><div class="streak-bar-fill" id="streak-bar-fill" style="width:0%"></div></div>
-      <div class="streak-bar-label"><span id="daily-progress-start">0 заданий</span><span id="daily-progress-goal">Цель: 20 заданий</span></div>
+      <div class="streak-bar-label"><span id="daily-progress-start">0 заданий</span><span id="daily-progress-goal">Цель: 40 заданий</span></div>
       <div class="daily-goal-breakdown" aria-label="Состав задания дня">
-        <div class="daily-goal-chip"><span>Новые</span><b id="daily-new-progress">0 / 4</b></div>
-        <div class="daily-goal-chip"><span>Повторение</span><b id="daily-review-progress">0 / 10</b></div>
-        <div class="daily-goal-chip"><span>Ввод</span><b id="daily-typing-progress">0 / 6</b></div>
+        <div class="daily-goal-chip"><span>Новые</span><b id="daily-new-progress">0 / 8</b></div>
+        <div class="daily-goal-chip"><span>Повторение</span><b id="daily-review-progress">0 / 20</b></div>
+        <div class="daily-goal-chip"><span>Ввод</span><b id="daily-typing-progress">0 / 12</b></div>
       </div>
       <div class="streak-done hidden" id="streak-done">
         <span class="ui-icon ui-icon-success">
           <svg><use href="#ui-icon-success"></use></svg>
         </span>
-        Отлично! Серия продлена на ещё один день!
+        <span id="streak-done-text">Сегодняшний день засчитан. Приходите завтра, чтобы продолжить серию.</span>
       </div>
+      <div class="daily-next-day-note hidden" id="daily-next-day-note">До завтра можно проходить дополнительные задания без ограничений — сегодняшний день повторно не засчитается.</div>
       <button class="daily-action daily-goal-start" id="btn-daily-goal" type="button" onclick="startDailyGoal()">Начать задание дня</button>
       <div id="banner-rank"></div>
     </div>
@@ -3641,8 +3655,8 @@ button,input,select,textarea{max-width:100%;min-width:0;}
     </div>
   </div>
   <div class="res-body">
-    <button class="btn-res" onclick="backToMenu()"><span class="ui-icon"><svg><use href="#ui-icon-home"></use></svg></span>В меню</button>
-    <button class="btn-res sec" onclick="restartQuiz()"><span class="ui-icon"><svg><use href="#ui-icon-refresh"></use></svg></span>Повторить</button>
+    <button class="btn-res" id="result-menu-btn" onclick="backToMenu()"><span class="ui-icon"><svg><use href="#ui-icon-home"></use></svg></span>В меню</button>
+    <button class="btn-res sec" id="result-repeat-btn" onclick="restartQuiz()"><span class="ui-icon"><svg><use href="#ui-icon-refresh"></use></svg></span>Повторить</button>
     <div class="word-list" id="res-word-list"></div>
   </div>
 </div>
@@ -3920,6 +3934,23 @@ button:not(:disabled):active,[role="button"]:not([aria-disabled="true"]):active,
   #tab-rules .rule-quran-ar,
   #tab-rules .rule-study .tbl-wrap td .rule-table-ar.rule-quran-ar{font-size:36px!important;line-height:2!important;padding:10px 12px!important;}
 }
+.daily-week-card{margin-top:13px;padding:12px 10px 10px;border:1px solid #d7e1e7;border-radius:13px;background:linear-gradient(145deg,#f8fbfc,#fff)}
+.daily-week-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px;color:#29495f}
+.daily-week-head strong{font-size:13px;font-weight:800}.daily-week-head span{color:#71838e;font-size:10px;font-weight:700}
+.daily-week-map{position:relative;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.daily-week-map::before{content:"";position:absolute;z-index:0;top:35px;left:7%;right:7%;height:2px;background:#dbe5ea}
+.daily-week-day{position:relative;z-index:1;display:flex;min-width:0;flex-direction:column;align-items:center;gap:5px;color:#71838e}
+.daily-week-label{font-size:10px;font-weight:800;text-transform:uppercase}
+.daily-week-node{display:grid;width:31px;height:31px;place-items:center;border:2px solid #d3dee4;border-radius:50%;background:#fff;color:#71838e;font-size:11px;font-weight:850;box-shadow:0 2px 7px rgba(37,77,101,.06)}
+.daily-week-day.is-complete .daily-week-node{border-color:#3f6178;background:#3f6178;color:#fff}
+.daily-week-day.is-complete .daily-week-label{color:#2f5369}
+.daily-week-day.is-today .daily-week-node{border-color:#a9582b;color:#8e4926;box-shadow:0 0 0 3px rgba(169,88,43,.12)}
+.daily-week-day.is-today .daily-week-label{color:#8e4926}
+.daily-week-day.is-complete.is-today .daily-week-node{border-color:#3f6178;color:#fff;box-shadow:0 0 0 3px rgba(169,88,43,.22)}
+.daily-week-day.is-missed .daily-week-node{border-style:dashed;color:#9aa8b0;background:#f5f7f8}
+.daily-week-day.is-future{opacity:.62}
+.daily-week-caption{margin:9px 2px 0;color:#647783;font-size:11px;line-height:1.45;text-align:center}
+.daily-next-day-note{margin-top:10px;padding:10px 12px;border:1px solid #cbdde6;border-radius:10px;background:#f0f7fa;color:#31566b;font-size:12px;font-weight:650;line-height:1.55}
 .daily-goal-breakdown{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
 .daily-goal-chip{display:flex;flex-direction:column;gap:3px;min-width:0;padding:9px 8px;border:1px solid #d7e1e7;border-radius:10px;background:#f7fafb;color:#536977;text-align:center}
 .daily-goal-chip span{font-size:11px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -3953,6 +3984,8 @@ button:not(:disabled):active,[role="button"]:not([aria-disabled="true"]):active,
   .daily-goal-options--settings{grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
   .daily-goal-options--settings .daily-goal-option{grid-column:auto!important;min-height:52px;padding-inline:2px}
   .daily-goal-options--settings .daily-goal-option b{font-size:17px}
+  .daily-week-card{padding-inline:7px}
+  .daily-week-map{gap:2px}.daily-week-node{width:29px;height:29px;font-size:10px}.daily-week-map::before{top:34px}
   .daily-goal-breakdown{gap:5px}
   .daily-goal-chip{padding-inline:4px}
   .daily-goal-chip span{font-size:10px}

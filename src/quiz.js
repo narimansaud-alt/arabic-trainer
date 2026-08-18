@@ -975,8 +975,24 @@ async function finishQuiz() {
   quizGetEl('r-correct').textContent = roundCorrect;
   const attemptsEl = quizGetEl('r-attempts');
   if (attemptsEl) attemptsEl.textContent = roundAttempts;
-  const resultTitle = completedMode === 'fast' ? 'Быстрое повторение завершено' : completedMode === 'daily' ? 'Задание дня завершено' : 'Урок завершён';
+  const resultTitle = completedMode === 'fast'
+    ? 'Быстрое повторение завершено'
+    : completedMode === 'daily'
+    ? dailyQuizReplay
+      ? 'Дополнительная практика завершена'
+      : 'Задание дня завершено'
+    : 'Урок завершён';
   setIconLabel(quizGetEl('res-title'), completedMode === 'fast' ? 'bolt' : 'success', resultTitle);
+  const resultMenuButton = quizGetEl('result-menu-btn');
+  const resultRepeatButton = quizGetEl('result-repeat-btn');
+  if (completedMode === 'daily') {
+    setIconLabel(resultMenuButton, 'home', 'К карте дня');
+    const dailyComplete = typeof dailyGoalIsComplete === 'function' && dailyGoalIsComplete();
+    setIconLabel(resultRepeatButton, 'refresh', dailyComplete ? 'Продолжить занятия' : 'Продолжить задание дня');
+  } else {
+    setIconLabel(resultMenuButton, 'home', 'В меню');
+    setIconLabel(resultRepeatButton, 'refresh', 'Повторить');
+  }
   const box = quizGetEl('res-word-list');
   const wrongArs = new Set(roundWrong.map((w) => w.ar));
   const wrongItems = resultWords.filter((w) => wrongArs.has(w.ar));
@@ -1027,10 +1043,7 @@ function restartQuiz() {
     return;
   }
   if (previous.kind === 'daily') {
-    const tasks = toSafeDailyTaskList(previous.dailyTasks).map((task) => ({ ...task, word: { ...task.word }, done: false, __counted: false }));
-    if (!tasks.length) return startDailyGoal();
-    initQuiz(tasks.map((task) => ({ ...task.word })), 'daily', false, { dailyTasks: tasks, dailyReplay: true });
-    return;
+    return startDailyGoal();
   }
   initQuiz(previous.words.map((word) => ({ ...word })), previous.mode, previous.isFav);
 }
