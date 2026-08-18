@@ -29,6 +29,7 @@ function fakeElement() {
 
 const apiCalls = [];
 const alerts = [];
+const confirms = [];
 const context = {
   console,
   Date,
@@ -57,6 +58,7 @@ const context = {
     body: { appendChild() {} },
   },
   alert(message) { alerts.push(message); },
+  confirm(message) { confirms.push(message); return true; },
   setTimeout() { return 1; },
   clearTimeout() {},
   setInterval() { return 1; },
@@ -168,6 +170,19 @@ await context.handleFast(fakeElement(), false, 'بَطِيءٌ', false);
 assert.equal(vm.runInContext('roundAttempts', context), 2, 'fast mode must count every answered card');
 assert.equal(vm.runInContext('roundCorrect', context), 1, 'fast mode must count correct answers');
 assert.deepEqual(Array.from(vm.runInContext('roundWrong.map((word) => word.ar)', context)), ['بَطِيءٌ'], 'fast mode must retain wrong answers');
+
+context.__finishCalls = 0;
+vm.runInContext(`
+  finishQuiz = async function () { globalThis.__finishCalls += 1; };
+  quizMode = 'fast';
+`, context);
+context.confirmExit();
+assert.equal(confirms.length, 0, 'fast-mode exit must never open a timer-pausing native dialog');
+assert.equal(context.__finishCalls, 1, 'fast-mode exit must finish immediately');
+vm.runInContext("quizMode = 'review'", context);
+context.confirmExit();
+assert.equal(confirms.length, 1, 'ordinary modes must retain the exit confirmation');
+assert.equal(context.__finishCalls, 2, 'confirmed ordinary exit must finish the session');
 
 assert.match(quizSource, /updateWordLevel\(curWord\.ar, false\)/u, 'quiz errors must use the shared difficult-word path');
 assert.match(htmlSource, /id="star-btn"[^>]+onclick="toggleStar\(\)"/u, 'the manual difficult-word button must remain in the quiz card');

@@ -102,6 +102,10 @@ function checkMidnightReset() {
     saveDailyProgressSnapshot();
     updateStreakBanner();
   }
+  const dailyGoalDate = typeof DailyGoalState !== 'undefined' ? DailyGoalState.row?.goal_date || null : null;
+  if (dailyGoalDate && dailyGoalDate !== today && typeof resetDailyGoalForNewDay === 'function') {
+    void resetDailyGoalForNewDay(today);
+  }
   if (__midnightResetTimerId) {
     clearTimeout(__midnightResetTimerId);
   }

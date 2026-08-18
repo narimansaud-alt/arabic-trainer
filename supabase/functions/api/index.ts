@@ -355,6 +355,10 @@ Deno.serve(async (req: Request) => {
           }
 
           case "sync-daily-goal-progress": {
+            const requestedGoalDate = typeof body.goal_date === "string" ? body.goal_date : "";
+            if (requestedGoalDate && (!/^\d{4}-\d{2}-\d{2}$/.test(requestedGoalDate) || requestedGoalDate !== moscowDateKey())) {
+              return badRequest("Daily goal date expired");
+            }
             const courseName = typeof body.course_name === "string" ? body.course_name.slice(0, 64) : "";
             if (!/^Мединский курс \(Том [1-4]\)$/.test(courseName)) return badRequest("Unsupported course");
             const newCompleted = body.new_completed;

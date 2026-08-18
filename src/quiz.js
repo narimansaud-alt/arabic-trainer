@@ -190,6 +190,16 @@ function resetQuizState() {
   clearProgress();
 }
 
+function stopDailyQuizForNewDay() {
+  const activeScreen = document.querySelector?.('.screen.active')?.id || '';
+  if (quizMode !== 'daily' || activeScreen !== 'screen-quiz') return false;
+  resetQuizState();
+  showScreen('screen-app');
+  if (typeof switchTab === 'function') switchTab('train');
+  alert('Начался новый день по московскому времени. Задание дня обновлено.');
+  return true;
+}
+
 // QUIZ START
 function getSelectedWords() {
   const active = [...document.querySelectorAll('.lesson-pill.active')].map((p) => p.dataset.lesson);
@@ -629,7 +639,11 @@ function goNext() {
   nextWord(true);
 }
 function confirmExit() {
-  if (confirm('Завершить тренировку?')) finishQuiz();
+  if (quizMode === 'fast') {
+    void finishQuiz();
+    return;
+  }
+  if (confirm('Завершить тренировку?')) void finishQuiz();
 }
 function clearTimers() {
   clearInterval(timerInt);
