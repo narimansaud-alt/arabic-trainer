@@ -30,6 +30,15 @@ const main = read('src/main.js');
 const api = read('src/api.js');
 const verbRules = read('src/verb-rules.js');
 const apiV2Entry = read('supabase/functions/api-v2/index.ts');
+if (!index.includes('<meta name="apple-mobile-web-app-title" content="Мединский курс">')) {
+  fail('iOS Home Screen title must remain Мединский курс');
+}
+if (!index.includes('const isIosHomeScreenPlatform =') || !index.includes("manifestLink.href = './manifest.json'")) {
+  fail('platform-specific PWA manifest selection is missing');
+}
+if (/<link\s+rel=["']manifest["']/iu.test(index)) {
+  fail('a static manifest link would expose the legacy Android name to new iOS installs');
+}
 if (!api.includes("'/functions/v1/api-v2'")) fail('current client must use the JWT-verified api-v2 endpoint');
 if (!api.includes("Authorization: 'Bearer ' + SUPA_ANON_KEY")) fail('Edge Function calls must include the anon JWT');
 if (!api.includes('apikey: SUPA_ANON_KEY')) fail('Edge Function calls must include the Supabase apikey header');

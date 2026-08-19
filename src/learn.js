@@ -108,6 +108,7 @@ function renderLearnQ() {
   const btnNext = learnGetEl('btn-next');
   const opts = learnGetEl('opts');
   const typeArea = learnGetEl('type-area');
+  renderQuizWordSource(curWord);
   if (qProg) qProg.textContent = doneCount + '/' + roundWords.length;
   if (qBar) qBar.style.width = (roundWords.length ? (doneCount / roundWords.length) * 100 : 0) + '%';
   if (starBtn) renderFavoriteButton(starBtn, App.favorites.includes(curWord.ar));

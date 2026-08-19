@@ -423,7 +423,7 @@ function renderQuizWordSource(word) {
     el = document.createElement('div');
     el.id = 'q-source';
     el.className = 'quiz-word-source hidden';
-    wordDisplay.parentNode.insertBefore(el, wordDisplay);
+    wordDisplay.insertAdjacentElement('afterend', el);
   }
   const volumeId = word?.volume || App.volume || '';
   const volumeLabel =

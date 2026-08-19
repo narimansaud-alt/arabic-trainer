@@ -5,7 +5,20 @@
 <title>Мединский курс</title>
 <meta name="theme-color" content="#ffffff">
 <meta name="mobile-web-app-capable" content="yes">
-<link rel="manifest" href="./manifest.json">
+<meta name="application-name" content="Мединский курс">
+<script id="pwa-manifest-selector">
+(() => {
+  const isIosHomeScreenPlatform =
+    /iPad|iPhone|iPod/i.test(navigator.userAgent || '') ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (!isIosHomeScreenPlatform) {
+    const manifestLink = document.createElement('link');
+    manifestLink.rel = 'manifest';
+    manifestLink.href = './manifest.json';
+    document.head.appendChild(manifestLink);
+  }
+})();
+</script>
 <link href="./assets/fonts/local-fonts.css?v=8" rel="stylesheet">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -3655,6 +3668,7 @@ button,input,select,textarea{max-width:100%;min-width:0;}
     <div class="word-card" id="word-card">
       <button class="star-btn" id="star-btn" aria-label="Добавить в трудные слова" aria-pressed="false" onclick="toggleStar()"><span class="ui-icon"><svg><use href="#ui-icon-star"></use></svg></span></button>
       <div id="word-display"></div>
+      <div class="quiz-word-source hidden" id="q-source"></div>
     </div>
     <div class="opts hidden" id="opts"></div>
     <div class="hidden" id="type-area">

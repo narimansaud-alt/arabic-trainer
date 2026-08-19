@@ -392,18 +392,27 @@
 }
 
 .quiz-word-source {
-  margin: 0 auto 11px;
+  margin: 11px auto 0;
   width: fit-content;
-  max-width: calc(100% - 72px);
-  padding: 5px 9px;
-  border: 1px solid #d7e1e7;
-  border-radius: 999px;
-  background: #f4f7f9;
-  color: #607684;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #7b8c97;
   font-size: 10px;
-  font-weight: 750;
-  letter-spacing: .02em;
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: .01em;
   text-align: center;
+}
+
+#screen-quiz .word-card {
+  flex-direction: column;
+}
+
+#screen-quiz #word-display {
+  width: 100%;
+  min-width: 0;
 }
 
 @media (max-width: 520px) {

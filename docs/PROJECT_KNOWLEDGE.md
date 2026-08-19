@@ -19,6 +19,7 @@ Stable PWA identity:
 - Keep `manifest.json` `id` equal to `./`.
 - Keep the full manifest name unchanged at the value enforced by the release check; changing it makes Android show an installed-app rename prompt.
 - Keep short_name unchanged; it is the compact launcher label.
+- `index.html` intentionally connects `manifest.json` only on non-iOS platforms. On iPhone/iPad the Home Screen label comes from `apple-mobile-web-app-title` and the document title, both set to `Мединский курс`; exposing the legacy Android manifest there makes fresh iOS installs display the old label.
 - `scripts/release-check.mjs` enforces these values before release.
 
 Current release history:
