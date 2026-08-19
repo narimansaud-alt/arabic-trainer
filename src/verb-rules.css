@@ -15,7 +15,7 @@
 #tab-rules .vr-note>strong{display:block;color:#183247;font-size:17px}
 #tab-rules .vr-note>p,#tab-rules .vr-form-body>p{margin:8px 0 0;color:#43576a;font-size:14px;line-height:1.72}
 #tab-rules .vr-example{margin-top:12px;padding:11px 13px;border-left:3px solid #315d79;border-radius:8px;background:#f5f8fb;color:#20384d}
-#tab-rules .vr-ar{font-family:"Noto Naskh Arabic","Amiri",serif;font-size:21px;line-height:1.6;unicode-bidi:isolate}
+#tab-rules .vr-ar{font-family:"Noto Naskh Arabic","Amiri",serif;font-size:21px;font-weight:850;line-height:1.6;color:#315d79;unicode-bidi:isolate}
 #tab-rules .vr-table-wrap{width:100%;max-width:100%;margin-top:12px;overflow-x:auto;border:1px solid #dce5ec;border-radius:11px;-webkit-overflow-scrolling:touch}
 #tab-rules .vr-table{width:100%;min-width:0;border-collapse:collapse;table-layout:fixed}
 #tab-rules .vr-table th{padding:9px 7px;background:#f3f7fa;color:#52677a;font-size:11px;line-height:1.35;text-align:left}
@@ -23,6 +23,11 @@
 #tab-rules .vr-table th:first-child,#tab-rules .vr-table td:first-child{width:31%}
 #tab-rules .vr-table th:nth-child(2),#tab-rules .vr-table td:nth-child(2){width:31%}
 #tab-rules .vr-table .vr-ar{font-size:20px;line-height:1.5}
+#tab-rules .vr-table:has(th:nth-child(5)){min-width:860px;table-layout:auto}
+#tab-rules .vr-table:has(th:nth-child(5)) th,#tab-rules .vr-table:has(th:nth-child(5)) td{width:auto;min-width:145px}
+#tab-rules .vr-table:has(th:nth-child(5)) th:first-child,#tab-rules .vr-table:has(th:nth-child(5)) td:first-child{width:auto;min-width:110px}
+#tab-rules .vr-table:has(th:nth-child(5)) th:nth-child(2),#tab-rules .vr-table:has(th:nth-child(5)) td:nth-child(2){width:auto;min-width:170px}
+#tab-rules .vr-table:has(th:nth-child(5)) th:nth-child(5),#tab-rules .vr-table:has(th:nth-child(5)) td:nth-child(5){min-width:220px}
 #tab-rules .vr-form-list{display:grid;gap:10px}
 #tab-rules .vr-form-card{padding:0;overflow:hidden}
 #tab-rules .vr-form-card summary{display:grid;grid-template-columns:42px minmax(0,1fr);align-items:center;gap:10px;padding:14px;cursor:pointer;list-style:none}
@@ -31,6 +36,7 @@
 #tab-rules .vr-form-card summary .vr-ar{color:#183247;font-size:23px}
 #tab-rules .vr-form-body{padding:0 14px 14px;border-top:1px solid #e5ebf0}
 @media(max-width:620px){#tab-rules .vr-topic-grid{grid-template-columns:1fr}#tab-rules .vr-hero,#tab-rules .vr-topic-head{padding:17px}#tab-rules .vr-topic-card{min-height:96px;padding:14px}#tab-rules .vr-note{padding:15px}#tab-rules .vr-table th{padding:7px 5px;font-size:10px}#tab-rules .vr-table td{padding:7px 5px;font-size:12px}#tab-rules .vr-table .vr-ar{font-size:18px;line-height:1.45}}
+@media(max-width:620px){#tab-rules .vr-table:has(th:nth-child(5)) th{padding:10px;font-size:12px;line-height:1.45}#tab-rules .vr-table:has(th:nth-child(5)) td{padding:10px;font-size:13px;line-height:1.6}#tab-rules .vr-table:has(th:nth-child(5)) .vr-ar{font-size:22px;line-height:1.65}}
 
 #tab-rules .vr-weak-section{min-width:0;padding:18px;border:1px solid #dfe7ee;border-radius:14px;background:#fff;box-shadow:0 6px 18px rgba(30,55,77,.04)}
 #tab-rules .vr-weak-section .grammar-ref-section-title{margin:0;color:#183247;font-size:18px;line-height:1.6}

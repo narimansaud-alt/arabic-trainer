@@ -3194,6 +3194,32 @@ button,input,select,textarea{max-width:100%;min-width:0;}
   line-height:1.45!important;
   text-transform:none!important;
 }
+/* Arabic embedded in Russian prose and compact labels must remain fully legible. */
+#tab-rules .rule-title :is([lang="ar"],[dir="rtl"]):not(.rule-title-ar),
+#tab-rules .rule-outline-title-text :is([lang="ar"],[dir="rtl"]):not(.rule-title-ar),
+#tab-rules .rules-preview-title :is([lang="ar"],[dir="rtl"]):not(.rule-title-ar),
+#tab-rules .rule-study :is(.rule-study-text,.rule-term-ru,.rule-example-ru,.rule-analysis-ru,.rule-note,.rule-card-kicker,.rule-table-ru,li) :is([lang="ar"],[dir="rtl"]):not(.rule-main-ar):not(.rule-example-ar):not(.rule-term-ar):not(.rule-table-ar):not(.rule-source-ar):not(.rule-analysis-ar):not(.rule-title-ar){
+  display:inline-block!important;
+  direction:rtl!important;
+  unicode-bidi:isolate!important;
+  padding:0 .12em!important;
+  margin-inline:.04em!important;
+  border:0!important;
+  border-radius:6px!important;
+  background:rgba(255,255,255,.55)!important;
+  color:#246076;
+  font-family:var(--ui-font-ar)!important;
+  font-size:clamp(20px,1.35em,24px)!important;
+  font-weight:900!important;
+  line-height:1.7!important;
+  letter-spacing:0!important;
+  text-transform:none!important;
+  vertical-align:middle!important;
+  white-space:normal!important;
+  overflow-wrap:normal!important;
+  word-break:normal!important;
+  text-shadow:0 .2px 0 currentColor!important;
+}
 @media(max-width:620px){
   #tab-rules .rule-card:has(.rule-study) .rule-card-body{padding:0 0 16px!important;}
   #tab-rules .rule-study{gap:11px;}
