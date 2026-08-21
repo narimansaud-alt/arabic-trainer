@@ -141,12 +141,13 @@ async function loadLeaderboardCacheBy(sortBy) {
   if (__leaderboardInflight[inflightKey]) return __leaderboardInflight[inflightKey];
 
   const request = (async () => {
-    let query = db
-      .from('leaderboard')
-      .select('nickname,total_score,streak,daily_goals_completed')
-      .order(sortBy, { ascending: false });
-    if (isDailyGoalSort) query = query.order('streak', { ascending: false });
-    const queryPromise = query.limit(200);
+    const type = isDailyGoalSort ? 'daily' : 'score';
+    const queryPromise = db.rpc('get_public_leaderboard', {
+      p_type: type,
+      p_period: 'all',
+      p_username: App.username || null,
+      p_limit: 100,
+    });
     let timeoutId = 0;
     const timeoutPromise = new Promise((_, reject) => {
       timeoutId = setTimeout(() => reject(new Error('leaderboard-timeout')), 10000);
@@ -157,7 +158,18 @@ async function loadLeaderboardCacheBy(sortBy) {
       const data = result?.data;
       const error = result?.error;
       if (error) throw error;
-      rows = data && data.length ? data : [];
+      rows = (data || []).map((row) => {
+        const score = Number(row.score_value) || 0;
+        return {
+          nickname: row.nickname,
+          rank: Number(row.position) || 0,
+          is_current: Boolean(row.is_current),
+          total_score: isDailyGoalSort ? 0 : score,
+          daily_goals_completed: isDailyGoalSort ? score : 0,
+          streak: Number(row.streak) || 0,
+          daily_goal_minutes: Number(row.daily_goal_minutes) || 10,
+        };
+      });
     } catch (e) {
       ErrorLog.capture(e, { source: 'streak', action: 'leaderboard-cache', sortBy });
       rows = store.rows || [];
@@ -165,7 +177,7 @@ async function loadLeaderboardCacheBy(sortBy) {
       clearTimeout(timeoutId);
     }
 
-    if (isStreakSort) {
+    if (isDailyGoalSort) {
       __leaderboardStreakCache = { ts: Date.now(), rows };
     } else {
       __leaderboardScoreCache = { ts: Date.now(), rows };
@@ -225,7 +237,11 @@ async function loadStreakRank() {
   try {
     const data = await loadLeaderboardCacheBy('daily_goals_completed');
     if (!el || !data || !data.length) return;
-    const rank = data.findIndex((user) => user.nickname === App.username) + 1;
+    const usernameKey = String(App.username).trim().toLocaleLowerCase();
+    const row = data.find((user) =>
+      user.is_current || String(user.nickname || '').trim().toLocaleLowerCase() === usernameKey
+    );
+    const rank = Number(row?.rank) || 0;
     if (rank > 0) {
       const place = rank === 1 ? '1-е' : rank === 2 ? '2-е' : rank === 3 ? '3-е' : rank + '-е';
       el.textContent = place + ' \u043c\u0435\u0441\u0442\u043e \u0432 \u0440\u0435\u0439\u0442\u0438\u043d\u0433\u0435 \u0437\u0430\u0434\u0430\u043d\u0438\u0439 \u0434\u043d\u044f';

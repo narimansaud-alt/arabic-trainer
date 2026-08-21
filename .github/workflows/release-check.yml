@@ -26,3 +26,5 @@ jobs:
         run: node scripts/release-check.mjs
       - name: Run training regressions
         run: node scripts/test-training-regressions.mjs
+      - name: Run leaderboard regressions
+        run: node scripts/test-leaderboards.mjs

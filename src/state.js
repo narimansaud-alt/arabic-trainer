@@ -67,7 +67,8 @@ function appPeriodStart(period) {
   let start = Date.UTC(year, month - 1, day, -APP_TIME_ZONE_OFFSET_MINUTES / 60, 0, 0, 0);
   if (period === 'week') {
     const dayOfWeek = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
-    start = Date.UTC(year, month - 1, day - dayOfWeek, -APP_TIME_ZONE_OFFSET_MINUTES / 60, 0, 0, 0);
+    const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    start = Date.UTC(year, month - 1, day - daysSinceMonday, -APP_TIME_ZONE_OFFSET_MINUTES / 60, 0, 0, 0);
   } else if (period === 'month') {
     start = Date.UTC(year, month - 1, 1, -APP_TIME_ZONE_OFFSET_MINUTES / 60, 0, 0, 0);
   }

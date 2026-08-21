@@ -128,7 +128,8 @@ assert.match(cssSource, /#tab-train \.sc:has\(#lesson-grid\)/u, 'the old global 
 assert.doesNotMatch(htmlSource, /setLbFilter\('type','streak'/u, 'the separate streak leaderboard control must be absent');
 assert.doesNotMatch(lbSource, /type === 'streak'/u, 'the retired streak leaderboard branch must be removed');
 assert.match(streakSource, /loadLeaderboardCacheBy\('daily_goals_completed'\)/u, 'the banner rank must use completed daily goals');
-assert.match(streakSource, /if \(isDailyGoalSort\) query = query\.order\('streak'/u, 'daily-goal rank ties must use the same streak tiebreaker as the leaderboard');
+assert.match(streakSource, /db\.rpc\('get_public_leaderboard'/u, 'the banner rank must use the canonical server leaderboard');
+assert.doesNotMatch(streakSource, /isStreakSort/u, 'the undefined legacy leaderboard cache variable must stay removed');
 const resetAppSource = stateSource.match(/function resetApp\(\) \{([\s\S]*?)\n\}/u)?.[1] || '';
 assert.match(resetAppSource, /resetDailyGoalState/u, 'logout must clear the previous account daily-goal state');
 

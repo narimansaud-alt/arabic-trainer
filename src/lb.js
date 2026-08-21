@@ -1,6 +1,6 @@
-// lb.js — leaderboard tab. All reads here are public/non-sensitive
-// (the `leaderboard` view exposes no password data, kept in sync with
-// `users` by a database trigger — see the schema migration).
+// lb.js — leaderboard tab. All reads use narrow public RPCs that expose
+// performance metrics only. Period aggregation stays inside PostgreSQL so a
+// PostgREST row limit can never truncate the score history before summing it.
 const LB_QUERY_TIMEOUT_MS = 7000;
 
 function lbQueryErrorMessage() {
@@ -38,104 +38,49 @@ async function loadLB() {
   cont.innerHTML = '<div class="lb-empty">Загрузка...</div>';
   const { type, period } = Settings.lbFilters;
   const username = typeof App?.username === 'string' && App.username ? App.username : null;
+  const leaderboardPeriod = type === 'score' ? period : 'all';
+  const leaderboardPromise = safeLbQuery(
+    () => db.rpc('get_public_leaderboard', {
+      p_type: type,
+      p_period: leaderboardPeriod,
+      p_username: username,
+      p_limit: 20,
+    }),
+    `${type}-${leaderboardPeriod}`
+  );
+  const chartPromise = type === 'score' && username
+    ? safeLbQuery(
+      () => db.rpc('get_public_score_chart', { p_username: username, p_days: 7 }),
+      'score-chart'
+    )
+    : Promise.resolve([]);
+  const [data, chartData] = await Promise.all([leaderboardPromise, chartPromise]);
 
-  if (type === 'fast') {
-    const data = await safeLbQuery(() =>
-      db.from('leaderboard').select('nickname,fast_mode_high_score').order('fast_mode_high_score', { ascending: false }).limit(20),
-      'fast'
-    );
-    if (data === null) {
-      cont.innerHTML = '<div class="lb-empty">' + lbQueryErrorMessage() + '</div>';
-      return;
-    }
-    const items = data.map((r) => ({ name: r.nickname, val: (r.fast_mode_high_score || 0) + ' слов' }));
-    cont.innerHTML = '';
-    renderLbTable(cont, items, true);
-    return;
-  }
-
-
-  if (type === 'daily') {
-    const data = await safeLbQuery(() =>
-      db
-        .from('leaderboard')
-        .select('nickname,daily_goals_completed,streak,daily_goal_minutes')
-        .order('daily_goals_completed', { ascending: false })
-        .order('streak', { ascending: false })
-        .limit(20),
-      'daily-goals'
-    );
-    if (data === null) {
-      cont.innerHTML = '<div class="lb-empty">' + lbQueryErrorMessage() + '</div>';
-      return;
-    }
-    const items = data.map((r) => ({
-      name: r.nickname,
-      val: (r.daily_goals_completed || 0) + ' дн.',
-      extra: 'Серия: ' + (r.streak || 0) + ' · цель: ' + (r.daily_goal_minutes || 10) + ' мин.',
-    }));
-    cont.innerHTML = '';
-    renderLbTable(cont, items, true);
-    return;
-  }
-
-  // All-time score is the canonical total kept on users/leaderboard.
-  // score_history is still used for time windows and the personal chart.
-  if (period === 'all') {
-    const data = await safeLbQuery(() =>
-      db.from('leaderboard').select('nickname,total_score').order('total_score', { ascending: false }).limit(20),
-      'score'
-    );
-    if (data === null) {
-      cont.innerHTML = '<div class="lb-empty">' + lbQueryErrorMessage() + '</div>';
-      return;
-    }
-    const d30 = new Date();
-    d30.setDate(d30.getDate() - 30);
-    const myData = username ? await safeLbQuery(() => db.from('score_history').select('points,created_at').eq('username', username).gte('created_at', d30.toISOString()), 'history-all') : [];
-    if (myData === null) {
-      cont.innerHTML = '<div class="lb-empty">' + lbQueryErrorMessage() + '</div>';
-      return;
-    }
-    const items = data.map((r) => ({ name: r.nickname, val: (r.total_score || 0) + ' баллов' }));
-    cont.innerHTML = '';
-    const chart = buildChart(Array.isArray(myData) ? myData : []);
-    if (chart) cont.innerHTML += chart;
-    renderLbTable(cont, items, true);
-    return;
-  }
-
-  // Period scores are aggregated from Moscow calendar periods:
-  // day starts at 00:00 MSK, week starts on Sunday, month starts on the 1st.
-  let q = db.from('score_history').select('username,points,course_name,created_at').like('course_name', 'Мединский курс%');
-  const d = appPeriodStart(period);
-  q = q.gte('created_at', d.toISOString());
-  const d30 = new Date();
-  d30.setDate(d30.getDate() - 30);
-  const myData = username ? await safeLbQuery(() => db.from('score_history').select('points,created_at').eq('username', username).gte('created_at', d30.toISOString()), 'history-period') : [];
-  let data = await safeLbQuery(() => q, 'period');
   if (data === null) {
     cont.innerHTML = '<div class="lb-empty">' + lbQueryErrorMessage() + '</div>';
     return;
   }
-  if (myData === null) {
-    cont.innerHTML = '<div class="lb-empty">' + lbQueryErrorMessage() + '</div>';
-    return;
-  }
-  if (!Array.isArray(data)) data = [];
-  const agg = {};
-  (data || []).forEach((r) => {
-    agg[r.username] = (agg[r.username] || 0) + r.points;
+
+  const items = data.map((row) => {
+    const score = Number(row.score_value) || 0;
+    const item = {
+      name: row.nickname,
+      rank: Number(row.position) || 0,
+      isCurrent: Boolean(row.is_current),
+      val: score + (type === 'fast' ? ' слов' : type === 'daily' ? ' дн.' : ' баллов'),
+    };
+    if (type === 'daily') {
+      item.extra = 'Серия: ' + (Number(row.streak) || 0) + ' · цель: ' + (Number(row.daily_goal_minutes) || 10) + ' мин.';
+    }
+    return item;
   });
-  const sorted = Object.entries(agg).sort((a, b) => b[1] - a[1]).slice(0, 15);
+
   cont.innerHTML = '';
-  const chart = buildChart(myData || []);
-  if (chart) cont.innerHTML += chart;
-  if (!sorted.length) {
-    cont.innerHTML += '<div class="lb-empty">Нет данных</div>';
-    return;
+  if (type === 'score' && Array.isArray(chartData)) {
+    const chart = buildChart(chartData);
+    if (chart) cont.innerHTML += chart;
   }
-  renderLbTable(cont, sorted.map(([name, val]) => ({ name, val: val + ' баллов' })), true);
+  renderLbTable(cont, items, true);
 }
 
 function buildChart(records) {
@@ -146,8 +91,8 @@ function buildChart(records) {
   }
   const byDay = {};
   records.forEach((r) => {
-    if (!r || !r.created_at) return;
-    const d = appDateKey(new Date(r.created_at));
+    if (!r) return;
+    const d = r.score_date || (r.created_at ? appDateKey(new Date(r.created_at)) : '');
     if (!d) return;
     const points = Number(r.points);
     if (!Number.isFinite(points)) return;
@@ -165,9 +110,13 @@ function buildChart(records) {
         4
       )}%;background:${isT ? 'var(--gold)' : 'var(--green)'}"></div></div><div class="chart-label" style="${
         isT ? 'font-weight:700;color:var(--gold)' : ''
-      }">${dn[new Date(d).getDay()]}</div></div>`;
+      }">${dn[new Date(d + 'T12:00:00Z').getUTCDay()]}</div></div>`;
     })
     .join('')}</div></div>`;
+}
+
+function normalizedLbName(value) {
+  return String(value || '').trim().toLocaleLowerCase();
 }
 
 function renderLbTable(cont, rows, append) {
@@ -175,21 +124,25 @@ function renderLbTable(cont, rows, append) {
     cont.innerHTML += '<div class="lb-empty">Пока нет результатов</div>';
     return;
   }
-  const html =
-    '<div class="lb-table">' +
-    rows
-      .map(
-        (r, i) => `
-    <div class="lb-item ${r.name === App.username ? 'is-current' : ''}">
-      <div class="lb-rank ${i === 0 ? 't1' : i === 1 ? 't2' : i === 2 ? 't3' : ''}">${i + 1}.</div>
-      <div class="lb-name ${r.name === App.username ? 'me' : ''}">${esc(r.name)}${
-          r.name === App.username ? ' ← ты' : ''
-        }${r.extra ? '<div style="font-size:10px;color:#e67e22">' + esc(r.extra) + '</div>' : ''}</div>
+  const currentName = normalizedLbName(App.username);
+  let lastRank = 0;
+  const rowHtml = rows.map((r, i) => {
+    const rank = Number(r.rank) || i + 1;
+    const isCurrent = Boolean(r.isCurrent) || (currentName && normalizedLbName(r.name) === currentName);
+    const gap = i > 0 && rank > lastRank + 1
+      ? '<div class="lb-rank-gap" aria-hidden="true">•••</div>'
+      : '';
+    lastRank = rank;
+    return `${gap}
+    <div class="lb-item ${isCurrent ? 'is-current' : ''}">
+      <div class="lb-rank ${rank === 1 ? 't1' : rank === 2 ? 't2' : rank === 3 ? 't3' : ''}">${rank}.</div>
+      <div class="lb-name ${isCurrent ? 'me' : ''}">${esc(r.name)}${
+        isCurrent ? ' ← ты' : ''
+      }${r.extra ? '<div style="font-size:10px;color:#e67e22">' + esc(r.extra) + '</div>' : ''}</div>
       <div class="lb-val">${esc(r.val)}</div>
-    </div>`
-      )
-      .join('') +
-    '</div>';
+    </div>`;
+  }).join('');
+  const html = '<div class="lb-table">' + rowHtml + '</div>';
   if (append) cont.innerHTML += html;
   else cont.innerHTML = html;
 }

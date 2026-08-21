@@ -1,6 +1,6 @@
 # Arabic Trainer project knowledge
 
-Last updated: 2026-08-14 (dictionary QA, stable PWA identity, and network resilience)
+Last updated: 2026-08-21 (canonical server-side leaderboards and Moscow periods)
 
 ## Production and repositories
 
@@ -42,7 +42,7 @@ Current release history:
 
 Network model:
 
-- The public Supabase client reads reference data such as words, rules, announcements, and leaderboard data.
+- The public Supabase client reads reference data such as words, rules, announcements, and leaderboard metrics returned by narrow public RPCs.
 - Sensitive writes use `Api.call()` and the server-side `api` Edge Function.
 - The Edge Function verifies username/password ownership and performs privileged database operations with the server-side service-role key.
 - Error logging scrubs password, token, API key, and authorization fields before recording diagnostic data.
@@ -114,6 +114,17 @@ Authentication decision:
 - Attempts and correct answers are tracked separately.
 - Every wrong answer automatically marks the word as difficult; the star button remains the explicit add/remove control, and later correct answers do not silently clear the mark.
 - A word's review interval can increase at most once in a single training session; an error schedules a short retry interval.
+
+### Ratings and leaderboard invariants
+
+- Canonical public read functions are `get_public_leaderboard(type, period, username, limit)` and `get_public_score_chart(username, days)`; both expose performance metrics only.
+- Never aggregate raw `score_history` rows in the browser. PostgREST limits a response to 1,000 rows by default, which previously truncated weekly and monthly totals. Period aggregation must remain inside PostgreSQL.
+- The score leaderboard covers all four canonical Medina course names. `all` uses `users.total_score`; `day`, `week`, and `month` sum the complete score history.
+- Calendar boundaries use `Europe/Moscow`: day at 00:00, week on Monday at 00:00, and month on its first day at 00:00.
+- Every leaderboard response contains the requested top rows plus the current user's true ranked row when the user is outside that top.
+- Fast ranking uses `users.survival_record`. Daily-goal ranking uses `users.daily_goals_completed`, with current `streak` as the first tie-breaker.
+- The `trg_sync_leaderboard` trigger must react to score, survival record, streak, completed daily goals, and daily-goal minute changes. `leaderboard` is a compatibility cache; `users` and completed `daily_goal_progress` rows remain authoritative.
+- Migration `supabase/migrations/20260819130000_fix_public_leaderboards.sql` defines these invariants and backfills stale public cache values.
 
 ## Database change procedure
 
