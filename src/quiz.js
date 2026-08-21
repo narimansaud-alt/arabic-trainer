@@ -36,6 +36,45 @@ let timerInt = null,
   bestStreak = 0;
 let hintCount = 0;
 let learnPhase = 'intro'; // legacy flag kept for hstack/saveProgress compatibility
+const wordStatWriteChains = new Map();
+const favoriteToggleInFlight = new Set();
+let scoreWriteChain = Promise.resolve();
+
+function trainingWordIdentity(word) {
+  return `${rmH(String(word?.ar || ''))}|${String(word?.ru || '').trim().toLowerCase()}`;
+}
+
+function uniqueQuizWords(words) {
+  const seen = new Set();
+  return (Array.isArray(words) ? words : []).filter((word) => {
+    const key = trainingWordIdentity(word);
+    if (!word?.ar || !word?.ru || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function enqueueWordStatWrite(ar, payload, action) {
+  if (!App.username) return Promise.resolve(true);
+  const key = `${App.username}\u0000${ar}`;
+  const previous = wordStatWriteChains.get(key) || Promise.resolve(true);
+  const task = previous
+    .catch(() => false)
+    .then(async () => {
+      try {
+        await Api.call('update-word-stat', payload);
+        return true;
+      } catch (error) {
+        ErrorLog.capture(error, { source: 'quiz', action, word: ar });
+        return false;
+      }
+    });
+  wordStatWriteChains.set(key, task);
+  void task.then(() => {
+    if (wordStatWriteChains.get(key) === task) wordStatWriteChains.delete(key);
+  });
+  return task;
+}
 
 function quizGetEl(id, required = false) {
   if (!quizGetEl._noop) {
@@ -138,8 +177,9 @@ async function updateWordLevel(ar, ok) {
     nr = getNextReview(nl, false);
   }
   App.wordStats[ar] = { ...s, level: nl, next: nr, seen: (s.seen || 0) + 1 };
-  try {
-    await Api.call('update-word-stat', {
+  return enqueueWordStatWrite(
+    ar,
+    {
       username: App.username,
       password: App.password,
       word_ar: ar,
@@ -147,33 +187,37 @@ async function updateWordLevel(ar, ok) {
       level: nl,
       next_review: nr,
       is_favorite: App.favorites.includes(ar),
-    });
-  } catch (e) {
-    ErrorLog.capture(e, { source: 'quiz', action: 'update-word-level', word: ar });
-  }
+    },
+    'update-word-level'
+  );
 }
 
-// SMART WORD SELECTION — no repeats, prioritize: new → weak → due → others
-function getSmartQueue(words, limit) {
+// Mode-aware SRS order. Learning introduces unseen words first; all repetition
+// modes start with difficult, weak and due material and use unseen words only
+// after scheduled material. Exact Arabic/Russian records are kept distinct.
+function getSmartQueue(words, limit, mode = Settings.mode) {
   const now = new Date().toISOString();
-  const newWords = words.filter((w) => !App.wordStats[w.ar]);
-  const weakWords = words.filter(
-    (w) => App.wordStats[w.ar] && (App.wordStats[w.ar].level || 1) <= 2 && (!App.wordStats[w.ar].next || App.wordStats[w.ar].next <= now)
+  const source = uniqueQuizWords(words);
+  const isNew = (word) => !App.wordStats[word.ar] || !(App.wordStats[word.ar].seen > 0);
+  const isDue = (word) => {
+    const stat = App.wordStats[word.ar];
+    return Boolean(stat && (!stat.next || stat.next <= now));
+  };
+  const difficult = source.filter((word) => App.favorites.includes(word.ar));
+  const newWords = source.filter((word) => !App.favorites.includes(word.ar) && isNew(word));
+  const weakWords = source.filter((word) => !App.favorites.includes(word.ar) && !isNew(word) && (App.wordStats[word.ar]?.level || 1) <= 2);
+  const dueWords = source.filter((word) => !App.favorites.includes(word.ar) && !isNew(word) && (App.wordStats[word.ar]?.level || 1) > 2 && isDue(word));
+  const scheduledWords = source.filter(
+    (word) => !App.favorites.includes(word.ar) && !isNew(word) && (App.wordStats[word.ar]?.level || 1) > 2 && !isDue(word)
   );
-  const dueWords = words.filter(
-    (w) => App.wordStats[w.ar] && (App.wordStats[w.ar].level || 1) > 2 && (!App.wordStats[w.ar].next || App.wordStats[w.ar].next <= now)
-  );
-  const otherWords = words.filter((w) => App.wordStats[w.ar] && App.wordStats[w.ar].next && App.wordStats[w.ar].next > now);
-  otherWords.sort((a, b) => (App.wordStats[a.ar]?.next || '').localeCompare(App.wordStats[b.ar]?.next || ''));
-  let pool = [...shuf(newWords), ...shuf(weakWords), ...shuf(dueWords), ...otherWords];
-  const seen = new Set();
-  pool = pool.filter((w) => {
-    if (seen.has(w.ar)) return false;
-    seen.add(w.ar);
-    return true;
-  });
-  if (limit !== 'all' && limit !== 'inf') pool = pool.slice(0, parseInt(limit));
-  return pool;
+  scheduledWords.sort((a, b) => (App.wordStats[a.ar]?.next || '').localeCompare(App.wordStats[b.ar]?.next || ''));
+
+  const ordered = mode === 'learn'
+    ? [...shuf(newWords), ...shuf(difficult), ...shuf(weakWords), ...shuf(dueWords), ...scheduledWords]
+    : [...shuf(difficult), ...shuf(weakWords), ...shuf(dueWords), ...scheduledWords, ...shuf(newWords)];
+  if (limit === 'all' || limit === 'inf') return ordered;
+  const requested = Math.max(0, Number.parseInt(limit, 10) || 0);
+  return ordered.slice(0, requested);
 }
 function getBalancedFastQueue(words, limit) {
   const groups = new Map();
@@ -185,7 +229,7 @@ function getBalancedFastQueue(words, limit) {
 
   const groupQueues = shuf(
     [...groups.values()]
-      .map((group) => getSmartQueue(group, 'all'))
+      .map((group) => getSmartQueue(group, 'all', 'fast'))
       .filter((group) => group.length)
   );
   const result = [];
@@ -198,7 +242,7 @@ function getBalancedFastQueue(words, limit) {
       let word = null;
       while (group.length && !word) {
         const candidate = group.shift();
-        const key = `${rmH(candidate.ar)}|${String(candidate.ru || '').trim().toLowerCase()}`;
+        const key = trainingWordIdentity(candidate);
         if (seenArabic.has(key)) continue;
         seenArabic.add(key);
         word = candidate;
@@ -272,7 +316,7 @@ function startQuizLegacy(onlyFav) {
   if (!words.length) return alert(onlyFav ? 'Нет трудных слов в выбранных уроках' : 'Слова не найдены');
   const effectiveMode = Settings.mode;
   const limit = effectiveMode === 'fast' ? Settings.qtyFast : Settings.qtyNormal;
-  initQuiz(getSmartQueue(words, limit), effectiveMode, onlyFav);
+  initQuiz(getSmartQueue(words, limit, effectiveMode), effectiveMode, onlyFav);
 }
 
 function getSelectedWords() {
@@ -303,7 +347,7 @@ async function startQuiz(onlyFav) {
     return;
   }
   const limit = typeof getTrainingModeLimit === 'function' ? getTrainingModeLimit(effectiveMode, words.length) : effectiveMode === 'fast' ? Settings.qtyFast : Settings.qtyNormal;
-  const prepared = effectiveMode === 'fast' ? getBalancedFastQueue(words, limit) : getSmartQueue(words, limit);
+  const prepared = effectiveMode === 'fast' ? getBalancedFastQueue(words, limit) : getSmartQueue(words, limit, effectiveMode);
   initQuiz(prepared, effectiveMode, onlyFav);
 }
 
@@ -439,15 +483,24 @@ function renderQuizWordSource(word) {
 }
 
 
+function setQuizNextButton(enabled, label = 'Дальше →') {
+  const button = quizGetEl('btn-next');
+  button.classList.remove('hidden');
+  button.disabled = !enabled;
+  button.textContent = enabled ? label : 'Ответьте, чтобы продолжить';
+  button.setAttribute?.('aria-disabled', enabled ? 'false' : 'true');
+}
+
 function renderQ() {
   quizGetEl('q-prog').textContent = qi + 1 + '/' + queue.length;
   quizGetEl('q-bar').style.width = ((qi + 1) / queue.length) * 100 + '%';
   renderQuizWordSource(curWord);
-  renderFavoriteButton(quizGetEl('star-btn'), App.favorites.includes(curWord.ar));
+  const starButton = quizGetEl('star-btn');
+  renderFavoriteButton(starButton, App.favorites.includes(curWord.ar));
+  starButton.disabled = favoriteToggleInFlight.has(curWord.ar);
   quizGetEl('feedback').textContent = '';
   quizGetEl('feedback').className = 'feedback';
-  quizGetEl('btn-next').classList.add('hidden');
-  quizGetEl('btn-next').textContent = 'Дальше →';
+  setQuizNextButton(false);
   const opts = quizGetEl('opts');
   const typeArea = quizGetEl('type-area');
   opts.classList.add('hidden');
@@ -467,8 +520,7 @@ function renderQ() {
         <div class="learn-intro-ru">${esc(curWord.ru)}</div>
         <div class="learn-intro-hint">Прочитайте слово и перевод, затем продолжайте.</div>
       </div>`;
-    quizGetEl('btn-next').classList.remove('hidden');
-    quizGetEl('btn-next').textContent = 'Запомнил, дальше →';
+    setQuizNextButton(true, 'Запомнил, дальше →');
   } else if (activeMode === 'type-ar') {
     hintCount = 0;
     quizGetEl('word-display').innerHTML = `<div class="w-ru">${esc(curWord.ru)}</div>`;
@@ -524,17 +576,30 @@ function renderQ() {
 }
 
 function genOpts(correct, key) {
-  const source = quizMode === 'fast' && roundWords.length ? roundWords : Dict.allWords.length ? Dict.allWords : queue;
-  const pool = shuf(source.filter((w) => w[key] !== correct && rmH(w[key]) !== rmH(correct)));
-  const opts = [correct, ...pool.slice(0, 3).map((w) => w[key])];
-  while (opts.length < 4) opts.push('—');
-  return shuf(opts);
+  const correctKey = rmH(String(correct || '')).trim().toLowerCase();
+  const candidates = [];
+  const seenValues = new Set([correctKey]);
+  const addFrom = (words) => {
+    (Array.isArray(words) ? words : []).forEach((word) => {
+      const value = String(word?.[key] || '').trim();
+      const normalized = rmH(value).trim().toLowerCase();
+      if (!value || !normalized || seenValues.has(normalized)) return;
+      seenValues.add(normalized);
+      candidates.push(value);
+    });
+  };
+  addFrom(sessionInitialWords);
+  addFrom(roundWords);
+  addFrom(queue);
+  if (candidates.length < 3) addFrom(Dict.allWords);
+  return shuf([correct, ...shuf(candidates).slice(0, 3)]);
 }
 
 async function handleAns(btn, ok, correct, isAr) {
   registerQuizAttempt(curWord, btn?.textContent || '');
   if (currentDailyTask && typeof markDailyGoalTaskCompleted === 'function') markDailyGoalTaskCompleted(currentDailyTask, dailyQuizReplay);
   document.querySelectorAll('.opt').forEach((b) => (b.disabled = true));
+  setQuizNextButton(true);
   const fb = quizGetEl('feedback');
   if (ok) {
     btn.classList.add('ok');
@@ -566,7 +631,7 @@ async function handleAns(btn, ok, correct, isAr) {
       '</span>';
     updateWordLevel(curWord.ar, false);
     if (!roundWrong.find((w) => w.ar === curWord.ar)) roundWrong.push(curWord);
-    quizGetEl('btn-next').classList.remove('hidden');
+    setQuizNextButton(true);
     pauseTmo = setTimeout(() => nextWord(true), 3000);
   }
 }
@@ -597,15 +662,18 @@ function showHint() {
 
 function checkTyped() {
   if (isHist) return;
+  const input = quizGetEl('type-input');
+  if (input.disabled) return;
   if (quizMode === 'learn') {
     checkTypedLearn();
     return;
   }
-  const val = quizGetEl('type-input').value.trim();
+  const val = input.value.trim();
   registerQuizAttempt(curWord, val);
   if (currentDailyTask && typeof markDailyGoalTaskCompleted === 'function') markDailyGoalTaskCompleted(currentDailyTask, dailyQuizReplay);
   const fb = quizGetEl('feedback');
-  quizGetEl('type-input').disabled = true;
+  input.disabled = true;
+  setQuizNextButton(true);
   const hintBtn = quizGetEl('btn-hint');
   if (hintBtn) hintBtn.style.display = 'none';
   const hintLbl = quizGetEl('hint-cost-label');
@@ -692,6 +760,7 @@ async function handleFast(btn, ok, correct, isTimeout) {
     if (b.textContent === correct) b.classList.add('ok');
     else if (b === btn) b.classList.add('err');
   });
+  setQuizNextButton(true);
   updateWordLevel(curWord.ar, ok);
   const fb = quizGetEl('feedback');
   if (ok) {
@@ -719,8 +788,7 @@ async function handleFast(btn, ok, correct, isTimeout) {
         }
       }
       fb.innerHTML += '<br><b style="color:var(--red)">Лучшая серия: ' + fastWords + ' слов</b>';
-      quizGetEl('btn-next').textContent = 'Результаты →';
-      quizGetEl('btn-next').classList.remove('hidden');
+      setQuizNextButton(true, 'Результаты →');
       clearProgress();
     } else {
       pauseTmo = setTimeout(() => nextWord(true), 1500);
@@ -729,6 +797,8 @@ async function handleFast(btn, ok, correct, isTimeout) {
 }
 
 function goNext() {
+  const nextButton = quizGetEl('btn-next');
+  if (nextButton.disabled) return;
   clearTimers();
   if (quizMode === 'fast' && lives <= 0) {
     finishQuiz();
@@ -1166,54 +1236,90 @@ function setWordFavoriteLocal(ar, active) {
 }
 
 async function persistWordFavorite(ar, active, action) {
-  try {
-    await Api.call('update-word-stat', {
-      username: App.username,
-      password: App.password,
-      word_ar: ar,
-      is_favorite: active,
-      seen_count: App.wordStats[ar]?.seen || 0,
-      level: App.wordStats[ar]?.level || 1,
-    });
-  } catch (e) {
-    ErrorLog.capture(e, { source: 'quiz', action, word: ar });
-  }
+  const nextReview = App.wordStats[ar]?.next;
+  const payload = {
+    username: App.username,
+    password: App.password,
+    word_ar: ar,
+    is_favorite: active,
+    seen_count: App.wordStats[ar]?.seen || 0,
+    level: App.wordStats[ar]?.level || 1,
+  };
+  if (typeof nextReview === 'string' && nextReview) payload.next_review = nextReview;
+  return enqueueWordStatWrite(ar, payload, action);
 }
-
 async function toggleStar() {
   if (!curWord) return;
   const ar = curWord.ar;
+  if (favoriteToggleInFlight.has(ar)) return;
+  favoriteToggleInFlight.add(ar);
+  const button = quizGetEl('star-btn');
+  button.disabled = true;
   const active = !App.favorites.includes(ar);
   setWordFavoriteLocal(ar, active);
-  if (!App.username) return;
-  await persistWordFavorite(ar, active, 'toggle-favorite');
+  if (!App.username) {
+    favoriteToggleInFlight.delete(ar);
+    button.disabled = false;
+    return;
+  }
+  const saved = await persistWordFavorite(ar, active, 'toggle-favorite');
+  if (!saved) {
+    setWordFavoriteLocal(ar, !active);
+    showFavoriteSyncError();
+  }
+  favoriteToggleInFlight.delete(ar);
+  if (curWord?.ar === ar) button.disabled = false;
 }
-async function logPts(pts) {
-  if (!App.username) return;
+function logPts(pts) {
+  if (!App.username) return Promise.resolve(false);
   App.totalScore = (App.totalScore || 0) + pts;
   updateUI();
   showXP(pts);
-  try {
-    const scoreEventId = typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : null;
-    const res = await Api.call('log-score', { username: App.username, password: App.password, points: pts, course_name: App.volume, score_event_id: scoreEventId });
-    if (typeof res.total_score === 'number') App.totalScore = res.total_score;
-    updateUI();
-  } catch (e) {
-    App.totalScore = Math.max(0, (App.totalScore || 0) - pts);
-    updateUI();
-    showScoreSyncError();
-    ErrorLog.capture(e, { source: 'quiz', action: 'log-score', points: pts, course: App.volume });
-  }
+  const scoreEventId = typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : `score-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const task = scoreWriteChain
+    .catch(() => false)
+    .then(async () => {
+      try {
+        const res = await Api.call('log-score', {
+          username: App.username,
+          password: App.password,
+          points: pts,
+          course_name: App.volume,
+          score_event_id: scoreEventId,
+        });
+        if (typeof res.total_score === 'number') App.totalScore = Math.max(App.totalScore || 0, res.total_score);
+        updateUI();
+        return true;
+      } catch (error) {
+        App.totalScore = Math.max(0, (App.totalScore || 0) - pts);
+        updateUI();
+        showScoreSyncError();
+        ErrorLog.capture(error, { source: 'quiz', action: 'log-score', points: pts, course: App.volume });
+        return false;
+      }
+    });
+  scoreWriteChain = task;
+  return task;
 }
 
-function showScoreSyncError() {
-  const old = quizGetEl('score-sync-error');
+function showQuizSyncError(id, message) {
+  const old = document.getElementById(id);
   if (old) old.remove();
   const el = document.createElement('div');
-  el.id = 'score-sync-error';
-  el.textContent = 'Очки не сохранились. Проверьте интернет и перезайдите.';
+  el.id = id;
+  el.textContent = message;
   el.style.cssText =
     'position:fixed;left:12px;right:12px;bottom:78px;z-index:9999;background:var(--red);color:white;padding:10px 14px;border-radius:10px;font-weight:700;font-size:13px;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,0.22);';
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 3500);
+}
+
+function showFavoriteSyncError() {
+  showQuizSyncError('favorite-sync-error', 'Не удалось сохранить трудное слово после повторных попыток. Проверьте интернет.');
+}
+
+function showScoreSyncError() {
+  showQuizSyncError('score-sync-error', 'Не удалось сохранить очки после повторных попыток. Проверьте интернет.');
 }

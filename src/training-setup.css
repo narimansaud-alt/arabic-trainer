@@ -469,3 +469,138 @@
     align-items: stretch;
   }
 }
+.difficult-words-manager {
+  width: 100%;
+  min-width: 0;
+}
+
+.difficult-words-body {
+  display: grid;
+  gap: 12px;
+  padding-top: 14px;
+}
+
+.difficult-words-list {
+  display: grid;
+  gap: 8px;
+}
+
+.difficult-word-item {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 13px;
+  border: 1px solid #d7e1e7;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, .94);
+  box-shadow: 0 6px 18px rgba(25, 47, 68, .04);
+}
+
+.difficult-word-copy {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.difficult-word-ar {
+  display: block;
+  color: #315d79;
+  font: 800 28px/1.65 'Noto Naskh Arabic', 'Amiri', serif;
+  overflow-wrap: normal;
+  text-align: right;
+  unicode-bidi: isolate;
+  word-break: normal;
+}
+
+.difficult-word-ru {
+  color: #20384d;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.difficult-word-copy small {
+  color: #71838e;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.difficult-word-remove,
+.difficult-clear-button {
+  min-height: 40px;
+  border: 1px solid #e4b9bd;
+  border-radius: 10px;
+  background: #fff7f7;
+  color: #9f3e47;
+  font: 800 11px/1.2 'Manrope', 'Segoe UI', sans-serif;
+  cursor: pointer;
+}
+
+.difficult-word-remove {
+  padding: 9px 11px;
+}
+
+.difficult-word-remove:hover,
+.difficult-word-remove:focus-visible,
+.difficult-clear-button:hover,
+.difficult-clear-button:focus-visible {
+  border-color: #cc7f87;
+  background: #fff0f1;
+}
+
+.difficult-word-remove:disabled,
+.difficult-clear-button:disabled {
+  cursor: default;
+  opacity: .55;
+}
+
+.difficult-words-status {
+  padding: 10px 12px;
+  border: 1px solid #bcd7c7;
+  border-radius: 10px;
+  background: #f1faf5;
+  color: #2d6948;
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.difficult-words-status.is-error {
+  border-color: #e4b9bd;
+  background: #fff5f5;
+  color: #9f3e47;
+}
+
+.difficult-words-actions {
+  display: grid;
+  grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+  gap: 8px;
+}
+
+.difficult-words-actions .btn-start,
+.difficult-clear-button {
+  width: 100%;
+  margin: 0 !important;
+}
+
+@media (max-width: 520px) {
+  .difficult-word-item {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    padding: 11px;
+  }
+
+  .difficult-word-ar {
+    font-size: 26px;
+  }
+
+  .difficult-word-remove {
+    width: 100%;
+  }
+
+  .difficult-words-actions {
+    grid-template-columns: 1fr;
+  }
+}

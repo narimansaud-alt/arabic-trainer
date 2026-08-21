@@ -35,7 +35,10 @@ const context = {
   Dict: {
     byLesson: {
       '1': [{ ar: 'أَوَّلٌ', ru: 'первый', volume: V1, lesson: '1' }],
-      '2': [{ ar: 'ثَانٍ', ru: 'второй', volume: V1, lesson: '2' }],
+      '2': [
+        { ar: 'ثَانٍ', ru: 'второй', volume: V1, lesson: '2' },
+        { ar: 'ثَانٍ', ru: 'второй', volume: V1, lesson: '2' },
+      ],
     },
     allWords: [],
   },
@@ -109,6 +112,7 @@ assert.deepEqual(JSON.parse(JSON.stringify(learnWords)), [[V1, '1', 'أَوَّ�
 
 const reviewWords = vm.runInContext("getTrainingSelectedWords('review').map((word) => word.ar)", context);
 assert.deepEqual(Array.from(reviewWords), ['ثَانٍ'], 'each ordinary mode must retain its own lesson selection');
+assert.equal(reviewWords.length, 1, 'ordinary mode counts and queues must remove exact duplicate records consistently');
 
 const fastWords = vm.runInContext("getTrainingSelectedWords('fast')", context);
 assert.equal(fastWords.length, 3, 'fast selection must combine volumes and remove only exact duplicates');
@@ -141,7 +145,9 @@ assert.match(setupSource, /tab\.appendChild\(root\)/u, 'the setup page must be a
 assert.doesNotMatch(setupSource, /insertAdjacentElement\('afterend', root\)/u, 'the setup page must not be inserted below the mode buttons');
 assert.match(setupSource, /actions\.appendChild\(startButton\)/u, 'the start action must live inside the selected mode page');
 assert.match(setupSource, /difficultCount[\s\S]*favorite\.disabled = unavailable \|\| !difficultCount/u, 'difficult-only start must show its selected-lesson count and disable at zero');
-assert.match(htmlSource, /id="training-mode-next"[^>]*hidden[^>]*onclick="openTrainingModeSetup\(\)"/u, 'the mode menu must provide a hidden next action that opens setup');
+const modeNextMarkup = htmlSource.match(/<button id="training-mode-next"[^>]*>/u)?.[0] || '';
+assert.match(modeNextMarkup, /onclick="openTrainingModeSetup\(\)"/u, 'the mode menu next action must open setup');
+assert.doesNotMatch(modeNextMarkup, /\bhidden\b/u, 'the mode menu next action must always be visible');
 assert.match(mainSource, /training-mode-next[\s\S]*classList\.remove\('hidden'\)/u, 'selecting a mode must reveal the next action');
 assert.doesNotMatch(mainSource, /function setMode[\s\S]*openTrainingModeSetup\(\)/u, 'selecting a mode must wait for the explicit next action');
 assert.match(dictSource, /t !== 'train'.*closeTrainingModeSetup/su, 'leaving the training tab must close its setup page');
@@ -151,5 +157,14 @@ assert.match(cssSource, /#tab-train\.training-mode-page-open > :not\(#training-m
 assert.match(cssSource, /#tab-train:not\(\.training-mode-page-open\) > #btn-start/u, 'start controls must not flash on the mode menu before JavaScript moves them');
 assert.match(cssSource, /\.training-mode-next[\s\S]*min-height: 48px/u, 'the next action must be visibly tappable on mobile');
 assert.match(cssSource, /@media \(max-width: 520px\)[\s\S]*training-mode-page-head/u, 'the dedicated setup page must have a mobile layout');
+assert.match(htmlSource, /id="btn-fav"[^>]*openDifficultWordsManager\(\)/u, 'the difficult button must open its manager before training');
+assert.match(setupSource, /function renderDifficultWordsManager\(/u, 'the difficult manager must render a readable list');
+assert.match(setupSource, /function removeDifficultWord\(/u, 'one difficult word must be removable');
+assert.match(setupSource, /function clearDifficultWords\(/u, 'the difficult list must support clearing all displayed words');
+assert.match(setupSource, /function startDifficultWordsTraining\(/u, 'the managed difficult list must have an explicit start action');
+assert.match(cssSource, /\.difficult-word-ar[\s\S]*Noto Naskh Arabic/u, 'difficult Arabic words must use the readable application Arabic font');
+context.App.favorites = ['أَوَّلٌ'];
+const difficultWords = vm.runInContext("getDifficultTrainingWords().map((word) => word.ar)", context);
+assert.deepEqual(Array.from(difficultWords), ['أَوَّلٌ'], 'the difficult manager must respect the selected mode lessons');
 
 console.log('Training mode setup regression tests passed.');

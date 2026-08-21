@@ -188,7 +188,9 @@ assert.match(quizSource, /updateWordLevel\(curWord\.ar, false\)/u, 'quiz errors 
 assert.match(htmlSource, /id="star-btn"[^>]+onclick="toggleStar\(\)"/u, 'the manual difficult-word button must remain in the quiz card');
 assert.match(htmlSource, /id="type-format-hint"/u, 'the writing mode must contain the format hint');
 
-assert.match(learnSource, /btnNext\.classList\.remove\('hidden'\)[\s\S]*setTimeout\(\(\) => nextLearnCard\(\), 3000\)/u, 'a wrong learn answer must always expose a continuation path');
+assert.match(learnSource, /setQuizNextButton\(true\)[\s\S]*setTimeout\(\(\) => nextLearnCard\(\), 3000\)/u, 'a wrong learn answer must always expose an enabled continuation path');
+assert.match(learnSource, /if \(!inp \|\| inp\.disabled\) return/u, 'learn typing must ignore a second submit');
+assert.match(quizSource, /function setQuizNextButton[\s\S]*classList\.remove\('hidden'\)[\s\S]*button\.disabled = !enabled/u, 'the continuation button must stay visible and only change enabled state');
 assert.doesNotMatch(quizSource + learnSource, /\b(?:curWord|w)\.userAnswer\b/u, 'answers must not mutate shared dictionary word objects');
 assert.match(quizSource, /completedMode === 'fast' \? toSafeWordList\(roundAttemptedWords/u, 'early fast results must include attempted words only');
 assert.match(quizSource, /initQuiz\(previous\.words\.map[\s\S]*previous\.mode, previous\.isFav\)/u, 'repeat must preserve the previous mode and difficult-only filter');

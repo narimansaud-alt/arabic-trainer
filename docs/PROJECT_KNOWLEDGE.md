@@ -1,6 +1,6 @@
 # Arabic Trainer project knowledge
 
-Last updated: 2026-08-21 (canonical server-side leaderboards and Moscow periods)
+Last updated: 2026-08-21 (Book 4 lesson 2 dictionary and trainer reliability)
 
 ## Production and repositories
 
@@ -91,6 +91,7 @@ Authentication decision:
 - Active volume 3 dictionary import protocol: `docs/MEDINA_BOOK3_DICTIONARY_TASK.md`. Its controlling source is the lesson photographs in `C:\Users\user\Desktop\Мединский курс\Третий том\Фото словарь`; `C:\Users\user\Downloads\Облако Mail.zip` is a byte-identical control copy. Work must proceed lesson by lesson, with source-only extraction, a complete correction log, Supabase verification and screen verification of both dictionary modes before advancing.
 - The volume 3 dictionary task is additive project context. It does not supersede or delete any previously stored Medina rules tasks or audit records.
 - Volume 4 dictionary lesson 1 is sourced from the seven owner-supplied photographs of printed pages 154–160. Although the photographed heading says lesson 18, the owner explicitly mapped that complete block to application lesson 1. The verified result is 90 source rows and 109 displayed forms, including 19 singular/plural pairs with separate Russian plural meanings. Progress and the correction log are in `docs/MEDINA_BOOK4_DICTIONARY_PROGRESS.md`; migration: `supabase/migrations/20260814080000_import_book4_dictionary_lesson01.sql`.
+- Volume 4 dictionary lesson 2 is sourced from five owner-supplied photographs of printed pages 161–165. Although the heading says lesson 19, the owner explicitly mapped the block to application lesson 2. The verified live result is 64 source rows and 77 list/training records: 50 single forms, 13 singular/plural pairs and the plural-only `أُولُو`. Every plural has its own Russian plural meaning. Migration: `supabase/migrations/20260821060000_import_book4_dictionary_lesson02.sql`; automated and screen QA are recorded in `docs/MEDINA_BOOK4_DICTIONARY_PROGRESS.md`.
 
 ### Book
 
@@ -103,7 +104,8 @@ Authentication decision:
 ## Trainer behavior
 
 - Training modes include learn, Arabic typing, review, mix, and fast review.
-- Review is always available for words in the selected lessons: due and weak words remain prioritized, while already completed words fill the queue when nothing is due.
+- Review is always available for words in the selected lessons. Review, Arabic input, mix and fast modes prioritize difficult, weak and due material before scheduled material and use unseen words only as fallback; learn mode introduces unseen words first.
+- Selected-word counts and queues use the same exact-deduplicated pool. Answer options are deduplicated by visible value and are drawn from the current selected session. The active volume dictionary is used only when the selected pool has fewer than three distractors.
 - Arabic typing has educational and strict checking modes.
 - Strict checking preserves distinct hamza forms and checks diacritics.
 - Educational checking permits omitted vowel marks but does not collapse different Arabic letters.
@@ -113,7 +115,10 @@ Authentication decision:
 - Changing volumes clears the active training session to prevent state leakage.
 - Attempts and correct answers are tracked separately.
 - Every wrong answer automatically marks the word as difficult; the star button remains the explicit add/remove control, and later correct answers do not silently clear the mark.
-- A word's review interval can increase at most once in a single training session; an error schedules a short retry interval.
+- The mode setup opens a difficult-word manager before difficult-only training. It lists the difficult words from the currently selected lessons, shows Arabic, Russian and source lesson, allows removing one or clearing the displayed set, and starts the chosen mode only after explicit confirmation.
+- The quiz «Далее» button remains visible for every card. It is disabled before an answer and enabled after an answer, so it cannot be used to skip unanswered cards. Enter submits typed Arabic once; after processing, Enter follows the enabled «Далее» action.
+- A word's review interval can increase at most once in a single training session; an error schedules a short retry interval. Writes for one word are serialized so an older response cannot overwrite newer seen/level/favorite state. Favorite-only writes omit an absent `next_review`, and a final manual-star save failure restores the last server-backed local state.
+- Score writes are serialized and use a stable `score_event_id` per event. Safe idempotent API actions retry transient network failures, HTTP 408/429 and selected 5xx responses up to three attempts; only the final failure is shown and logged.
 
 ### Ratings and leaderboard invariants
 
@@ -143,6 +148,7 @@ Recent schema/data migrations include:
 - `20260804010000_rule_sections.sql`
 - `20260804160000_replace_tom1_rules_archive.sql`
 - `20260804180000_fix_ma_man_rule.sql`
+- `20260821060000_import_book4_dictionary_lesson02.sql`
 
 ## Deployment procedure
 

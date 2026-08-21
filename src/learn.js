@@ -117,8 +117,7 @@ function renderLearnQ() {
     feedback.className = 'feedback';
   }
   if (btnNext) {
-    btnNext.classList.add('hidden');
-    btnNext.textContent = 'Дальше →';
+    setQuizNextButton(false);
   }
   if (opts) opts.classList.add('hidden');
   if (typeArea) typeArea.classList.add('hidden');
@@ -140,8 +139,7 @@ function renderLearnQ() {
       </div>`;
     }
     if (btnNext) {
-      btnNext.classList.remove('hidden');
-      btnNext.textContent = 'Запомнил, дальше →';
+      setQuizNextButton(true, 'Запомнил, дальше →');
     }
     return;
   }
@@ -180,8 +178,7 @@ function renderLearnQ() {
       feedback.textContent = 'Запомнил!';
     }
     if (btnNext) {
-      btnNext.classList.remove('hidden');
-      btnNext.textContent = 'Далее';
+      setQuizNextButton(true, 'Далее');
     }
     return;
   }
@@ -208,6 +205,7 @@ async function handleLearnAns(btn, ok, correct, isAr) {
   registerQuizAttempt(curWord, btn?.textContent || '');
   const optionButtons = document.querySelectorAll('.opt');
   optionButtons.forEach((b) => (b.disabled = true));
+  setQuizNextButton(true);
   const fb = learnGetEl('feedback');
   const stage = curLearnCard.stage;
   if (ok) {
@@ -239,19 +237,19 @@ async function handleLearnAns(btn, ok, correct, isAr) {
     }
     roundUserAnswers[curWord.ar] = btn ? btn.textContent : '';
     learnStageAdvance(false);
-    const btnNext = learnGetEl('btn-next');
-    if (btnNext) btnNext.classList.remove('hidden');
+    setQuizNextButton(true);
     pauseTmo = setTimeout(() => nextLearnCard(), 3000);
   }
 }
 function checkTypedLearn() {
   if (isHist) return;
   const inp = learnGetEl('type-input');
-  if (!inp) return;
+  if (!inp || inp.disabled) return;
   const val = inp.value.trim();
   registerQuizAttempt(curWord, val);
   const fb = learnGetEl('feedback');
   inp.disabled = true;
+  setQuizNextButton(true);
   const hintBtn = learnGetEl('btn-hint');
   if (hintBtn) hintBtn.style.display = 'none';
   const hintLbl = learnGetEl('hint-cost-label');
@@ -274,12 +272,12 @@ function checkTypedLearn() {
     }
     roundUserAnswers[curWord.ar] = val;
     learnStageAdvance(false);
-    const btnNext = learnGetEl('btn-next');
-    if (btnNext) btnNext.classList.remove('hidden');
+    setQuizNextButton(true);
     pauseTmo = setTimeout(() => nextLearnCard(), 3000);
   }
 }
 function goNextLearn() {
+  if (learnGetEl('btn-next')?.disabled) return;
   clearTimers();
   if (curLearnCard.stage === 0) {
     curLearnCard.stage = 1;

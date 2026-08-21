@@ -40,6 +40,11 @@ const TrainingSetup = {
   fastCatalogError: '',
   openFastVolumes: new Set(),
   starting: false,
+  difficultOpen: false,
+  difficultBusy: false,
+  difficultStatus: '',
+  difficultStatusError: false,
+  difficultWords: [],
 };
 
 function trainingSetupStorageKey() {
@@ -240,7 +245,7 @@ function getTrainingSelectedWords(mode = Settings.mode) {
   normalTrainingSelection(mode, App.volume).forEach((lesson) => {
     if (Dict.byLesson[lesson]) words.push(...Dict.byLesson[lesson]);
   });
-  return words;
+  return uniqueTrainingWordList(words);
 }
 
 function getTrainingSelectedLessonCount(mode = Settings.mode) {
@@ -385,18 +390,152 @@ function updateTrainingStartButtons(selectedWords = getTrainingSelectedWords(Set
     else start.textContent = label;
   }
   if (favorite) {
-    const difficult = new Set(Array.isArray(App.favorites) ? App.favorites : []);
-    const difficultCount = getTrainingSelectedWords(Settings.mode).filter((word) => difficult.has(word.ar)).length;
+    const difficultCount = getDifficultTrainingWords().length;
     favorite.disabled = unavailable || !difficultCount;
-    favorite.textContent = difficultCount ? `Только трудные слова · ${difficultCount}` : 'Трудных слов в выбранных уроках нет';
-    favorite.setAttribute('aria-label', difficultCount ? `Начать тренировку: только трудные слова, ${difficultCount}` : 'В выбранных уроках нет трудных слов');
-    favorite.title = difficultCount ? `Будут использованы только трудные слова из выбранных уроков: ${difficultCount}` : 'Добавьте слова звёздочкой или выберите уроки, где уже есть трудные слова';
+    favorite.textContent = difficultCount ? `Трудные слова · ${difficultCount}` : 'Трудных слов в выбранных уроках нет';
+    favorite.setAttribute('aria-label', difficultCount ? `Открыть список трудных слов: ${difficultCount}` : 'В выбранных уроках нет трудных слов');
+    favorite.title = difficultCount ? `Просмотреть и настроить трудные слова из выбранных уроков: ${difficultCount}` : 'Добавьте слова звёздочкой или выберите уроки, где уже есть трудные слова';
   }
 }
 
 function setTrainingStartBusy(busy) {
   TrainingSetup.starting = Boolean(busy);
   updateTrainingStartButtons();
+}
+
+function getDifficultTrainingWords() {
+  const favorites = new Set(Array.isArray(App.favorites) ? App.favorites : []);
+  const seenArabic = new Set();
+  return getTrainingSelectedWords(Settings.mode).filter((word) => {
+    if (!favorites.has(word.ar) || seenArabic.has(word.ar)) return false;
+    seenArabic.add(word.ar);
+    return true;
+  });
+}
+
+function difficultWordSourceLabel(word) {
+  const parts = [trainingVolumeLabel(word?.volume || App.volume)];
+  if (word?.lesson != null && word.lesson !== '') parts.push(`Урок ${word.lesson}`);
+  return parts.filter(Boolean).join(' · ');
+}
+
+function openDifficultWordsManager() {
+  if (TrainingSetup.starting) return;
+  TrainingSetup.difficultOpen = true;
+  TrainingSetup.difficultStatus = '';
+  TrainingSetup.difficultStatusError = false;
+  renderTrainingModeSetup();
+}
+
+function closeDifficultWordsManager() {
+  if (TrainingSetup.difficultBusy) return;
+  TrainingSetup.difficultOpen = false;
+  TrainingSetup.difficultStatus = '';
+  TrainingSetup.difficultStatusError = false;
+  document.getElementById('difficult-words-manager')?.remove();
+  renderTrainingModeSetup();
+}
+
+function renderDifficultWordsManager(root = ensureTrainingModeConfigRoot()) {
+  if (!root) return;
+  root.querySelectorAll?.('.training-mode-page-head, .training-mode-page-body').forEach((element) => element.classList.add('hidden'));
+  let manager = document.getElementById('difficult-words-manager');
+  if (!manager || manager.parentNode !== root) {
+    manager = document.createElement('div');
+    manager.id = 'difficult-words-manager';
+    manager.className = 'difficult-words-manager';
+    root.appendChild(manager);
+  }
+
+  const words = getDifficultTrainingWords();
+  TrainingSetup.difficultWords = words;
+  const wordItems = words
+    .map(
+      (word, index) => `
+        <article class="difficult-word-item">
+          <div class="difficult-word-copy">
+            <strong class="difficult-word-ar" lang="ar" dir="rtl">${esc(word.ar)}</strong>
+            <span class="difficult-word-ru">${esc(word.ru)}</span>
+            <small>${esc(difficultWordSourceLabel(word))}</small>
+          </div>
+          <button class="difficult-word-remove" type="button" data-index="${index}" onclick="removeDifficultWord(this)" ${TrainingSetup.difficultBusy ? 'disabled' : ''}>Исключить</button>
+        </article>`
+    )
+    .join('');
+  const status = TrainingSetup.difficultStatus
+    ? `<div class="difficult-words-status${TrainingSetup.difficultStatusError ? ' is-error' : ''}" role="status">${esc(TrainingSetup.difficultStatus)}</div>`
+    : '';
+  manager.innerHTML = `
+    <div class="training-mode-page-head difficult-words-head">
+      <button class="training-mode-back" type="button" onclick="closeDifficultWordsManager()" ${TrainingSetup.difficultBusy ? 'disabled' : ''} aria-label="Вернуться к настройке режима">← <span>Назад</span></button>
+      <div class="training-mode-page-title"><span>${esc(TRAINING_MODE_META[Settings.mode]?.title || 'Тренировка')}</span><h2>Трудные слова</h2></div>
+      <span class="training-mode-scope">${words.length} ${getRussianCountLabel(words.length, 'слово', 'слова', 'слов')}</span>
+    </div>
+    <div class="difficult-words-body" aria-busy="${TrainingSetup.difficultBusy}">
+      <p class="training-mode-note">Просмотрите слова перед началом. Можно исключить отдельное слово или очистить весь список.</p>
+      ${status}
+      <div class="difficult-words-list">${wordItems || '<div class="training-empty">В выбранных уроках трудных слов нет.</div>'}</div>
+      <div class="difficult-words-actions">
+        <button class="difficult-clear-button" type="button" onclick="clearDifficultWords()" ${!words.length || TrainingSetup.difficultBusy ? 'disabled' : ''}>Очистить список</button>
+        <button class="btn-start green" type="button" onclick="startDifficultWordsTraining()" ${!words.length || TrainingSetup.difficultBusy ? 'disabled' : ''}>Начать тренировку</button>
+      </div>
+    </div>`;
+  root.classList.remove('hidden');
+  document.getElementById('tab-train')?.classList.add('training-mode-page-open');
+}
+
+async function removeDifficultWord(button) {
+  if (TrainingSetup.difficultBusy) return;
+  const word = TrainingSetup.difficultWords[Number(button?.dataset?.index)];
+  if (!word) return;
+  TrainingSetup.difficultBusy = true;
+  TrainingSetup.difficultStatus = 'Сохраняю изменение…';
+  TrainingSetup.difficultStatusError = false;
+  setWordFavoriteLocal(word.ar, false);
+  renderDifficultWordsManager();
+  const saved = await persistWordFavorite(word.ar, false, 'remove-difficult-word');
+  if (!saved) {
+    setWordFavoriteLocal(word.ar, true);
+    TrainingSetup.difficultStatus = 'Не удалось исключить слово. Проверьте интернет и повторите.';
+    TrainingSetup.difficultStatusError = true;
+  } else {
+    TrainingSetup.difficultStatus = 'Слово исключено из трудных.';
+  }
+  TrainingSetup.difficultBusy = false;
+  renderDifficultWordsManager();
+}
+
+async function clearDifficultWords() {
+  if (TrainingSetup.difficultBusy) return;
+  const words = [...TrainingSetup.difficultWords];
+  if (!words.length || !confirm(`Убрать из трудных все слова в этом списке: ${words.length}?`)) return;
+  TrainingSetup.difficultBusy = true;
+  TrainingSetup.difficultStatus = 'Очищаю список…';
+  TrainingSetup.difficultStatusError = false;
+  words.forEach((word) => setWordFavoriteLocal(word.ar, false));
+  renderDifficultWordsManager();
+
+  const failed = [];
+  for (let index = 0; index < words.length; index += 4) {
+    const batch = words.slice(index, index + 4);
+    const results = await Promise.all(batch.map((word) => persistWordFavorite(word.ar, false, 'clear-difficult-words')));
+    results.forEach((saved, resultIndex) => {
+      if (!saved) failed.push(batch[resultIndex]);
+    });
+  }
+  failed.forEach((word) => setWordFavoriteLocal(word.ar, true));
+  TrainingSetup.difficultBusy = false;
+  TrainingSetup.difficultStatusError = failed.length > 0;
+  TrainingSetup.difficultStatus = failed.length
+    ? `Удалено: ${words.length - failed.length}. Не удалось удалить: ${failed.length}. Повторите после проверки интернета.`
+    : 'Список трудных слов очищен.';
+  renderDifficultWordsManager();
+}
+
+function startDifficultWordsTraining() {
+  if (TrainingSetup.difficultBusy || !getDifficultTrainingWords().length) return;
+  TrainingSetup.difficultOpen = false;
+  void startQuiz(true);
 }
 
 function renderTrainingLessonButtons(mode, volumeId, byLesson, selected) {
@@ -486,6 +625,7 @@ function renderTrainingQuantity() {
 
 function openTrainingModeSetup() {
   TrainingSetup.pageOpen = true;
+  TrainingSetup.difficultOpen = false;
   const tab = document.getElementById('tab-train');
   if (tab) {
     tab.classList.add('training-mode-page-open');
@@ -497,6 +637,9 @@ function openTrainingModeSetup() {
 
 function closeTrainingModeSetup() {
   TrainingSetup.pageOpen = false;
+  TrainingSetup.difficultOpen = false;
+  TrainingSetup.difficultBusy = false;
+  document.getElementById('difficult-words-manager')?.remove();
   const tab = document.getElementById('tab-train');
   const root = document.getElementById('training-mode-config');
   if (tab) {
@@ -518,6 +661,10 @@ function renderTrainingModeSetup() {
     const buttonMode = button.dataset.mode || onclick.match(/setMode\('([^']+)'/u)?.[1] || '';
     button.classList.toggle('active', buttonMode === mode);
   });
+  if (TrainingSetup.difficultOpen) {
+    renderDifficultWordsManager(root);
+    return;
+  }
   const answerRow = document.querySelector('.answer-check-row');
   const startButton = document.getElementById('btn-start');
   const favoriteButton = document.getElementById('btn-fav');

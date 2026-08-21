@@ -14,6 +14,18 @@ const API_HEADERS = Object.freeze({
   apikey: SUPA_ANON_KEY,
   Authorization: 'Bearer ' + SUPA_ANON_KEY,
 });
+const API_RETRY_ACTIONS = new Set([
+  'get-state',
+  'get-daily-goal',
+  'set-daily-goal-minutes',
+  'sync-daily-goal-progress',
+  'update-word-stat',
+  'log-score',
+  'update-survival-record',
+  'update-daily-count',
+  'revoke-session',
+]);
+const API_RETRY_STATUSES = new Set([408, 429, 500, 502, 503, 504]);
 
 const { createClient } = supabase;
 const db = createClient(SUPA_URL, SUPA_ANON_KEY, { auth: { persistSession: false } });
@@ -201,60 +213,73 @@ const Api = {
    */
   async call(action, payload, options = {}) {
     const body = this.buildBody(action, payload);
-    let res;
-    let data;
-    let responseText = '';
     const timeoutMs = Number.isFinite(options.timeoutMs) && options.timeoutMs > 0 ? options.timeoutMs : 10000;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    const retrySafe = API_RETRY_ACTIONS.has(action) && (action !== 'log-score' || typeof body.score_event_id === 'string' && body.score_event_id);
+    const maxAttempts = options.retry === false || !retrySafe ? 1 : 3;
+    let lastError = null;
+    let attempts = 0;
 
-    try {
-      res = await fetch(API_URL, {
-        method: 'POST',
-        headers: API_HEADERS,
-        keepalive: options.keepalive === true,
-        signal: controller.signal,
-        body: JSON.stringify(body),
-      });
-      responseText = await res.text().catch(() => '');
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      attempts = attempt;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
       try {
-        data = responseText ? JSON.parse(responseText) : {};
-      } catch {
-        data = { error: responseText || 'Invalid API response format.' };
-      }
-    } catch (e) {
-      clearTimeout(timeoutId);
-      if (e?.name === 'AbortError') {
-        const error = new ApiError(`Request timeout (${timeoutMs}ms).`, 0);
-        ErrorLog.capture(error, { source: 'api-timeout', action, kind: 'api', severity: 'warning' });
-        throw error;
-      }
-      const error = new ApiError('Сеть недоступна. Проверьте подключение.', 0);
-      ErrorLog.capture(error, { source: 'api-network', action, kind: 'api', severity: 'warning' });
-      throw error;
-    }
-    clearTimeout(timeoutId);
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: API_HEADERS,
+          keepalive: options.keepalive === true,
+          signal: controller.signal,
+          body: JSON.stringify(body),
+        });
+        const responseText = await response.text().catch(() => '');
+        let data;
+        try {
+          data = responseText ? JSON.parse(responseText) : {};
+        } catch {
+          data = { error: responseText || 'Invalid API response format.' };
+        }
 
-    if (!res || !res.ok || data?.error) {
-      const errorMessage = data?.error || data?.message || responseText || 'Unknown API error';
-      if (res?.status === 401 && typeof clearStoredAuth === 'function' && action !== 'login' && action !== 'register') {
-        clearStoredAuth();
-        if (typeof resetApp === 'function') resetApp();
-        if (typeof showScreen === 'function') showScreen('screen-login');
+        if (!response.ok || data?.error) {
+          const errorMessage = data?.error || data?.message || responseText || 'Unknown API error';
+          if (response.status === 401 && typeof clearStoredAuth === 'function' && action !== 'login' && action !== 'register') {
+            clearStoredAuth();
+            if (typeof resetApp === 'function') resetApp();
+            if (typeof showScreen === 'function') showScreen('screen-login');
+          }
+          const error = new ApiError(errorMessage, response.status || 0);
+          error.failureType = 'response';
+          throw error;
+        }
+        return data;
+      } catch (caught) {
+        if (caught instanceof ApiError) {
+          lastError = caught;
+        } else if (caught?.name === 'AbortError') {
+          lastError = new ApiError(`Request timeout (${timeoutMs}ms).`, 0);
+          lastError.failureType = 'timeout';
+        } else {
+          lastError = new ApiError('Сеть недоступна. Проверьте подключение.', 0);
+          lastError.failureType = 'network';
+        }
+        const retryableFailure = lastError.status === 0 || API_RETRY_STATUSES.has(lastError.status);
+        if (attempt >= maxAttempts || !retryableFailure) break;
+        await new Promise((resolve) => setTimeout(resolve, Math.min(250 * 2 ** (attempt - 1), 1000)));
+      } finally {
+        clearTimeout(timeoutId);
       }
-      const error = new ApiError(errorMessage, res?.status || 0);
-      const expectedAuthInput = ['login', 'register'].includes(action) && [400, 401, 409].includes(res?.status || 0);
-      ErrorLog.capture(error, {
-        source: 'api-response',
-        action,
-        status: res?.status,
-        kind: 'api',
-        severity: expectedAuthInput ? 'info' : 'error',
-      });
-      throw error;
     }
 
-    return data;
+    const status = lastError?.status || 0;
+    const expectedAuthInput = ['login', 'register'].includes(action) && [400, 401, 409].includes(status);
+    ErrorLog.capture(lastError || new ApiError('Unknown API error', status), {
+      source: lastError?.failureType === 'timeout' ? 'api-timeout' : lastError?.failureType === 'network' ? 'api-network' : 'api-response',
+      action,
+      status,
+      attempts,
+      kind: 'api',
+      severity: expectedAuthInput ? 'info' : status === 0 ? 'warning' : 'error',
+    });
+    throw lastError || new ApiError('Unknown API error', status);
   },
 };
 

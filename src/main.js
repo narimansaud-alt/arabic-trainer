@@ -141,9 +141,13 @@ document.addEventListener('keypress', (e) => {
     loginMode === 'login' ? doLogin() : doRegister();
   } else if (s === 'screen-quiz') {
     const typeArea = document.getElementById('type-area');
+    const typeInput = document.getElementById('type-input');
     const btnNext = document.getElementById('btn-next');
-    if (typeArea && !typeArea.classList.contains('hidden')) checkTyped();
-    else if (btnNext && !btnNext.classList.contains('hidden')) goNext();
+    if (typeArea && !typeArea.classList.contains('hidden') && typeInput && !typeInput.disabled) {
+      checkTyped();
+    } else if (btnNext && !btnNext.classList.contains('hidden') && !btnNext.disabled) {
+      goNext();
+    }
   }
 });
 
