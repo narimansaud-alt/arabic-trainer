@@ -98,7 +98,7 @@ assert.equal(plan.tasks.filter((task) => task.category === 'new').length, 7, 'da
 assert.equal(plan.tasks.filter((task) => task.category === 'review').length, 7, 'daily plan must include review tasks');
 assert.equal(plan.tasks.filter((task) => task.category === 'typing').length, 6, 'daily plan must include typing tasks');
 assert.equal(plan.tasks.filter((task) => task.mode === 'type-ar').length, 6, 'typing tasks must use Arabic input');
-assert.equal(plan.version, 6, 'daily plan cache version must invalidate plans with old category ratios or lesson numbering');
+assert.equal(plan.version, 7, 'daily plan cache version must invalidate plans with old category ratios or lesson numbering');
 assert.equal(new Set(plan.tasks.map((task) => task.word.ar)).size, 20, 'a twenty-task plan must not repeat words when vocabulary is sufficient');
 
 const largestRow = vm.runInContext(`normalizeDailyGoalRow({
