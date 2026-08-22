@@ -1,6 +1,6 @@
 # Arabic Trainer project knowledge
 
-Last updated: 2026-08-21 (Book 4 lesson 2 dictionary and trainer reliability)
+Last updated: 2026-08-22 (Book 4 lesson 3 dictionary and balanced daily tasks)
 
 ## Production and repositories
 
@@ -92,6 +92,7 @@ Authentication decision:
 - The volume 3 dictionary task is additive project context. It does not supersede or delete any previously stored Medina rules tasks or audit records.
 - Volume 4 dictionary lesson 1 is sourced from the seven owner-supplied photographs of printed pages 154–160. Although the photographed heading says lesson 18, the owner explicitly mapped that complete block to application lesson 1. The verified result is 90 source rows and 109 displayed forms, including 19 singular/plural pairs with separate Russian plural meanings. Progress and the correction log are in `docs/MEDINA_BOOK4_DICTIONARY_PROGRESS.md`; migration: `supabase/migrations/20260814080000_import_book4_dictionary_lesson01.sql`.
 - Volume 4 dictionary lesson 2 is sourced from five owner-supplied photographs of printed pages 161–165. Although the heading says lesson 19, the owner explicitly mapped the block to application lesson 2. The verified live result is 64 source rows and 77 list/training records: 50 single forms, 13 singular/plural pairs and the plural-only `أُولُو`. Every plural has its own Russian plural meaning. Migration: `supabase/migrations/20260821060000_import_book4_dictionary_lesson02.sql`; automated and screen QA are recorded in `docs/MEDINA_BOOK4_DICTIONARY_PROGRESS.md`.
+- Volume 4 dictionary lesson 3 is sourced from five owner-supplied photographs of printed pages 169–173. Although the heading says lesson 21, the owner explicitly mapped the block to application lesson 3. The verified live result is 65 source rows and 81 list/training records: 49 single forms and 16 singular/plural pairs. Every plural has its own Russian plural meaning. Migration: `supabase/migrations/20260822061000_import_book4_dictionary_lesson03.sql`; exact data and responsive screen QA are recorded in `docs/MEDINA_BOOK4_DICTIONARY_PROGRESS.md`.
 
 ### Book
 
@@ -104,6 +105,8 @@ Authentication decision:
 ## Trainer behavior
 
 - Training modes include learn, Arabic typing, review, mix, and fast review.
+- Daily goal choices remain 5, 10, 20, 25, and 30 minutes at four tasks per minute. Categories are divided as evenly as possible; review receives the first remainder task and new words the second: 20 → 7/7/6, 40 → 13/14/13, 80 → 27/27/26, 100 → 33/34/33, and 120 → 40/40/40 for new/review/typing. A 12-task continuation block is 4/4/4. Client plan version 5 invalidates cached uneven plans.
+- Migration `20260822060000_balance_daily_goal_categories.sql` updates untouched plans for the current Moscow day and all newly created plans. In-progress and completed current-day plans are preserved so already earned progress is not rewritten; subsequent days always use the balanced split.
 - Review is always available for words in the selected lessons. Review, Arabic input, mix and fast modes prioritize difficult, weak and due material before scheduled material and use unseen words only as fallback; learn mode introduces unseen words first.
 - Selected-word counts and queues use the same exact-deduplicated pool. Answer options are deduplicated by visible value and are drawn from the current selected session. The active volume dictionary is used only when the selected pool has fewer than three distractors.
 - Arabic typing has educational and strict checking modes.
@@ -149,6 +152,8 @@ Recent schema/data migrations include:
 - `20260804160000_replace_tom1_rules_archive.sql`
 - `20260804180000_fix_ma_man_rule.sql`
 - `20260821060000_import_book4_dictionary_lesson02.sql`
+- `20260822060000_balance_daily_goal_categories.sql`
+- `20260822061000_import_book4_dictionary_lesson03.sql`
 
 ## Deployment procedure
 

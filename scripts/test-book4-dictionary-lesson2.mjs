@@ -130,7 +130,7 @@ const dailyPlan = vm.runInContext('buildDailyGoalPlan(__dailyRow)', dailyContext
 assert.equal(dailyPlan.tasks.length, 120, 'a 30-minute day must still contain 120 tasks after the import');
 assert.equal(new Set(dailyPlan.tasks.map((task) => task.word.ar)).size, 120, 'daily tasks must not duplicate words when the vocabulary is sufficient');
 const freshTasks = dailyPlan.tasks.filter((task) => task.category === 'new');
-assert.equal(freshTasks.length, 24, 'the 30-minute plan must contain 24 new-word tasks');
+assert.equal(freshTasks.length, 40, 'the balanced 30-minute plan must contain 40 new-word tasks');
 assert.equal(freshTasks.every((task) => task.word.lesson === '2'), true, 'unseen lesson 2 words must enter the new-word category');
 const pluralDailyTask = freshTasks.find((task) => task.word.ar === 'مَهَابِطُ');
 assert.ok(pluralDailyTask, 'the lesson 2 plural مَهَابِطُ must be eligible for the daily plan');

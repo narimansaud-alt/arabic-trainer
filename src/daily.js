@@ -3,7 +3,7 @@
 
 const DAILY_GOAL_MINUTE_OPTIONS = [5, 10, 20, 25, 30];
 const DAILY_GOAL_CACHE_KEY = 'arabic_daily_goal_v2';
-const DAILY_GOAL_PLAN_VERSION = 4;
+const DAILY_GOAL_PLAN_VERSION = 5;
 const DAILY_GOAL_TASKS_PER_MINUTE = 4;
 const DAILY_CONTINUATION_TASKS = 12;
 const DAILY_WEEK_LABELS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
@@ -21,8 +21,10 @@ const DailyGoalState = {
 function dailyGoalTargets(minutes) {
   const safeMinutes = DAILY_GOAL_MINUTE_OPTIONS.includes(Number(minutes)) ? Number(minutes) : 10;
   const target = safeMinutes * DAILY_GOAL_TASKS_PER_MINUTE;
-  const fresh = Math.round(target * 0.2);
-  const review = Math.round(target * 0.5);
+  const base = Math.floor(target / 3);
+  const remainder = target % 3;
+  const fresh = base + (remainder === 2 ? 1 : 0);
+  const review = base + (remainder >= 1 ? 1 : 0);
   return {
     goal_minutes: safeMinutes,
     target_tasks: target,
@@ -473,7 +475,7 @@ function buildDailyContinuationTasks(row, roundNumber) {
     [...reviewPool, ...freshPool].filter((word, index, items) => items.findIndex((item) => item.ar === word.ar) === index),
     offset
   );
-  const targets = { new: 3, review: 6, typing: 3 };
+  const targets = { new: 4, review: 4, typing: 4 };
   const tasks = [];
   const usedWords = new Set();
 
