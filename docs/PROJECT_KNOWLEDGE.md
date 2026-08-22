@@ -1,6 +1,6 @@
 # Arabic Trainer project knowledge
 
-Last updated: 2026-08-22 (Book 4 dictionary lesson 3 source import)
+Last updated: 2026-08-22 (Book 4 dictionary lesson 6 source import)
 
 ## Production and repositories
 
@@ -95,7 +95,8 @@ Authentication decision:
 - Volume 4 dictionary lesson 3 is sourced from three owner-supplied photographs of printed lesson 20, pages 166–168: 37 source rows and 45 list/training records (29 single forms and 8 singular/plural pairs). All eight plurals have separate Russian plural meanings; the two source alternatives `مَوَاضِيعُ، مَوْضُوعَاتٌ` remain one plural cell/card. Migration: `supabase/migrations/20260822080000_import_book4_dictionary_lesson03.sql`; exact automated and responsive screen QA are recorded in `docs/MEDINA_BOOK4_DICTIONARY_PROGRESS.md`.
 - Volume 4 dictionary lesson 4 is sourced from five photographs of printed lesson 21, pages 169–173: 65 source rows and 81 records (49 single, 16 singular and 16 plural). The payload was initially misnumbered as application lesson 3 and was moved to lesson 4 with IDs preserved by migration `20260822070000_fix_book4_dictionary_numbering_and_import_lesson05.sql`.
 - Volume 4 dictionary lesson 5 is sourced from three photographs of printed lesson 22, pages 174–176: 33 source rows and 34 records (32 single plus `جِسْرٌ` / `جُسُورٌ`, «Мост» / «Мосты»). Exact migration and tests: `supabase/migrations/20260822070000_fix_book4_dictionary_numbering_and_import_lesson05.sql` and `scripts/test-book4-dictionary-lessons4-5.mjs`.
-- Canonical Book 4 dictionary mapping is `application lesson = printed lesson − 17`: 18→1, 19→2, 20→3, 21→4, 22→5. Do not infer a different mapping from missing photo blocks.
+- Volume 4 dictionary lesson 6 is sourced from three owner-supplied photographs of printed lesson 23, pages 177–179: 43 source rows and 46 list/training records (40 single forms and 3 singular/plural pairs). The plural cards have separate Russian meanings «Этажи», «Друзья», and «Змеи». The photographed `وَفَقَ/يَفِقُ` is preserved exactly. Migration: `supabase/migrations/20260822090000_import_book4_dictionary_lesson06.sql`; exact automated and responsive screen QA are recorded in `docs/MEDINA_BOOK4_DICTIONARY_PROGRESS.md`.
+- Canonical Book 4 dictionary mapping is `application lesson = printed lesson − 17`: 18→1, 19→2, 20→3, 21→4, 22→5, 23→6. Do not infer a different mapping from missing photo blocks.
 
 ### Book
 
@@ -108,7 +109,7 @@ Authentication decision:
 ## Trainer behavior
 
 - Training modes include learn, Arabic typing, review, mix, and fast review.
-- Daily goal choices remain 5, 10, 20, 25, and 30 minutes at four tasks per minute. Categories are divided as evenly as possible; review receives the first remainder task and new words the second: 20 → 7/7/6, 40 → 13/14/13, 80 → 27/27/26, 100 → 33/34/33, and 120 → 40/40/40 for new/review/typing. A 12-task continuation block is 4/4/4. Client plan version 7 invalidates cached plans with old category ratios or incomplete Book 4 lesson numbering while server progress remains authoritative.
+- Daily goal choices remain 5, 10, 20, 25, and 30 minutes at four tasks per minute. Categories are divided as evenly as possible; review receives the first remainder task and new words the second: 20 → 7/7/6, 40 → 13/14/13, 80 → 27/27/26, 100 → 33/34/33, and 120 → 40/40/40 for new/review/typing. A 12-task continuation block is 4/4/4. Client plan version 8 invalidates cached plans with old category ratios or incomplete Book 4 lesson numbering while server progress remains authoritative.
 - Migration `20260822060000_balance_daily_goal_categories.sql` updates untouched plans for the current Moscow day and all newly created plans. In-progress and completed current-day plans are preserved so already earned progress is not rewritten; subsequent days always use the balanced split.
 - Review is always available for words in the selected lessons. Review, Arabic input, mix and fast modes prioritize difficult, weak and due material before scheduled material and use unseen words only as fallback; learn mode introduces unseen words first.
 - Selected-word counts and queues use the same exact-deduplicated pool. Answer options are deduplicated by visible value and are drawn from the current selected session. The active volume dictionary is used only when the selected pool has fewer than three distractors.
@@ -159,6 +160,7 @@ Recent schema/data migrations include:
 - `20260822061000_import_book4_dictionary_lesson03.sql`
 - `20260822070000_fix_book4_dictionary_numbering_and_import_lesson05.sql`
 - `20260822080000_import_book4_dictionary_lesson03.sql`
+- `20260822090000_import_book4_dictionary_lesson06.sql`
 
 ## Deployment procedure
 
