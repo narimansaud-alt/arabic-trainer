@@ -3,7 +3,7 @@
 
 const DAILY_GOAL_MINUTE_OPTIONS = [5, 10, 20, 25, 30];
 const DAILY_GOAL_CACHE_KEY = 'arabic_daily_goal_v2';
-const DAILY_GOAL_PLAN_VERSION = 5;
+const DAILY_GOAL_PLAN_VERSION = 6;
 const DAILY_GOAL_TASKS_PER_MINUTE = 4;
 const DAILY_CONTINUATION_TASKS = 12;
 const DAILY_WEEK_LABELS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
