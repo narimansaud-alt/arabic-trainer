@@ -1,6 +1,6 @@
 # Arabic Trainer project knowledge
 
-Last updated: 2026-08-22 (Book 4 dictionary lesson 6 source import)
+Last updated: 2026-08-26 (Book 1 full Russian sharh final deep audit)
 
 ## Production and repositories
 
@@ -73,11 +73,15 @@ Authentication decision:
 
 ### Medina volume 1
 
-- Canonical course name: `Мединский курс (Том 1)`
-- Lessons: 1-23
-- Final rule base: 70 rule records across all 23 lessons (confirmed from live Supabase on 2026-08-13).
-- Source rule archive migration: `supabase/migrations/20260804160000_replace_tom1_rules_archive.sql`
-- `مَا/مَنْ` correction migration: `supabase/migrations/20260804180000_fix_ma_man_rule.sql`
+- Canonical course name: `Мединский курс (Том 1)`.
+- Controlling source: `C:\Users\user\Desktop\Мединский курс\Первый том\Sharkh_na_1_tom_Med_kursa.pdf`, PDF pages 3–36.
+- Lessons: 1–23.
+- Final live state confirmed on 2026-08-26: 70 public rule cards, 147 private source fragments and complete Russian presentation of the author's instructional explanations.
+- Verified boundaries: L1 3–4; L2 5; L3 6–7; L4 8; L5 9; L6 10; L7 11; L8 12; L9 13; L10 14–15; L11 16; L12 17–18; L13 19–22; L14 23–25; L15 26–27; L16 28; L17 29; L18 30–31; L19 32; L20 32; L21 33–34; L22 35–36; L23 36.
+- Final deep audit: `docs/MEDINA_RULES_BOOK1_FULL_SHARH_FINAL_AUDIT_20260826.md`.
+- Completion migrations: `20260826120000_full_book1_lessons14_23_sharh_ru.sql` and `20260826140000_deep_audit_book1_full_sharh.sql`; permanent tests are the complete `scripts/test-book1-full-sharh-*.mjs` suite.
+- Source rule archive migration: `supabase/migrations/20260804160000_replace_tom1_rules_archive.sql`.
+- `مَا/مَنْ` correction migration: `supabase/migrations/20260804180000_fix_ma_man_rule.sql`.
 
 ### Dictionary
 
@@ -161,6 +165,8 @@ Recent schema/data migrations include:
 - `20260822070000_fix_book4_dictionary_numbering_and_import_lesson05.sql`
 - `20260822080000_import_book4_dictionary_lesson03.sql`
 - `20260822090000_import_book4_dictionary_lesson06.sql`
+- `20260826120000_full_book1_lessons14_23_sharh_ru.sql`
+- `20260826140000_deep_audit_book1_full_sharh.sql`
 
 ## Deployment procedure
 
