@@ -55,17 +55,22 @@ Authentication decision:
 
 ## Application content
 
-### Quran vocabulary (2026-09-02)
+### Quran vocabulary (2026-09-03)
 
-- Separate course «1000 самых частых слов Корана»: 20 frequency blocks of 50 cards,
-  not another Medina volume. Source, editorial limitations, reproducible imports,
-  corrections, tests and deployment/rollback steps: [QURAN_VOCABULARY.md](QURAN_VOCABULARY.md).
+- Public course «Частые слова Корана»: 759 Academy-based cards in 16 study blocks
+  (15 × 50 + 9), replacing the previous QAC 1,000-card selection by owner request.
+  The official Understand Al-Qur’an Academy PDF was read completely; Arabic facts
+  have independently edited Russian study meanings, not an official Russian translation.
+  The immutable DB course ID remains «1000 самых частых слов Корана» to preserve
+  score/daily-goal references. Do NOT rename it or pad the source to 1,000.
+  Active ledgers/builders, source limits, corrections, cache migration and scoped
+  rollback: [QURAN_VOCABULARY.md](QURAN_VOCABULARY.md).
 - Quran-only source metadata lives in words.vocabulary_meta; existing Medina
   words and student progress are preserved. Daily tasks and scores explicitly
   support this course, including every leaderboard period.
-- The current client writes to api-v2; its entry point imports api/index.ts.
-  This release deploys api-v2 only, preserving JWT verification. Legacy api and
-  its authentication settings are unchanged; old clients do not expose this course.
+- This source replacement changes no backend allowlists or student tables and
+  needs no Edge Function redeployment. Dataset revision guards prevent legacy
+  cached sessions/daily plans from restoring replaced words; earned progress stays.
 
 ### Medina rules verification workflow
 

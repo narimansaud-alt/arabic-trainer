@@ -16,6 +16,9 @@
 /data/quran-frequency-context.json
 /data/quran-vocabulary-ru.txt
 /data/quran-vocabulary.json
+/data/quran-academy-study-source.json
+/data/quran-academy-verb-source.json
+/data/quran-academy-vocabulary.json
 /data/book4-dictionary-lessons7-8.json
 /data/book4-dictionary-lessons9-17.json
 /data/book4-dictionary-lessons9-17-sources.json

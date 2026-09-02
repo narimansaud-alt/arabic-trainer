@@ -36,7 +36,7 @@ function showVolumeScreen(courseName, key) {
     )
     .join('');
   if (key === 'med') {
-    container.insertAdjacentHTML('beforeend', '<button class="vol-card quran-course-card" type="button" onclick="selectVolume(QURAN_COURSE_ID)"><div class="vol-body"><div class="vol-title">' + esc(QURAN_COURSE_ID) + '</div><div class="quran-course-sub">Отдельный словарь и тренировки · 20 блоков по 50 слов</div></div><div class="vol-arrow" aria-hidden="true">→</div></button>');
+    container.insertAdjacentHTML('beforeend', '<button class="vol-card quran-course-card" type="button" onclick="selectVolume(QURAN_COURSE_ID)"><div class="vol-body"><div class="vol-title">' + esc(QURAN_COURSE_TITLE) + '</div><div class="quran-course-sub">Подборка Understand Quran · словарь и тренировки</div></div><div class="vol-arrow" aria-hidden="true">→</div></button>');
   }
   showScreen('screen-volume');
 }

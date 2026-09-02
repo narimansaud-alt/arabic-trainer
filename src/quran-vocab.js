@@ -1,24 +1,17 @@
-// QAC-based study vocabulary. The underlying source and editorial method are
-// versioned in data/quran-vocabulary.json; database rows carry small metadata.
+// Academy-based study vocabulary; original Russian meanings and provenance:
+// data/quran-academy-vocabulary.json. The legacy course ID preserves scores.
 function quranInputHint(word) {
   if (!isQuranVolume(word?.volume || App.volume)) return '';
   const meta = word?.vocabularyMeta || {};
   if (meta.inputForm === 'imperative') return 'Введите повеление одному мужчине — одну форму.';
   if (meta.inputForm === 'present') return 'Введите настоящее время, «он» — одну форму.';
-  if (meta.kind === 'verb') return 'Введите одну форму прошедшего времени, «он». Не нужно писать пару времён.';
+  if (meta.inputForm === 'past-phrase') return 'Введите глагол в прошедшем времени, «он», вместе со словом после него.';
+  if (meta.inputForm === 'construction') return 'Введите обе части конструкции через пробел, без многоточия и вставки слов.';
+  if (meta.inputForm === 'past') return 'Введите одну форму прошедшего времени, «он». Не нужно писать пару времён.';
+  if (meta.kind === 'plural') return 'Введите множественное число из карточки.';
+  if (meta.kind === 'dual') return 'Введите двойственное число — форму для двух.';
+  if (meta.kind === 'attached') return 'Введите только слитное местоимение, без слова перед ним.';
   return 'Введите словарную форму из карточки. Падежное окончание добавлять не нужно.';
-}
-
-function quranSourceLinks(meta) {
-  return (meta?.sourceRecords || []).flatMap((record) => {
-    try {
-      const url = new URL(record.url);
-      if (url.origin !== 'https://corpus.quran.com' || url.pathname !== '/search.jsp') return [];
-      return ['<a href="' + esc(url.href) + '" target="_blank" rel="noopener noreferrer">Вхождения QAC</a>'];
-    } catch (_) {
-      return [];
-    }
-  }).join(' · ');
 }
 
 function quranGlossParts(word) {
@@ -32,6 +25,10 @@ function quranGlossesOverlap(first, second) {
 
 function isQuranAlternateAnswerCorrect(value, word, mode) {
   if (!isQuranVolume(word?.volume || App.volume)) return false;
+  if (word.vocabularyMeta?.inputForm === 'construction') {
+    const parts = text => String(text || '').replace(/[.\u2026ـ]/gu, ' ').replace(/\s+/gu, ' ').trim();
+    if (isArabicAnswerCorrect(parts(value), parts(word.ar), mode)) return true;
+  }
   // Identical Russian prompts must not require guessing which synonym the
   // scheduler chose. Different requested verb forms are not interchangeable.
   const ru = String(word.ru || '').trim().toLowerCase();
@@ -43,13 +40,24 @@ function isQuranAlternateAnswerCorrect(value, word, mode) {
     isArabicAnswerCorrect(value, candidate.ar, mode));
 }
 
+function quranTasksAreCurrent(tasks, fallbackVolume) {
+  return Array.isArray(tasks) && tasks.every(task => {
+    const word = task?.word || task?.w || task;
+    return !isQuranVolume(word?.volume || fallbackVolume) || word?.vocabularyMeta?.dataset === QURAN_DATASET_REVISION;
+  });
+}
+
+function quranProgressIsStale(progress) {
+  const words = [...(progress.queue || []), ...(progress.learnCards || []),
+    ...(progress.dailyTasks || []), ...(progress.sessionInitialWords || [])];
+  return !quranTasksAreCurrent(words, progress.volume);
+}
+
 function renderQuranDictionary(words) {
-  const introduction = '<section class="quran-dictionary-intro"><h2>' + esc(QURAN_COURSE_ID) + '</h2>' +
-    '<p>20 блоков по 50 карточек, от более частых к менее частым. Это блоки словаря, не суры.</p>' +
-    '<details><summary>Источник и способ подсчёта</summary><p>Основа — <a href="https://corpus.quran.com/lemmas.jsp?group=1" target="_blank" rel="noopener noreferrer">Quranic Arabic Corpus: имена и частицы</a> и <a href="https://corpus.quran.com/verbs.jsp" target="_blank" rel="noopener noreferrer">глаголы</a>. Метод разметки описан в <a href="https://aclanthology.org/L10-1190/" target="_blank" rel="noopener noreferrer">публикации Dukes и Habash (LREC 2010)</a>.</p>' +
-    '<p>Число вхождений относится к словарной группе, включая её формы, а не только к написанию на карточке. Таблицы объединены; одинаковые написания сведены в одну карточку. Документированные смешения разных форм исправлены по указателю вхождений. Аффиксы и местоимения, не имеющие отдельной записи в этих таблицах, не включены. При равной частоте сохранён порядок исходных таблиц.</p>' +
-    '<p>Для набора используется обычное арабское написание. Русские значения — наши краткие учебные пояснения по формам и контексту QAC, не авторский перевод Корана и не тафсир. Независимую богословскую редактуру они не проходили.</p>' +
-    '<p>Данные QAC © 2011 Kais Dukes · <a href="https://corpus.quran.com/download/" target="_blank" rel="noopener noreferrer">источник и условия GPL</a>.</p></details></section>';
+  const total = Dict.allWords.filter(word => isQuranVolume(word.volume)).length;
+  const introduction = '<section class="quran-dictionary-intro"><h2>' + esc(QURAN_COURSE_TITLE) + '</h2>' +
+    '<p>' + total + ' карточек · блоки по 50.</p>' +
+    '<details><summary>Источник</summary><p>По подборке «85% of Qur’anic Words», д-р Абдульазиз Абдуррахим, <a href="https://understandquran.com/e-books/" target="_blank" rel="noopener noreferrer">Understand Al-Qur’an Academy</a>. Русские значения подготовлены для тренажёра: это не официальный перевод Академии и не перевод аятов.</p></details></section>';
   if (!words.length) return introduction + '<div class="lb-empty">Ничего не найдено</div>';
   const sorted = [...words].sort((a, b) => (a.vocabularyMeta?.rank || 0) - (b.vocabularyMeta?.rank || 0));
   const groups = new Map();
@@ -59,11 +67,8 @@ function renderQuranDictionary(words) {
   }
   return introduction + [...groups].map(([block, items]) => {
     const rows = items.map((word) => {
-      const meta = word.vocabularyMeta || {};
       return '<div class="quran-word"><div class="quran-word-main"><span class="dict-ar" dir="rtl" lang="ar">' + esc(word.ar) +
-        '</span><span class="dict-ru">' + esc(word.ru) + '</span></div><div class="quran-word-meta">№ ' + esc(meta.rank) +
-        ' · Вхождений группы: ' + esc(meta.frequency) + '</div><details class="quran-word-source"><summary>Проверить в источнике</summary>' +
-        quranSourceLinks(meta) + (meta.note ? '<p>' + esc(meta.note) + '</p>' : '') + '</details></div>';
+        '</span><span class="dict-ru">' + esc(word.ru) + '</span></div></div>';
     }).join('');
     return '<section class="dict-section quran-word-section' + (Settings.dictView === 'table' ? ' quran-compact' : '') +
       '"><div class="dict-section-hdr">Блок ' + esc(block) + ' · ' + items.length + ' слов</div>' + rows + '</section>';

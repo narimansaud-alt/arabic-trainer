@@ -82,6 +82,9 @@ function msUntilNextAppMidnight() {
 }
 
 const QURAN_COURSE_ID = '1000 самых частых слов Корана';
+// Keep the database ID stable: scores/daily goals refer to it. Display the title.
+const QURAN_COURSE_TITLE = 'Частые слова Корана';
+const QURAN_DATASET_REVISION = 'uqa-85-2020-ru-v1';
 
 function isQuranVolume(volumeId = App.volume) {
   return volumeId === QURAN_COURSE_ID;
@@ -92,7 +95,7 @@ function lessonUnitLabel(volumeId = App.volume) {
 }
 
 const VOLUMES = {
-  quran: [{ id: QURAN_COURSE_ID, label: 'Слова Корана', sub: '1000 слов · 20 блоков', vocabularyOnly: true }],
+  quran: [{ id: QURAN_COURSE_ID, label: 'Слова Корана', sub: 'Подборка Understand Quran', vocabularyOnly: true }],
   med: [
     {
       id: 'Мединский курс (Том 1)',

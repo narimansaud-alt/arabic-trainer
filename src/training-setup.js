@@ -100,12 +100,14 @@ function loadTrainingSetupPreferences() {
 
     Object.entries(saved.normalSelections || {}).forEach(([volumeId, modes]) => {
       if (!validVolumes.has(volumeId) || !modes || typeof modes !== 'object') return;
+      if (isQuranVolume(volumeId) && saved.quranDataset !== QURAN_DATASET_REVISION) return;
       TrainingSetup.normalSelections[volumeId] = {};
       TRAINING_STANDARD_MODES.forEach((mode) => {
         TrainingSetup.normalSelections[volumeId][mode] = normalizeTrainingLessons(modes[mode]);
       });
     });
     Object.entries(saved.fastSelections || {}).forEach(([volumeId, lessons]) => {
+      if (isQuranVolume(volumeId) && saved.quranDataset !== QURAN_DATASET_REVISION) return;
       if (validVolumes.has(volumeId)) TrainingSetup.fastSelections[volumeId] = normalizeTrainingLessons(lessons);
     });
     Object.keys(TRAINING_MODE_META).forEach((mode) => {
@@ -123,6 +125,7 @@ function saveTrainingSetupPreferences() {
       trainingSetupStorageKey(),
       JSON.stringify({
         version: TRAINING_SETUP_STORAGE_VERSION,
+        quranDataset: QURAN_DATASET_REVISION,
         normalSelections: TrainingSetup.normalSelections,
         fastSelections: TrainingSetup.fastSelections,
         quantities: TrainingSetup.quantities,

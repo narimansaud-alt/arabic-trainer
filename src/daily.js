@@ -516,6 +516,7 @@ function dailyPlanMatches(plan, row) {
       plan.date === row.goal_date &&
       plan.course === row.course_name &&
       Array.isArray(plan.tasks) &&
+      (typeof quranTasksAreCurrent !== 'function' || quranTasksAreCurrent(plan.tasks, row.course_name)) &&
       plan.tasks.length === row.target_tasks
   );
 }

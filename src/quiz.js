@@ -1003,6 +1003,11 @@ async function restoreProgress(options = {}) {
     if (p.volume && App.volume && p.volume !== App.volume) {
       return false;
     }
+    if (typeof quranProgressIsStale === 'function' && quranProgressIsStale(p)) {
+      clearProgress();
+      alert('Подборка слов Корана обновлена. Начните новую тренировку. Уже сохранённые очки, уровни слов и результат дня не удалены.');
+      return false;
+    }
     const mNames = {
       learn: 'Учить новые слова',
       'type-ar': 'Арабский ввод',
