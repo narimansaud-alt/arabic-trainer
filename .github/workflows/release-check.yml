@@ -26,5 +26,7 @@ jobs:
         run: node scripts/release-check.mjs
       - name: Run training regressions
         run: node scripts/test-training-regressions.mjs
+      - name: Verify Book 4 dictionary lessons 7-8
+        run: node scripts/test-book4-dictionary-lessons7-8.mjs
       - name: Run leaderboard regressions
         run: node scripts/test-leaderboards.mjs
