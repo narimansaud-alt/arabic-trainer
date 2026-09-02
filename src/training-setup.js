@@ -24,7 +24,7 @@ const TRAINING_MODE_META = {
   },
   fast: {
     title: 'Быстрое повторение',
-    note: 'Можно объединить любые уроки из всех четырёх томов. На ответ даётся 7 секунд.',
+    note: 'Можно объединить уроки четырёх томов и блоки слов Корана. На ответ даётся 7 секунд.',
   },
 };
 
@@ -52,7 +52,7 @@ function trainingSetupStorageKey() {
 }
 
 function trainingVolumeIds() {
-  return (VOLUMES.med || []).map((volume) => volume.id);
+  return Object.values(VOLUMES).flat().map((volume) => volume.id);
 }
 
 function trainingVolumeLabel(volumeId) {
@@ -142,6 +142,7 @@ function trainingWordFromRow(row, fallbackVolume) {
     volume: String(row.course_name || row.volume || fallbackVolume || ''),
     dictionaryRow: row.dictionary_row == null ? row.dictionaryRow ?? null : Number(row.dictionary_row),
     dictionaryForm: row.dictionary_form || row.dictionaryForm || '',
+    vocabularyMeta: row.vocabulary_meta || row.vocabularyMeta || null,
   };
 }
 
@@ -161,7 +162,9 @@ async function fetchTrainingVolumeWords(volumeId) {
     rows.push(...page);
     if (page.length < pageSize) break;
   }
-  return rows.map((row) => trainingWordFromRow(row, volumeId)).filter((word) => word.ar && word.ru && word.lesson);
+  const words = rows.map((row) => trainingWordFromRow(row, volumeId)).filter((word) => word.ar && word.ru && word.lesson);
+  if (typeof isQuranVolume === 'function' && isQuranVolume(volumeId)) words.sort((a, b) => a.vocabularyMeta.rank - b.vocabularyMeta.rank);
+  return words;
 }
 
 function buildTrainingVolumeCatalog(words) {
@@ -544,14 +547,14 @@ function renderTrainingLessonButtons(mode, volumeId, byLesson, selected) {
     .map((lesson) => {
       const active = selected.includes(lesson);
       const count = byLesson[lesson]?.length || 0;
-      return `<button class="lesson-pill training-lesson-pill${active ? ' active' : ''}" type="button" data-mode="${esc(mode)}" data-volume="${esc(volumeId)}" data-lesson="${esc(lesson)}" aria-pressed="${active}" onclick="toggleTrainingLesson(this)"><span>Урок ${esc(lesson)}</span><small>${count} сл.</small></button>`;
+      return `<button class="lesson-pill training-lesson-pill${active ? ' active' : ''}" type="button" data-mode="${esc(mode)}" data-volume="${esc(volumeId)}" data-lesson="${esc(lesson)}" aria-pressed="${active}" onclick="toggleTrainingLesson(this)"><span>${esc(lessonUnitLabel(volumeId))} ${esc(lesson)}</span><small>${count} сл.</small></button>`;
     })
     .join('');
 }
 
 function renderNormalTrainingPicker(mode) {
   const lessons = Object.keys(Dict.byLesson || {}).sort(sortTrainingLessons);
-  if (!lessons.length) return '<div class="training-empty">Слова текущего тома ещё загружаются.</div>';
+  if (!lessons.length) return '<div class="training-empty">Слова текущего раздела ещё загружаются.</div>';
   const selected = normalTrainingSelection(mode, App.volume);
   return `
     <div class="training-picker-toolbar">
@@ -566,11 +569,11 @@ function renderNormalTrainingPicker(mode) {
 
 function renderFastTrainingPicker() {
   if (!TrainingSetup.fastCatalogLoaded) {
-    const message = TrainingSetup.fastCatalogError || 'Загружаю уроки всех четырёх томов…';
+    const message = TrainingSetup.fastCatalogError || 'Загружаю уроки и блоки словарей…';
     return `<div class="training-empty${TrainingSetup.fastCatalogError ? ' is-error' : ''}">${esc(message)}${TrainingSetup.fastCatalogError ? '<button type="button" onclick="ensureFastTrainingCatalog(true)">Повторить</button>' : ''}</div>`;
   }
 
-  const volumeCards = (VOLUMES.med || [])
+  const volumeCards = Object.values(VOLUMES).flat()
     .map((volume) => {
       const byLesson = TrainingSetup.fastCatalog[volume.id]?.byLesson || {};
       const lessons = Object.keys(byLesson).sort(sortTrainingLessons);
@@ -582,15 +585,15 @@ function renderFastTrainingPicker() {
       return `
         <section class="fast-volume-picker${isOpen ? ' is-open' : ''}">
           <button class="fast-volume-toggle" type="button" data-volume="${esc(volume.id)}" aria-expanded="${isOpen}" onclick="toggleFastTrainingVolume(this)">
-            <span><b>${esc(volume.label)}</b><small>${selectedCount} из ${lessons.length} уроков · ${wordCount} слов</small></span>
+            <span><b>${esc(volume.label)}</b><small>${selectedCount} из ${lessons.length} ${isQuranVolume(volume.id) ? 'блоков' : 'уроков'} · ${wordCount} слов</small></span>
             <span class="fast-volume-chevron" aria-hidden="true">⌄</span>
           </button>
           <div class="fast-volume-lessons${isOpen ? '' : ' hidden'}">
             <div class="training-picker-actions fast-volume-actions">
-              <button type="button" data-volume="${esc(volume.id)}" onclick="setFastVolumeSelection(this,true)"${lessons.length ? '' : ' disabled'}>Весь том</button>
+              <button type="button" data-volume="${esc(volume.id)}" onclick="setFastVolumeSelection(this,true)"${lessons.length ? '' : ' disabled'}>Все</button>
               <button type="button" data-volume="${esc(volume.id)}" onclick="setFastVolumeSelection(this,false)"${selectedCount ? '' : ' disabled'}>Снять</button>
             </div>
-            ${lessons.length ? `<div class="lesson-grid training-lesson-grid">${renderTrainingLessonButtons('fast', volume.id, byLesson, selected)}</div>` : '<div class="training-empty compact">В этом томе пока нет слов.</div>'}
+            ${lessons.length ? `<div class="lesson-grid training-lesson-grid">${renderTrainingLessonButtons('fast', volume.id, byLesson, selected)}</div>` : '<div class="training-empty compact">В этом разделе пока нет слов.</div>'}
           </div>
         </section>`;
     })
@@ -598,7 +601,7 @@ function renderFastTrainingPicker() {
 
   return `
     <div class="training-picker-toolbar fast-picker-toolbar">
-      <span class="training-current-volume">Все тома</span>
+      <span class="training-current-volume">Тома и Коран</span>
       <div class="training-picker-actions">
         <button type="button" onclick="setAllFastTrainingLessons(true)">Выбрать все</button>
         <button type="button" onclick="setAllFastTrainingLessons(false)">Снять все</button>
@@ -675,12 +678,12 @@ function renderTrainingModeSetup() {
     <div class="training-mode-page-head">
       <button class="training-mode-back" type="button" onclick="closeTrainingModeSetup()" aria-label="Вернуться к выбору режима">← <span>Назад</span></button>
       <div class="training-mode-page-title"><span>Настройка режима</span><h2>${esc(meta.title)}</h2></div>
-      <span class="training-mode-scope">${mode === 'fast' ? 'Тома 1–4' : esc(trainingVolumeLabel(App.volume))}</span>
+      <span class="training-mode-scope">${mode === 'fast' ? 'Все разделы' : esc(trainingVolumeLabel(App.volume))}</span>
     </div>
     <div class="training-mode-page-body">
-      <p class="training-mode-note">${esc(meta.note)}</p>
+      <p class="training-mode-note">${esc(isQuranVolume() && mode !== 'fast' ? meta.note.replace('уроки текущего тома', 'блоки слов Корана').replace('выбранных уроков', 'выбранных блоков') : meta.note)}</p>
       <section class="training-mode-section" aria-labelledby="training-lessons-title">
-        <h3 class="training-mode-section-title" id="training-lessons-title">Выберите уроки</h3>
+        <h3 class="training-mode-section-title" id="training-lessons-title">${mode === 'fast' ? 'Выберите уроки и блоки' : isQuranVolume() ? 'Выберите блоки' : 'Выберите уроки'}</h3>
         <div class="training-picker">${picker}</div>
       </section>
       <section class="training-mode-section training-quantity-section" aria-labelledby="training-quantity-title">

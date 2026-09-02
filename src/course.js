@@ -35,6 +35,9 @@ function showVolumeScreen(courseName, key) {
     </div>`
     )
     .join('');
+  if (key === 'med') {
+    container.insertAdjacentHTML('beforeend', '<button class="vol-card quran-course-card" type="button" onclick="selectVolume(QURAN_COURSE_ID)"><div class="vol-body"><div class="vol-title">' + esc(QURAN_COURSE_ID) + '</div><div class="quran-course-sub">Отдельный словарь и тренировки · 20 блоков по 50 слов</div></div><div class="vol-arrow" aria-hidden="true">→</div></button>');
+  }
   showScreen('screen-volume');
 }
 
@@ -62,6 +65,11 @@ async function selectVolume(volumeId) {
     }
   }
   App.volume = volumeId;
+  for (const tab of ['book', 'rules']) {
+    const button = document.getElementById('at-' + tab);
+    if (button) button.style.display = isQuranVolume(volumeId) ? 'none' : '';
+  }
+  if (isQuranVolume(volumeId)) Dict.rules = [];
   currentCourseKey = getCourseKeyByVolume(volumeId) || currentCourseKey;
   try {
     localStorage.setItem('arabic_last_volume', volumeId);
@@ -77,7 +85,7 @@ async function selectVolume(volumeId) {
   try {
     await Promise.all([
       withTimeout(loadDict(), 12000, 'load-dict'),
-      withTimeout(loadRulesAll(), 12000, 'load-rules'),
+      isQuranVolume(volumeId) ? Promise.resolve() : withTimeout(loadRulesAll(), 12000, 'load-rules'),
     ]);
     if (typeof loadDailyGoal === 'function') await loadDailyGoal();
     if (typeof restoreProgress === 'function') await restoreProgress();

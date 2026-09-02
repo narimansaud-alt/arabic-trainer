@@ -81,7 +81,18 @@ function msUntilNextAppMidnight() {
   return Math.max(nextMidnight - Date.now(), 1000);
 }
 
+const QURAN_COURSE_ID = '1000 самых частых слов Корана';
+
+function isQuranVolume(volumeId = App.volume) {
+  return volumeId === QURAN_COURSE_ID;
+}
+
+function lessonUnitLabel(volumeId = App.volume) {
+  return isQuranVolume(volumeId) ? 'Блок' : 'Урок';
+}
+
 const VOLUMES = {
+  quran: [{ id: QURAN_COURSE_ID, label: 'Слова Корана', sub: '1000 слов · 20 блоков', vocabularyOnly: true }],
   med: [
     {
       id: 'Мединский курс (Том 1)',

@@ -254,7 +254,8 @@ function checkTypedLearn() {
   if (hintBtn) hintBtn.style.display = 'none';
   const hintLbl = learnGetEl('hint-cost-label');
   if (hintLbl) hintLbl.textContent = '';
-  if (isArabicAnswerCorrect(val, curWord.ar, Settings.answerCheck)) {
+  if (isArabicAnswerCorrect(val, curWord.ar, Settings.answerCheck) ||
+      (typeof isQuranAlternateAnswerCorrect === 'function' && isQuranAlternateAnswerCorrect(val, curWord, Settings.answerCheck))) {
     const penalty = hintCount * 5;
     const pts = Math.max(0, 20 - penalty);
     if (fb) {

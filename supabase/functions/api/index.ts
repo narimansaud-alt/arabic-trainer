@@ -44,6 +44,11 @@ const DAILY_STREAK_GOAL = 30;
 const MAX_DAILY_WORDS = 1000000;
 const MAX_SCORE_POINTS = 500;
 
+function isSupportedLearningCourse(courseName: string) {
+  return /^Мединский курс \(Том [1-4]\)$/.test(courseName) ||
+    courseName === "1000 самых частых слов Корана";
+}
+
 function moscowDateKey(offsetDays = 0) {
   return new Date(Date.now() + MOSCOW_OFFSET_MS + offsetDays * 24 * 60 * 60 * 1000)
     .toISOString()
@@ -341,7 +346,7 @@ Deno.serve(async (req: Request) => {
 
           case "get-daily-goal": {
             const courseName = typeof body.course_name === "string" ? body.course_name.slice(0, 64) : "";
-            if (!/^Мединский курс \(Том [1-4]\)$/.test(courseName)) return badRequest("Unsupported course");
+            if (!isSupportedLearningCourse(courseName)) return badRequest("Unsupported course");
             const { data, error } = await db.rpc("ensure_user_daily_goal", {
               p_username: username,
               p_course_name: courseName,
@@ -390,7 +395,7 @@ Deno.serve(async (req: Request) => {
               return badRequest("Daily goal date expired");
             }
             const courseName = typeof body.course_name === "string" ? body.course_name.slice(0, 64) : "";
-            if (!/^Мединский курс \(Том [1-4]\)$/.test(courseName)) return badRequest("Unsupported course");
+            if (!isSupportedLearningCourse(courseName)) return badRequest("Unsupported course");
             const newCompleted = body.new_completed;
             const reviewCompleted = body.review_completed;
             const typingCompleted = body.typing_completed;
@@ -444,7 +449,7 @@ Deno.serve(async (req: Request) => {
               return badRequest("integer points required");
             }
             const normalizedCourse = typeof courseName === "string" ? courseName.slice(0, 64) : "";
-            if (!/^Мединский курс \(Том [1-4]\)$/.test(normalizedCourse)) {
+            if (!isSupportedLearningCourse(normalizedCourse)) {
               return badRequest("Unsupported course");
             }
             const scoreEventId = typeof body.score_event_id === "string" ? body.score_event_id : crypto.randomUUID();

@@ -3436,7 +3436,7 @@ button,input,select,textarea{max-width:100%;min-width:0;}
         <button class="dict-view-btn active" type="button" data-dict-view="list" onclick="setDictView('list')" title="Список" aria-label="Список"><span class="ui-icon"><svg><use href="#ui-icon-list"></use></svg></span>Список</button>
         <button class="dict-view-btn" type="button" data-dict-view="table" onclick="setDictView('table')" title="Таблица" aria-label="Таблица"><span class="ui-icon"><svg><use href="#ui-icon-table"></use></svg></span>Таблица</button>
       </div>
-      <div class="sc-title">Урок</div>
+      <div class="sc-title" id="dict-lesson-title">Урок</div>
       <div class="lb-row-btns" id="dict-lesson-row">
         <button class="lb-pill active" onclick="setDictLesson('all',this)">Все</button>
       </div>
@@ -4042,9 +4042,11 @@ button:not(:disabled):active,[role="button"]:not([aria-disabled="true"]):active,
 }
 </style>
 <link rel="stylesheet" href="src/training-setup.css">
+<link rel="stylesheet" href="src/quran-vocab.css">
 <script src="src/api.js"></script>
 <script src="src/state.js"></script>
 <script src="src/helpers.js"></script>
+<script src="src/quran-vocab.js"></script>
 <script src="src/auth.js"></script>
 <script src="src/announcement.js"></script>
 <script src="src/course.js"></script>

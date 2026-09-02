@@ -116,6 +116,7 @@ function copyTrainingWord(word) {
   if (word.lesson != null && word.lesson !== '') copy.lesson = String(word.lesson);
   if (word.dictionaryRow != null) copy.dictionaryRow = word.dictionaryRow;
   if (word.dictionaryForm) copy.dictionaryForm = String(word.dictionaryForm);
+  if (word.vocabularyMeta) copy.vocabularyMeta = word.vocabularyMeta;
   return copy;
 }
 
@@ -455,7 +456,7 @@ function nextWord(inc) {
 
 function renderArabicInputFormatHint(expected) {
   const el = quizGetEl('type-format-hint');
-  const text = expected ? getArabicAnswerInputHint(expected) : '';
+  const text = expected ? [typeof quranInputHint === 'function' ? quranInputHint(curWord) : '', getArabicAnswerInputHint(expected)].filter(Boolean).join(' ') : '';
   el.textContent = text;
   el.classList.toggle('hidden', !text);
 }
@@ -477,7 +478,7 @@ function renderQuizWordSource(word) {
   const lesson = word?.lesson ? String(word.lesson) : '';
   const parts = [];
   if (volumeLabel) parts.push(volumeLabel);
-  if (lesson) parts.push(`\u0423\u0440\u043e\u043a ${lesson}`);
+  if (lesson) parts.push(lessonUnitLabel(volumeId) + ' ' + lesson);
   el.textContent = parts.join(' \u00b7 ');
   el.classList.toggle('hidden', !parts.length);
 }
@@ -581,6 +582,8 @@ function genOpts(correct, key) {
   const seenValues = new Set([correctKey]);
   const addFrom = (words) => {
     (Array.isArray(words) ? words : []).forEach((word) => {
+      if (typeof isQuranVolume === 'function' && isQuranVolume(curWord?.volume || App.volume) &&
+          typeof quranGlossesOverlap === 'function' && quranGlossesOverlap(curWord, word)) return;
       const value = String(word?.[key] || '').trim();
       const normalized = rmH(value).trim().toLowerCase();
       if (!value || !normalized || seenValues.has(normalized)) return;
@@ -678,7 +681,8 @@ function checkTyped() {
   if (hintBtn) hintBtn.style.display = 'none';
   const hintLbl = quizGetEl('hint-cost-label');
   if (hintLbl) hintLbl.textContent = '';
-  if (isArabicAnswerCorrect(val, curWord.ar, Settings.answerCheck)) {
+  if (isArabicAnswerCorrect(val, curWord.ar, Settings.answerCheck) ||
+      (typeof isQuranAlternateAnswerCorrect === 'function' && isQuranAlternateAnswerCorrect(val, curWord, Settings.answerCheck))) {
     const penalty = hintCount * 5;
     const pts = Math.max(0, 20 - penalty);
     fb.className = 'feedback ok';

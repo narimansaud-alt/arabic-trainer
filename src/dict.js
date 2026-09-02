@@ -19,7 +19,7 @@ function buildLessonPills(rowId, lessons, onSelect) {
     .forEach((l) => {
       const btn = document.createElement('button');
       btn.className = 'lb-pill';
-      btn.textContent = 'Ур. ' + l;
+      btn.textContent = (isQuranVolume() ? 'Блок ' : 'Ур. ') + l;
       btn.onclick = () => {
         row.querySelectorAll('.lb-pill').forEach((b) => b.classList.remove('active'));
         btn.classList.add('active');
@@ -87,12 +87,14 @@ async function loadDict() {
       lesson: k,
       dictionaryRow: r.dictionary_row == null ? null : Number(r.dictionary_row),
       dictionaryForm: r.dictionary_form || '',
+      vocabularyMeta: r.vocabulary_meta || null,
     };
     Dict.byLesson[k].push(word);
     lessons.add(k);
     Dict.allWords.push(word);
   });
 
+  if (isQuranVolume()) Dict.allWords.sort((a, b) => a.vocabularyMeta.rank - b.vocabularyMeta.rank);
   if (cloudStatus) cloudStatus.textContent = 'Загружено: ' + Dict.allWords.length + ' слов';
 
   if (!g) {
@@ -108,7 +110,7 @@ async function loadDict() {
       const btn = document.createElement('button');
       btn.className = 'lesson-pill';
       btn.dataset.lesson = l;
-      btn.textContent = 'Урок ' + l;
+      btn.textContent = lessonUnitLabel() + ' ' + l;
       btn.onclick = () => btn.classList.toggle('active');
       g.appendChild(btn);
     });
@@ -338,14 +340,20 @@ function renderDictBook(words, lesson) {
 }
 
 function renderDict() {
+  const lessonTitle = document.getElementById('dict-lesson-title');
+  if (lessonTitle) lessonTitle.textContent = lessonUnitLabel();
   document.querySelectorAll('[data-dict-view]').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.dictView === Settings.dictView);
   });
   const q = (document.getElementById('dict-search').value || '').trim().toLowerCase();
   let words = Dict.allWords;
   if (Settings.dictLesson !== 'all') words = words.filter((w) => String(w.lesson) === Settings.dictLesson);
-  if (q) words = words.filter((w) => w.ar.includes(q) || w.ru.toLowerCase().includes(q));
+  if (q) words = words.filter((w) => (isQuranVolume() ? rmH(w.ar).includes(rmH(q)) : w.ar.includes(q)) || w.ru.toLowerCase().includes(q));
   const cont = document.getElementById('dict-content');
+  if (isQuranVolume()) {
+    cont.innerHTML = renderQuranDictionary(words);
+    return;
+  }
   if (!words.length) {
     cont.innerHTML = '<div class="lb-empty">Ничего не найдено</div>';
     return;
@@ -1483,6 +1491,7 @@ function renderPronounReferenceTable() {
 
 // TABS
 function switchTab(t) {
+  if (isQuranVolume() && ['book', 'rules'].includes(t)) t = 'dict';
   if (t !== 'train' && typeof closeTrainingModeSetup === 'function') closeTrainingModeSetup();
   document.querySelectorAll('.tab-content').forEach((p) => p.classList.remove('active'));
   document.querySelectorAll('.app-tab').forEach((b) => b.classList.remove('active'));

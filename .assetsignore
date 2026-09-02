@@ -12,6 +12,10 @@
 /output/
 /preview/
 /scripts/
+/data/quran-frequency-source.json
+/data/quran-frequency-context.json
+/data/quran-vocabulary-ru.txt
+/data/quran-vocabulary.json
 /services/
 /supabase/
 /tmp/

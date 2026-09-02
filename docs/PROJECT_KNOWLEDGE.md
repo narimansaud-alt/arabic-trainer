@@ -55,6 +55,18 @@ Authentication decision:
 
 ## Application content
 
+### Quran vocabulary (2026-09-02)
+
+- Separate course «1000 самых частых слов Корана»: 20 frequency blocks of 50 cards,
+  not another Medina volume. Source, editorial limitations, reproducible imports,
+  corrections, tests and deployment/rollback steps: [QURAN_VOCABULARY.md](QURAN_VOCABULARY.md).
+- Quran-only source metadata lives in words.vocabulary_meta; existing Medina
+  words and student progress are preserved. Daily tasks and scores explicitly
+  support this course, including every leaderboard period.
+- The current client writes to api-v2; its entry point imports api/index.ts.
+  This release deploys api-v2 only, preserving JWT verification. Legacy api and
+  its authentication settings are unchanged; old clients do not expose this course.
+
 ### Medina rules verification workflow
 
 - Owner-requested Medina rules workflow is stored in `docs/MEDINA_RULES_KNOWLEDGE_BASE.md`.
